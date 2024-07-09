@@ -5,4 +5,4 @@
 # Learn more from ready-to-use templates: https://www.gitpod.io/docs/introduction/getting-started/quickstart
 
 tasks:
-  - init: npm install & npm i -g @salesforce/cli
+  - init: sudo apt update & npm install & npm i -g @salesforce/cli
