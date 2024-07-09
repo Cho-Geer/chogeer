@@ -7,6 +7,6 @@
   ],
   "name": "chogeer",
   "namespace": "",
-  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sfdcLoginUrl": "https://softcode-dev-ed.develop.my.salesforce.com/",
   "sourceApiVersion": "59.0"
 }

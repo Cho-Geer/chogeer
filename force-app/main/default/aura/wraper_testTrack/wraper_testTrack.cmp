@@ -1,0 +1,12 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 04-22-2024
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<aura:component
+  implements="flexipage:availableForAllPageTypes,force:appHostable,lightning:isUrlAddressable"
+>
+  <c:testTrack></c:testTrack>
+</aura:component>

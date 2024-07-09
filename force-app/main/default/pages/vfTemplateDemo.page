@@ -1,0 +1,28 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 05-15-2024
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<apex:page
+  docType="html-5.0"
+  standardStylesheets="false"
+  showHeader="false"
+  applyHtmlTag="false"
+>
+  <!-- Begin Default Content REMOVE THIS -->
+  <apex:composition template="OneDemoTemplate">
+    <apex:define name="head">
+      <!-- <div> -->
+      <p>this is One Demo Template For Head</p>
+      <!-- </div> -->
+    </apex:define>
+    <apex:define name="body">
+      <!-- <div> -->
+      <p>this is One Demo Template For Body</p>
+      <!-- </div> -->
+    </apex:define>
+  </apex:composition>
+  <!-- End Default Content REMOVE THIS -->
+</apex:page>
