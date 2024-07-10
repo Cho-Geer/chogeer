@@ -1,1 +1,22 @@
-<aura:component> </aura:component>
+<aura:component
+  implements="flexipage:availableForRecordHome, force:hasRecordId"
+  access="global"
+>
+  <aura:attribute
+    name="fields"
+    type="String[]"
+    default="['FirstName, LastName']"
+  />
+
+  <lightning:card title="Create Contact">
+    <div class="slds-m-horizontal_small">
+      <lightning:recordForm
+        aura:id="myForm"
+        objectApiName="Contact"
+        fields="{!v.fields}"
+        onsubmit="{!c.createContact}"
+        onsuccess="{!c.handleSuccess}"
+      />
+    </div>
+  </lightning:card>
+</aura:component>
