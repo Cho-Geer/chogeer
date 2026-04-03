@@ -1,0 +1,39 @@
+<template>
+  <lightning-card title="Create Contact" icon-name="standard:contact">
+    <div class="slds-p-around_medium">
+      <lightning-input
+        label="First Name"
+        name="firstName"
+        value={firstName}
+        onchange={handleChange}
+      ></lightning-input>
+      <lightning-input
+        label="Last Name"
+        name="lastName"
+        value={lastName}
+        onchange={handleChange}
+        required
+      ></lightning-input>
+      <lightning-input
+        label="Email"
+        name="email"
+        type="email"
+        value={email}
+        onchange={handleChange}
+      ></lightning-input>
+      <lightning-input
+        label="Title"
+        name="title"
+        value={title}
+        onchange={handleChange}
+      ></lightning-input>
+      <lightning-button
+        class="slds-m-top_medium"
+        label="Save Contact"
+        variant="brand"
+        onclick={handleSave}
+        disabled={isSaving}
+      ></lightning-button>
+    </div>
+  </lightning-card>
+</template>

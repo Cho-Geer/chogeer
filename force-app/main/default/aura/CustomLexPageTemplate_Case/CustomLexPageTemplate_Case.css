@@ -1,0 +1,190 @@
+.THIS {
+  --customLexHeaderTop: 0px;
+  --customLexHeaderHeight: 6.5rem;
+  --customLexHeaderGapTrim: 0.85rem;
+  --customLexHeaderTopPadding: 0.2rem;
+  --customLexContentGapTrim: 2.15rem;
+  --customLexRegionTopGap: 0.75rem;
+  --customLexRegionTopOffset: 1rem;
+  display: block;
+  height: calc(100vh - 8.75rem);
+  min-height: 40rem;
+  padding-bottom: 0 !important;
+  overflow: hidden;
+}
+
+.THIS .customLexPageShell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0 0.5rem 0;
+}
+
+.THIS .customLexRoot {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  gap: 0;
+  position: relative;
+  padding-top: 0;
+}
+
+.THIS .customLexRootPinned {
+  padding-top: calc(
+    var(--customLexHeaderHeight) - var(--customLexContentGapTrim)
+  );
+}
+
+.THIS .customLexHeader {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0;
+  padding-top: 0;
+  min-height: var(--customLexHeaderHeight);
+  z-index: 110;
+  overflow: visible;
+}
+
+.THIS .customLexHeaderPinned {
+  position: fixed;
+  top: calc(
+    var(--customLexHeaderTop) - var(--customLexHeaderGapTrim) +
+      var(--customLexHeaderTopPadding)
+  );
+  left: 0.5rem;
+  right: 0.5rem;
+}
+
+.THIS .customLexHeaderRegion {
+  display: block;
+  flex: 1 1 auto;
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: visible;
+}
+
+.THIS .customLexToolbar {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.THIS .customLexToolbarItem {
+  display: inline-flex;
+  align-items: center;
+}
+
+.THIS .customLexToolbarButton {
+  cursor: pointer;
+  border: 0;
+  line-height: 1.6;
+  padding: 0.25rem 0.875rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.THIS .customLexScroll {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-right: 0.25rem;
+  padding-bottom: 0;
+  box-sizing: border-box;
+  margin-top: 0;
+}
+
+.THIS .customLexScroll > .slds-grid {
+  margin-top: 0;
+}
+
+.THIS .customLexScroll .slds-p-around_small {
+  padding-top: 0;
+}
+
+.THIS .customLexScroll .slds-p-around_small:first-child {
+  padding-top: 0;
+}
+
+.THIS .customLexRegion {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.THIS .customLexRegionTop {
+  display: block;
+  width: calc(100% - var(--customLexRegionTopOffset));
+  min-height: 4.5rem;
+  overflow: visible;
+  margin-left: var(--customLexRegionTopGap);
+}
+
+.THIS .customLexRegionBody {
+  min-height: 12rem;
+}
+
+.THIS .customLexRegionBottom {
+  min-height: 8rem;
+}
+
+.THIS .middle {
+  position: relative;
+}
+
+.THIS .middle_fixed {
+  position: fixed;
+  width: calc(100% - 2rem);
+  left: 1rem;
+  right: 1rem;
+  justify-self: center;
+  padding: 0 1rem;
+  margin: 0;
+  z-index: 90;
+  background: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 12px 28px rgba(17, 37, 62, 0.18);
+}
+
+.THIS .tabBar {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.THIS .middle_scale_1 {
+  display: none;
+}
+
+.THIS .middle_scale_4 {
+  transform: scale(0.3, 0.3);
+  transform-origin: top right;
+}
+
+.THIS .middle_scale_6 {
+  transform: scale(0.6, 0.6);
+  transform-origin: top right;
+}
+
+.THIS .middle_scale_8 {
+  transform: scale(0.8, 0.8);
+  transform-origin: top right;
+}
+
+.THIS .middle_scale_10 {
+  transform: scale(1, 1);
+  transform-origin: top right;
+}

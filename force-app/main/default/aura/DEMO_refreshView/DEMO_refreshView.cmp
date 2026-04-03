@@ -14,7 +14,11 @@
         aura:id="myForm"
         objectApiName="Contact"
         fields="{!v.fields}"
-        onsubmit="{!c.createContact}"
+        onsubmit="
+          {
+            !c.createContact;
+          }
+        "
         onsuccess="{!c.handleSuccess}"
       />
     </div>

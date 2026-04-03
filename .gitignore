@@ -46,4 +46,21 @@ $RECYCLE.BIN/
 **/.venv/
 **/venv/
 
-docs/
+.git_disabled
+.gitpod.yml
+.prettierignore
+.prettierrc
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+.huskyrc
+.husky
+.vscode
+.violations.json
+.devcontainer
+
+docs
+scripts/
+force-app/main/default/staticresources

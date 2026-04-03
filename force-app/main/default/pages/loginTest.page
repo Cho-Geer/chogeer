@@ -21,7 +21,13 @@
         location="top"
         style="display: flex; flex-direction: row-reverse"
       >
-        <apex:commandButton value="OK" onclick="callCtrl(); return false;" />
+        <apex:commandButton
+          value="OK"
+          onclick="
+            callCtrl();
+            return false;
+          "
+        />
       </apex:pageBlockButtons>
       <apex:pageBlockSection
         id="blockSection"

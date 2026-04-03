@@ -10,10 +10,21 @@
     "test:unit:watch": "sfdx-lwc-jest --watch",
     "test:unit:debug": "sfdx-lwc-jest --debug",
     "test:unit:coverage": "sfdx-lwc-jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:chrome": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:install": "playwright install",
+    "test:e2e:codegen": "playwright codegen",
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "postinstall": "husky install",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "lint:e2e": "eslint tests/ --ext .js",
+    "lint:e2e:fix": "eslint tests/ --ext .js --fix"
   },
   "devDependencies": {
     "@lwc/eslint-plugin-lwc": "^1.1.2",
@@ -22,6 +33,7 @@
     "@salesforce/eslint-plugin-aura": "^2.0.0",
     "@salesforce/eslint-plugin-lightning": "^1.0.0",
     "@salesforce/sfdx-lwc-jest": "^3.1.0",
+    "@playwright/test": "^1.59.1",
     "eslint": "^8.11.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jest": "^27.6.0",
@@ -40,5 +52,20 @@
   },
   "dependencies": {
     "@salesforce/cli": "^2.48.6"
-  }
+  },
+  "main": "jest.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cho-Geer/chogeer.gi.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cho-Geer/chogeer.gi/issues"
+  },
+  "homepage": "https://github.com/Cho-Geer/chogeer.gi#readme"
 }
