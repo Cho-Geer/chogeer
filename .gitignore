@@ -39,7 +39,11 @@ $RECYCLE.BIN/
 # Local environment variables
 .env
 
+.git_disabled
+
 # Python Salesforce Functions
 **/__pycache__/
 **/.venv/
 **/venv/
+
+docs/
