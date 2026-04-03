@@ -1,0 +1,11 @@
+/*
+ * @Author: Cho-Geer 165348533+Cho-Geer@users.noreply.github.com
+ * @Date: 2024-07-09 07:37:48
+ * @LastEditors: Cho-Geer 165348533+Cho-Geer@users.noreply.github.com
+ * @LastEditTime: 2024-07-09 07:52:44
+ * @FilePath: /chogeer/force-app/main/default/aura/wraper_testTrack/wraper_testTrackController.js
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+({
+  myAction: function () {}
+});

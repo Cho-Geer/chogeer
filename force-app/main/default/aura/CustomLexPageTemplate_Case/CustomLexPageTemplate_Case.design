@@ -1,0 +1,32 @@
+<design:component>
+    <flexipage:template>
+        <flexipage:region name="top" defaultWidth="large">
+            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
+            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
+        </flexipage:region>
+        <flexipage:region name="middle" defaultWidth="large">
+            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
+            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
+        </flexipage:region>
+        <flexipage:region name="middle_Path" defaultWidth="large">
+            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
+            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
+        </flexipage:region>
+        <flexipage:region name="bottom" defaultWidth="large">
+            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
+            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
+        </flexipage:region>
+        <flexipage:region name="bottom_left" defaultWidth="large">
+            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
+            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
+        </flexipage:region>
+        <flexipage:region name="bottom_right" defaultWidth="small">
+            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
+            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
+        </flexipage:region>
+    </flexipage:template>
+    <design:supportedFormFactors>
+        <design:supportedFormFactor type="small"></design:supportedFormFactor>
+        <design:supportedFormFactor type="large"></design:supportedFormFactor>
+    </design:supportedFormFactors>
+</design:component>

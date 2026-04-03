@@ -1,0 +1,16 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 05-15-2024
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<apex:page>
+  <!-- Begin Default Content REMOVE THIS -->
+  <apex:outputText
+    value="これはテンプレートを利用するパージです。"
+  ></apex:outputText>
+  <apex:insert name="head" /><br />
+  <apex:insert name="body" />
+  <!-- End Default Content REMOVE THIS -->
+</apex:page>

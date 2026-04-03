@@ -1,0 +1,79 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 05-16-2024
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<apex:page
+  docType="html-5.0"
+  showHeader="false"
+  standardStylesheets="false"
+  lightningStylesheets="true"
+  controller="Site_loginWithoutEmailCtrl"
+>
+  <!-- Begin Default Content REMOVE THIS -->
+  <apex:form id="loginForm">
+    <apex:pageBlock mode="edit" id="pageBlock">
+      <apex:pageBlockButtons location="bottom">
+        <apex:commandButton
+          title="メールなしで新規登録"
+          value="メールなしで新規登録"
+          onclick="signin()"
+        ></apex:commandButton>
+        <apex:actionFunction
+          action="{!login}"
+          name="signin"
+          oncomplete="getSigninResult()"
+          reRender="as"
+        ></apex:actionFunction>
+      </apex:pageBlockButtons>
+      <apex:pageBlockSection
+        id="pageBlockSection"
+        title="Experience Cloud Site HomePage"
+        columns="1"
+      >
+        <apex:pageBlockSectionItem>
+          <apex:outputPanel>
+            <apex:outputLabel for="name" value="Name: "></apex:outputLabel
+            ><br />
+            <apex:inputText value="{!name}" id="name"></apex:inputText>
+            <apex:message for="name"></apex:message>
+          </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem>
+          <apex:outputPanel>
+            <apex:outputLabel
+              for="password"
+              value="Password: "
+            ></apex:outputLabel
+            ><br />
+            <apex:inputSecret
+              value="{!password}"
+              id="password"
+            ></apex:inputSecret>
+            <apex:message for="password"></apex:message>
+          </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem>
+          <apex:outputPanel id="outputPanel">
+            <apex:outputText id="ts" value="{!st}"></apex:outputText><br />
+          </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+      </apex:pageBlockSection>
+    </apex:pageBlock>
+    <script>
+      function signin() {
+        alert("start");
+      }
+      function getSigninResult() {
+        const st = document.getElementById(
+          "{!$Component.loginForm.pageBlock.pageBlockSection}"
+        )[2];
+        console.log(st);
+        alert("------st--------");
+      }
+    </script>
+  </apex:form>
+  <!-- End Default Content REMOVE THIS -->
+</apex:page>

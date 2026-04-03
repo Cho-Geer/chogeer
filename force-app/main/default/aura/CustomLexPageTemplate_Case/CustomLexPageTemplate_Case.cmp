@@ -1,0 +1,162 @@
+<aura:component implements="lightning:recordHomeTemplate">
+  <aura:attribute
+    name="heightSize"
+    type="String"
+    default="100"
+  ></aura:attribute>
+  <aura:attribute name="top" type="Aura.component[]"></aura:attribute>
+  <aura:attribute name="middle" type="Aura.component[]"></aura:attribute>
+  <aura:attribute name="middle_Path" type="Aura.component[]"></aura:attribute>
+  <aura:attribute name="bottom" type="Aura.component[]"></aura:attribute>
+  <aura:attribute name="bottom_left" type="Aura.component[]"></aura:attribute>
+  <aura:attribute name="bottom_right" type="Aura.component[]"></aura:attribute>
+  <aura:attribute
+    name="middleSize"
+    type="String"
+    default="large"
+  ></aura:attribute>
+  <aura:attribute
+    name="middleSizeNumber"
+    type="String"
+    default="10"
+  ></aura:attribute>
+  <aura:attribute
+    name="middleSizeBar"
+    type="Boolean"
+    default="false"
+  ></aura:attribute>
+  <aura:attribute
+    name="middlePathSizeBar"
+    type="Boolean"
+    default="false"
+  ></aura:attribute>
+  <aura:attribute
+    name="isMiddleLabelOpen"
+    type="String"
+    default="表示"
+  ></aura:attribute>
+  <aura:attribute
+    name="isMiddlePathLabelOpen"
+    type="String"
+    default="表示"
+  ></aura:attribute>
+
+  <aura:handler
+    name="init"
+    value="{!this}"
+    action="{!c.handleInit}"
+  ></aura:handler>
+  <aura:handler
+    name="destroy"
+    value="{!this}"
+    action="{!c.handleDestroy}"
+  ></aura:handler>
+  <aura:handler
+    name="change"
+    value="{!v.middleSize}"
+    action="{!c.handleMidControllerRerender}"
+  ></aura:handler>
+  <aura:handler
+    name="change"
+    value="{!v.heightSize}"
+    action="{!c.handleHeightSizeChange}"
+  ></aura:handler>
+
+  <section class="customLexPageShell">
+    <div aura:id="customLexRoot" class="customLexRoot">
+      <div aura:id="customLexHeader" class="customLexHeader">
+        <div class="customLexHeaderRegion">
+          <div
+            aura:id="topDiv"
+            data-id="topDiv"
+            class="customLexRegion customLexRegionTop"
+          >
+            {!v.top}
+          </div>
+        </div>
+        <div class="customLexToolbar">
+          <div
+            aura:id="middleSizeController"
+            data-id="middleSizeController"
+            class="customLexToolbarItem"
+          >
+            <button
+              type="button"
+              aura:id="middleSlider"
+              data-id="middleSlider"
+              class="slds-badge slds-theme_inverse customLexToolbarButton"
+              onclick="
+                {
+                  !c.handleSizeLabel;
+                }
+              "
+            >
+              {!v.isMiddleLabelOpen}
+            </button>
+          </div>
+          <div
+            aura:id="middlePathDivController"
+            data-id="middlePathDivController"
+            class="customLexToolbarItem"
+          >
+            <button
+              type="button"
+              aura:id="middlePathSlider"
+              data-id="middlePathSlider"
+              class="slds-badge slds-theme_inverse customLexToolbarButton"
+              onclick="
+                {
+                  !c.handleSizeLabel;
+                }
+              "
+            >
+              {!v.isMiddlePathLabelOpen}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <lightning:layout multipleRows="true">
+        <lightning:layoutItem size="12">
+          <div
+            aura:id="middleDiv"
+            data-id="middleDiv"
+            class="customLexRegion customLexRegionBody middle middle_scale_1"
+          >
+            {!v.middle}
+          </div>
+        </lightning:layoutItem>
+        <lightning:layoutItem size="12" padding="around-small">
+          <div
+            aura:id="pathDiv"
+            data-id="pathDiv"
+            class="customLexRegion customLexRegionBody middle middle_scale_1"
+          >
+            {!v.middle_Path}
+          </div>
+        </lightning:layoutItem>
+      </lightning:layout>
+      <div
+        aura:id="scrollTarget"
+        class="customLexScroll slds-m-bottom_large slds-p-bottom_large"
+        onwheel="
+          {
+            !c.handleWheel;
+          }
+        "
+      >
+        <lightning:layout multipleRows="true">
+          <lightning:layoutItem size="12" padding="around-small">
+            <div
+              aura:id="bottomDiv"
+              data-id="bottomDiv"
+              class="customLexRegion customLexRegionBottom"
+            >
+              {!v.bottom}
+            </div>
+          </lightning:layoutItem>
+        </lightning:layout>
+      </div>
+    </div>
+  </section>
+</aura:component>
