@@ -1,196 +1,129 @@
-# Salesforce CRM Application (Salesforce DX)
+# Salesforce Platform Showcase (chogeer)
 
-This project demonstrates a CRM-style Salesforce application built using **Salesforce DX**.
+This repository is a **Salesforce DX portfolio project** focused on customer community/login experiences and controller-driven UI patterns.
 
-It includes custom business logic implemented with **Apex**, modern UI components using **Lightning Web Components (LWC)**, and workflow automation using **Salesforce Flow**.
+It is positioned as a practical showcase for:
 
-The project showcases how Salesforce can be customized to support enterprise CRM scenarios.
-
----
-
-# Overview
-
-This repository contains a Salesforce DX project used to implement a simple CRM system.
-
-The application supports:
-
-- Account and contact management
-- Custom business logic using Apex
-- Lightning Web Components for UI
-- Flow automation for workflow management
-- Integration with external systems
-
-The project follows Salesforce DX best practices for development and deployment.
+- Apex controller development
+- Experience Cloud style login / registration / password flows
+- UI-to-Apex interaction patterns across Visualforce, Aura, and LWC
+- Security-aware controller design and test coverage
 
 ---
 
-# Tech Stack
+## Repository Focus
 
-Platform
+This is not a single monolithic business product; it is a curated Salesforce codebase that demonstrates implementation patterns commonly used in real-world Salesforce delivery.
+
+Primary showcase areas:
+
+- Authentication-related flows (login, forgot password, change password, self registration)
+- Experience Cloud compatible pages/components
+- Apex + UI coordination patterns
+- Mixed UI stack support (Visualforce, Aura, LWC)
+
+---
+
+## Key Apex Controllers
+
+Representative classes in this repo include:
+
+- `force-app/main/default/classes/LightningLoginFormController.cls`
+- `force-app/main/default/classes/ChangePasswordController.cls`
+- `force-app/main/default/classes/ForgotPasswordController.cls`
+- `force-app/main/default/classes/SiteLoginController.cls`
+- `force-app/main/default/classes/SiteRegisterController.cls`
+
+Related test classes are also included in the same folder.
+
+---
+
+## UI Assets Included
+
+### Visualforce Pages
+
+Examples under `force-app/main/default/pages/`:
+
+- `SiteLogin.page`
+- `SiteRegister.page`
+- `ForgotPassword.page`
+- `ChangePassword.page`
+- `CommunitiesLogin.page`
+- `CommunitiesSelfReg.page`
+
+### Aura Components
+
+Examples under `force-app/main/default/aura/`:
+
+- `loginForm`
+- `forgotPassword`
+- `selfRegister`
+
+### Lightning Web Components
+
+Examples under `force-app/main/default/lwc/`:
+
+- `testTrack`
+- `tabSet`
+- `openNewWindow`
+
+---
+
+## Tech Stack
 
 - Salesforce Platform
-- Salesforce DX
-
-Backend Logic
-
+- Salesforce DX (SFDX project)
 - Apex
-
-Frontend
-
-- Lightning Web Components (LWC)
-- Aura Components
 - Visualforce
-
-Automation
-
-- Salesforce Flow
-
-Development Tools
-
-- Salesforce CLI
-- ESLint
-- Prettier
-- Jest (LWC testing)
+- Aura Components
+- Lightning Web Components
+- JavaScript (ESLint + Jest for LWC)
 
 ---
 
-# System Architecture
+## Local Development
 
-```
-Users
-  │
-  ▼
-Salesforce UI
-(LWC / Aura / Visualforce)
-  │
-  ▼
-Apex Controllers
-  │
-  ▼
-Salesforce Data Model
-(Accounts / Contacts / Custom Objects)
-  │
-  ▼
-External Integrations
-(REST APIs)
+### 1) Install dependencies
+
+```bash
+npm install
 ```
 
----
+### 2) Authenticate to a Salesforce org
 
-# Project Structure
-
-```
-force-app
-└── main
-    └── default
-        ├── apexClasses
-        │   Apex business logic
-        ├── lwc
-        │   Lightning Web Components
-        ├── aura
-        │   Aura components
-        ├── flows
-        │   Flow automation
-        └── objects
-            Custom Salesforce objects
-```
-
----
-
-# Core Features
-
-## CRM Data Management
-
-Manage core CRM entities such as:
-
-- Accounts
-- Contacts
-- Opportunities
-
----
-
-## Apex Business Logic
-
-Apex classes are used to implement:
-
-- Validation logic
-- Data processing
-- Integration logic
-- Business rules
-
----
-
-## Lightning Web Components
-
-Modern UI components built with LWC.
-
-Features include:
-
-- Interactive dashboards
-- Data forms
-- Reusable components
-
----
-
-## Workflow Automation
-
-Salesforce Flow is used to automate business processes such as:
-
-- Record creation triggers
-- Status updates
-- Notifications
-
----
-
-# Deployment
-
-This project uses **Salesforce DX**.
-
-Login to Salesforce org:
-
-```
+```bash
 sfdx auth:web:login
 ```
 
-Push source to org:
+### 3) Push source
 
-```
+```bash
 sfdx force:source:push
 ```
 
-Run tests:
+### 4) Run checks
 
+```bash
+npm run lint
+npm run test:unit
 ```
-sfdx force:apex:test:run
-```
 
 ---
 
-# Testing
+## Career Artifacts (for remote job applications)
 
-Testing includes:
+This repo also includes ready-to-use English artifacts:
 
-- Apex unit tests
-- LWC Jest tests
+- `career/resume-v1.md`
+- `career/linkedin-v1.md`
+- `career/interview-answers-v1.md`
 
----
-
-# Future Improvements
-
-Possible improvements include:
-
-- Enhanced CRM workflows
-- External system integrations
-- Advanced reporting dashboards
-- Additional Lightning Web Components
+These files are prepared for a Salesforce Platform / Integration oriented job search narrative.
 
 ---
 
-# Author
+## Author
 
-Zixi Tao  
-Senior Software Engineer  
-14+ years experience building enterprise systems
-
-GitHub  
-https://github.com/Cho-Geer
+**Zach Tao (Zixi Tao)**  
+Senior Salesforce Platform / Integration Engineer  
+GitHub: https://github.com/Cho-Geer
