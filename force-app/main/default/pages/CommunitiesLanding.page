@@ -1,7 +1,16 @@
 <apex:page
   id="communitiesLandingPage"
   controller="CommunitiesLandingController"
-  action="{!forwardToStartPage}"
   title="{!$Label.site.site_login}"
 >
+  <apex:form>
+    <apex:actionFunction
+      name="redirectToStart"
+      action="{!forwardToStartPage}"
+      immediate="true"
+    />
+    <script>
+      redirectToStart();
+    </script>
+  </apex:form>
 </apex:page>

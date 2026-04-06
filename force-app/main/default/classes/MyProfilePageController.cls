@@ -36,6 +36,7 @@ public with sharing class MyProfilePageController {
         contact.email
       FROM User
       WHERE id = :UserInfo.getUserId()
+      WITH SECURITY_ENFORCED
     ];
     // guest users should never be able to access this page
     if (user.usertype == 'GUEST') {
@@ -53,7 +54,11 @@ public with sharing class MyProfilePageController {
 
   public void save() {
     try {
-      update user;
+      SObjectAccessDecision decision = Security.stripInaccessible(
+        AccessType.UPDATABLE,
+        new List<User>{ user }
+      );
+      update decision.getRecords();
       isEdit = false;
     } catch (DmlException e) {
       ApexPages.addMessages(e);
@@ -90,6 +95,7 @@ public with sharing class MyProfilePageController {
         contact.email
       FROM User
       WHERE id = :UserInfo.getUserId()
+      WITH SECURITY_ENFORCED
     ];
   }
 }

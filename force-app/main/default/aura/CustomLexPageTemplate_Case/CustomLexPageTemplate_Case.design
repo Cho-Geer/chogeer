@@ -4,14 +4,8 @@
             <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
             <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
         </flexipage:region>
-        <flexipage:region name="middle" defaultWidth="large">
-            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
-            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
-        </flexipage:region>
-        <flexipage:region name="middle_Path" defaultWidth="large">
-            <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
-            <flexipage:formfactor type="large" width="large"></flexipage:formfactor>
-        </flexipage:region>
+        <flexipage:region name="middle" defaultWidth="large"></flexipage:region>
+        <flexipage:region name="middle_Path" defaultWidth="large"></flexipage:region>
         <flexipage:region name="bottom" defaultWidth="large">
             <flexipage:formfactor type="medium" width="small"></flexipage:formfactor>
             <flexipage:formfactor type="large" width="large"></flexipage:formfactor>

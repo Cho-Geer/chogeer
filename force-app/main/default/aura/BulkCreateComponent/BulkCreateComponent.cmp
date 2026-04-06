@@ -1,0 +1,141 @@
+<aura:component controller="ContactDataController">
+  <lightning:notificationsLibrary aura:id="notifLib" />
+  <c:EventService aura:id="eventService"></c:EventService>
+  <aura:handler name="init" value="{!this}" action="{!c.doInit}"></aura:handler>
+  <aura:attribute
+    name="contactList"
+    type="List"
+    default="[{sobjectType:'Contact'}]"
+  ></aura:attribute>
+  <aura:attribute
+    name="checkedIndexList"
+    type="List"
+    default="[]"
+  ></aura:attribute>
+  <aura:attribute name="check" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="options" type="List"></aura:attribute>
+  <aura:handler
+    name="registerCompEvent"
+    event="c:Fw_CompEvent"
+    action="{!c.handleCompEvent}"
+  ></aura:handler>
+  <div class="tzxCard">
+    <div>
+      <div class="cardHeader" title="取引先責任者一括登録">
+        <div class="mediaFigure">
+          <lightning:icon
+            iconName="custom:custom51"
+            class="mediaIcon"
+          ></lightning:icon>
+        </div>
+        <div class="mediaTitle">取引先責任者一括登録</div>
+        <div>
+          <lightning:button
+            label="一括登録"
+            variant="brand"
+            onclick="
+              {
+                !c.handleBulkCreate;
+              }
+            "
+          ></lightning:button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="divTable">
+        <div class="divTable_relative">
+          <div class="divTable_static">
+            <table
+              class="slds-table slds-table_cell-buffer slds-table_bordered"
+            >
+              <thead>
+                <tr class="slds-line-height_reset">
+                  <th class="" scope="col">
+                    <div>
+                      <lightning:input
+                        type="checkbox"
+                        value=""
+                        checked="{!v.check}"
+                      ></lightning:input>
+                    </div>
+                  </th>
+                  <th class="" scope="col">
+                    <div>姓</div>
+                  </th>
+                  <th class="" scope="col">
+                    <div>名</div>
+                  </th>
+                  <th class="" scope="col">
+                    <div>取引先名</div>
+                  </th>
+                  <th class="" scope="col">
+                    <div>レコードタイプ</div>
+                  </th>
+                  <th class="" scope="col">
+                    <div>
+                      <lightning:buttonMenu
+                        menuAlignment="right"
+                        iconSize="small"
+                        variant="container"
+                        class="buttonMenu"
+                        alternativeText="Show menu"
+                        iconName="utility:settings"
+                        onselect="
+                          {
+                            !c.handleButtonSelect;
+                          }
+                        "
+                      >
+                        <lightning:menuItem
+                          class="buttonMenuItem"
+                          value="AddRow"
+                          label="Add Row"
+                          iconName="utility:add"
+                        />
+                        <lightning:menuItem
+                          class="buttonMenuItem"
+                          value="DeleteRow"
+                          label="Delete Row"
+                          iconName="utility:delete"
+                        />
+                      </lightning:buttonMenu>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody style="margin-right: 0; margin-left: 0">
+                <aura:iteration
+                  var="contact"
+                  items="{!v.contactList}"
+                  indexVar="index"
+                >
+                  <c:BulkCreateComponentChild
+                    contact="{!contact}"
+                    options="{!v.options}"
+                    index="{!index}"
+                    check="{!v.check}"
+                    checkFlag="{!v.checkedIndexList.length > 0 ? true : false}"
+                  ></c:BulkCreateComponentChild>
+                </aura:iteration>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div>
+        <lightning:button
+          label="一括登録"
+          variant="brand"
+          onclick="
+            {
+              !c.handleBulkCreate;
+            }
+          "
+        ></lightning:button>
+      </div>
+    </div>
+  </div>
+</aura:component>

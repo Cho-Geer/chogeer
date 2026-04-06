@@ -1,7 +1,16 @@
 <apex:page
   id="loginPage"
   controller="CommunitiesLoginController"
-  action="{!forwardToAuthPage}"
   title="{!$Label.site.site_login}"
 >
+  <apex:form>
+    <apex:actionFunction
+      name="redirectToAuth"
+      action="{!forwardToAuthPage}"
+      immediate="true"
+    />
+    <script>
+      redirectToAuth();
+    </script>
+  </apex:form>
 </apex:page>

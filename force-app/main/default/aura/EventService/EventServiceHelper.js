@@ -1,0 +1,3 @@
+({
+  setHandleCompEvent: function () {}
+});

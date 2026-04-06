@@ -23,6 +23,7 @@ yarn-error.log*
 
 # Dependency directories
 node_modules/
+package-lock.json
 
 # Eslint cache
 .eslintcache
@@ -35,6 +36,8 @@ Thumbs.db
 ehthumbs.db
 [Dd]esktop.ini
 $RECYCLE.BIN/
+*.swp
+*.swo
 
 # Local environment variables
 .env
@@ -46,10 +49,7 @@ $RECYCLE.BIN/
 **/.venv/
 **/venv/
 
-.git_disabled
 .gitpod.yml
-.prettierignore
-.prettierrc
 
 # Playwright
 playwright-report/
@@ -58,9 +58,12 @@ playwright/.cache/
 .huskyrc
 .husky
 .vscode
+.idea/
+.trae/
 .violations.json
 .devcontainer
 
-docs
+docs/*
 scripts/
+code_analyzation/
 force-app/main/default/staticresources

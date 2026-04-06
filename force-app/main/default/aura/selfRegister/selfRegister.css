@@ -84,9 +84,9 @@
   width: 100%;
   margin-top: 15px;
   margin-bottom: 5px;
-  color: #fff;
-  background-color: #0070d2;
-  border-color: #357ebd;
+  color: var(--sds-g-color-neutral-base-100);
+  background-color: var(--sds-g-color-brand-base-50);
+  border-color: var(--sds-g-color-brand-base-40);
   display: inline-block;
   text-align: center;
   vertical-align: middle;
@@ -105,8 +105,8 @@
 }
 
 .THIS button:hover {
-  background-color: #3276b1;
-  border-color: #285e8e;
+  background-color: var(--sds-g-color-brand-base-30);
+  border-color: var(--sds-g-color-brand-base-20);
   cursor: pointer;
 }
 
@@ -132,17 +132,17 @@
 }
 
 .THIS a {
-  color: white;
+  color: var(--sds-g-color-neutral-base-100);
   text-decoration: none;
 }
 .THIS a:hover {
-  color: white;
+  color: var(--sds-g-color-neutral-base-100);
   text-decoration: none;
 }
 
 .THIS input[type="checkbox"] {
   appearance: none;
-  border: 1px solid white;
+  border: 1px solid var(--sds-g-color-neutral-base-100);
   height: 22px;
   width: 22px;
   vertical-align: middle;
@@ -160,8 +160,8 @@
   top: 3px;
   height: 6px;
   width: 10px;
-  border-bottom: 4px solid /*#354452*/ white;
-  border-left: 4px solid /*#354452*/ white;
+  border-bottom: 4px solid var(--sds-g-color-neutral-base-100);
+  border-left: 4px solid var(--sds-g-color-neutral-base-100);
   transform: rotate(-45deg);
 }
 

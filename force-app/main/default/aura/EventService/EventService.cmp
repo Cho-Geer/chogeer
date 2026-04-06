@@ -1,0 +1,26 @@
+<aura:component>
+  <aura:registerEvent
+    name="registerCompEvent"
+    type="c:Fw_CompEvent"
+  ></aura:registerEvent>
+  <aura:registerEvent
+    name="registerAppEvent"
+    type="c:Fw_AppEvent"
+  ></aura:registerEvent>
+  <lightning:notificationsLibrary aura:id="notifLib" />
+  <aura:method name="fireCompEvent" action="{!c.handleFireCompEvent}">
+    <aura:attribute name="eventKey" type="String"></aura:attribute>
+    <aura:attribute name="eventValue" type="Object"></aura:attribute>
+  </aura:method>
+
+  <aura:method name="fireAppEvent" action="{!c.handleFireAppEvent}">
+    <aura:attribute name="it" type="String"></aura:attribute>
+  </aura:method>
+
+  <aura:method name="apexCallEvent" action="{!c.handleApexCallEvent}">
+    <aura:attribute name="compName" type="Aura.component"></aura:attribute>
+    <aura:attribute name="params" type="Object"></aura:attribute>
+    <aura:attribute name="apexMethodName" type="String"></aura:attribute>
+    <aura:attribute name="callback" type="Function"></aura:attribute>
+  </aura:method>
+</aura:component>

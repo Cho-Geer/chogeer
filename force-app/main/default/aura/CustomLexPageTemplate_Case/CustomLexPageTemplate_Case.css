@@ -154,10 +154,10 @@
   padding: 0 1rem;
   margin: 0;
   z-index: 90;
-  background: #fff;
+  background: var(--sds-g-color-neutral-base-100);
   overflow-y: auto;
   overflow-x: hidden;
-  box-shadow: 0 12px 28px rgba(17, 37, 62, 0.18);
+  box-shadow: var(--sds-g-shadow-2);
 }
 
 .THIS .tabBar {

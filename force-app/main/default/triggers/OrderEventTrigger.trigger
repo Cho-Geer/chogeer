@@ -16,6 +16,10 @@ trigger OrderEventTrigger on Order_Event__e(after insert) {
   }
 
   if (!tasksToCreate.isEmpty()) {
-    insert tasksToCreate;
+    SObjectAccessDecision decision = Security.stripInaccessible(
+      AccessType.CREATABLE,
+      tasksToCreate
+    );
+    insert decision.getRecords();
   }
 }

@@ -49,6 +49,7 @@ global with sharing class ShowcaseContactRestResource {
       SELECT Id, FirstName, LastName, Email, Title, Account.Name
       FROM Contact
       WHERE Id = :contactId
+      WITH SECURITY_ENFORCED
       LIMIT 1
     ];
 

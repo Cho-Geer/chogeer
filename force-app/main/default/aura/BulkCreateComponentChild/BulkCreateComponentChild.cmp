@@ -1,0 +1,107 @@
+<aura:component>
+  <aura:attribute name="contact" type="Map" default="{}"></aura:attribute>
+  <aura:attribute name="options" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="index" type="Integer"></aura:attribute>
+  <aura:attribute name="check" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute
+    name="checkFlag"
+    type="Boolean"
+    default="false"
+  ></aura:attribute>
+  <aura:attribute
+    name="spinnerFlag"
+    type="Boolean"
+    default="false"
+  ></aura:attribute>
+  <c:EventService aura:id="eventService"></c:EventService>
+  <aura:handler name="init" value="{!this}" action="{!c.doInit}"></aura:handler>
+  <aura:handler
+    name="registerCompEvent"
+    event="c:Fw_CompEvent"
+    action="{!c.handleCompEvent}"
+  ></aura:handler>
+  <tr>
+    <td>
+      <lightning:input
+        type="checkbox"
+        aura:id="checkbox"
+        checked="{!v.contact.checked}"
+        onchange="
+          {
+            !c.handleCheck;
+          }
+        "
+      ></lightning:input>
+    </td>
+    <td>
+      <lightning:input
+        type="text"
+        value="{!v.contact.LastName}"
+        name="lastName"
+        label=""
+        required="true"
+      ></lightning:input>
+    </td>
+    <td>
+      <lightning:input
+        type="text"
+        value="{!v.contact.FirstName}"
+        name="firstName"
+        label=""
+        required="true"
+      ></lightning:input>
+    </td>
+    <td>
+      <lightning:input
+        type="text"
+        value="{!v.contact.AccountId}"
+        label=""
+        name="account"
+      ></lightning:input>
+    </td>
+    <td>
+      <lightning:combobox
+        name="select"
+        label=""
+        value="{!v.contact.RecordTypeId}"
+        options="{!v.options}"
+        placeholder="選択..."
+        onchange="
+          {
+            !c.handleChange;
+          }
+        "
+      ></lightning:combobox>
+    </td>
+    <td>
+      <div>
+        <lightning:buttonMenu
+          menuAlignment="right"
+          iconSize="small"
+          variant="container"
+          class="buttonMenu"
+          alternativeText="Show menu"
+          iconName="utility:settings"
+          onselect="
+            {
+              !c.handleButtonSelect;
+            }
+          "
+        >
+          <lightning:menuItem
+            class="buttonMenuItem"
+            value="AddRow"
+            label="Add Row"
+            iconName="utility:add"
+          />
+          <lightning:menuItem
+            class="buttonMenuItem"
+            value="DeleteRow"
+            label="Delete Row"
+            iconName="utility:delete"
+          />
+        </lightning:buttonMenu>
+      </div>
+    </td>
+  </tr>
+</aura:component>
