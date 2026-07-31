@@ -1,1 +1,272 @@
-IyBTYWxlc2ZvcmNlIOW5s+WPsOS4jumbhuaIkOWxleekuumhueebrgoK5pys5LuT5bqT5piv5LiA5Liq57K+5b+D562W5YiS55qEIFNhbGVzZm9yY2UgRFgg5L2c5ZOB6ZuG6aG555uuLOmdouWQkSBgU2VuaW9yIFNhbGVzZm9yY2UgUGxhdGZvcm0gLyBJbnRlZ3JhdGlvbiBFbmdpbmVlcmAg5bKX5L2N44CCCgrpobnnm67liLvmhI/lj6rlsZXnpLrlubPlj7DjgIHpm4bmiJDjgIFVSSDku6Xlj4ogRXhwZXJpZW5jZSBDbG91ZCDpo47moLzorqTor4HmtYHnqIvkuK3lsJHph4/lhbfmnInku6PooajmgKfnmoTlrp7njrAs5Lul5L6/6K+E5a6h6ICF5peg6ZyA57+76ZiF5aSn6YeP5a6e6aqM5oCn5Y6G5Y+y5Luj56CBLOWNs+WPr+W/q+mAn+eQhuino+WFtuS4reiVtOWQq+eahOaKgOacr+S/oeWPt+OAggoK5pys5LuT5bqT5Yi75oSP5YGa5LqG57K+6YCJLOaXqOWcqOWxleekuuWFt+acieS7o+ihqOaAp+eahCBTYWxlc2ZvcmNlIOW5s+WPsOS4jumbhuaIkOaooeW8jyzogIzpnZ7lsZXnpLrmiYDmnInnmoTlrp7pqozmgKfmiJbnu4PkuaDmgKfkuqfnianjgIIKCiMjIOacrOS7k+W6k+WxleekuueahOWGheWuuQoKLSDkvb/nlKggQXBleOOAgVZpc3VhbGZvcmNlIOWSjCBBdXJhIOWunueOsOeahCBFeHBlcmllbmNlIENsb3VkIOmjjuagvOiupOivgea1geeoiwotIOe7k+WQiCBgQFJlc3RSZXNvdXJjZWDjgIFgd2l0aCBzaGFyaW5nYCDlkowgYFNlY3VyaXR5LnN0cmlwSW5hY2Nlc3NpYmxlYCDnmoTlronlhaggQXBleCBSRVNUIOiuvuiuoQotIOWfuuS6jiBIVFRQIENhbGxvdXQg5ZKMIE5hbWVkIENyZWRlbnRpYWwg55qE5Ye656uZ6ZuG5oiQ56uv54K56K6+6K6hCi0g55SxIFBsYXRmb3JtIEV2ZW50IOmpseWKqOeahOWkhOeQhumAu+i+kSzku6Xlj4rlr7nlupTnmoQgQXBleCBUcmlnZ2VyIOa1i+ivlQotIOeUsSBBcGV4IENvbnRyb2xsZXIg5pSv5pKR55qEIExpZ2h0bmluZyBXZWIgQ29tcG9uZW50cyDliJfooajkuI7liJvlu7rmtYHnqIsKLSDopobnm5bkuLvopoHlsZXnpLrlrp7njrDnmoQgQXBleCDljZXlhYPmtYvor5UKCiMjIOa2ieWPiueahCBTYWxlc2ZvcmNlIOaKgOiDvQoKLSBBcGV4IENvbnRyb2xsZXIg5LiOIFNlcnZpY2Ug57G7Ci0gQXBleCDljZXlhYPmtYvor5UKLSBWaXN1YWxmb3JjZQotIEF1cmEgQ29tcG9uZW50cwotIExpZ2h0bmluZyBXZWIgQ29tcG9uZW50cwotIEV4cGVyaWVuY2UgQ2xvdWQg6aOO5qC855qE6K6k6K+B5ZKM6Ieq5Yqp5rOo5YaM5rWB56iLCi0gYEBSZXN0UmVzb3VyY2VgCi0gYHdpdGggc2hhcmluZ2AKLSBgU2VjdXJpdHkuc3RyaXBJbmFjY2Vzc2libGVgCi0gSFRUUCBDYWxsb3V0Ci0g5Z+65LqOIE5hbWVkIENyZWRlbnRpYWwg55qE6ZuG5oiQ6YWN572uCi0gUGxhdGZvcm0gRXZlbnRzCi0g5Z+65LqOIFRyaWdnZXIg55qE5LqL5Lu25aSE55CGCi0g5a+56K+E5a6h5Y+L5aW955qE5LuT5bqT562W5YiS5LiO5p625p6E6K+05piO6IO95YqbCgojIyDku6PooajmgKflrp7njrAKCiMjIyAxLiBFeHBlcmllbmNlIENsb3VkIC8g6K6k6K+B5rWB56iLCgrku6PooajmgKcgQXBleCDmlofku7Y6CgotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvQ29tbXVuaXRpZXNMb2dpbkNvbnRyb2xsZXIuY2xzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvQ29tbXVuaXRpZXNTZWxmUmVnQ29udHJvbGxlci5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9Gb3Jnb3RQYXNzd29yZENvbnRyb2xsZXIuY2xzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvQ2hhbmdlUGFzc3dvcmRDb250cm9sbGVyLmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL015UHJvZmlsZVBhZ2VDb250cm9sbGVyLmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL0xpZ2h0bmluZ0xvZ2luRm9ybUNvbnRyb2xsZXIuY2xzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvTGlnaHRuaW5nU2VsZlJlZ2lzdGVyQ29udHJvbGxlci5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9MaWdodG5pbmdGb3Jnb3RQYXNzd29yZENvbnRyb2xsZXIuY2xzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvU2l0ZUxvZ2luQ29udHJvbGxlci5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9TaXRlUmVnaXN0ZXJDb250cm9sbGVyLmNsc2AKCuS7o+ihqOaAp+a1i+ivleaWh+S7tjoKCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9Db21tdW5pdGllc0xvZ2luQ29udHJvbGxlclRlc3QuY2xzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvQ29tbXVuaXRpZXNTZWxmUmVnQ29udHJvbGxlclRlc3QuY2xzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvRm9yZ290UGFzc3dvcmRDb250cm9sbGVyVGVzdC5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9DaGFuZ2VQYXNzd29yZENvbnRyb2xsZXJUZXN0LmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL015UHJvZmlsZVBhZ2VDb250cm9sbGVyVGVzdC5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9MaWdodG5pbmdMb2dpbkZvcm1Db250cm9sbGVyVGVzdC5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9MaWdodG5pbmdTZWxmUmVnaXN0ZXJDb250cm9sbGVyVGVzdC5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9MaWdodG5pbmdGb3Jnb3RQYXNzd29yZENvbnRyb2xsZXJUZXN0LmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL1NpdGVMb2dpbkNvbnRyb2xsZXJUZXN0LmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL1NpdGVSZWdpc3RlckNvbnRyb2xsZXJUZXN0LmNsc2AKCuS7o+ihqOaApyBWaXN1YWxmb3JjZSDpobXpnaI6CgotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L3BhZ2VzL0NvbW11bml0aWVzTG9naW4ucGFnZWAKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9wYWdlcy9Db21tdW5pdGllc1NlbGZSZWcucGFnZWAKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9wYWdlcy9Gb3Jnb3RQYXNzd29yZC5wYWdlYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L3BhZ2VzL0NoYW5nZVBhc3N3b3JkLnBhZ2VgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvcGFnZXMvTXlQcm9maWxlUGFnZS5wYWdlYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L3BhZ2VzL1NpdGVMb2dpbi5wYWdlYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L3BhZ2VzL1NpdGVSZWdpc3Rlci5wYWdlYAoK5Luj6KGo5oCnIEF1cmEg5paH5Lu2OgoKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9hdXJhL2xvZ2luRm9ybS9sb2dpbkZvcm0uY21wYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2F1cmEvc2VsZlJlZ2lzdGVyL3NlbGZSZWdpc3Rlci5jbXBgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvYXVyYS9mb3Jnb3RQYXNzd29yZC9mb3Jnb3RQYXNzd29yZC5jbXBgCgrov5nkupvnpLrkvovlsZXnpLrkuoY6CgotIOeZu+W9leS4juiHquWKqeazqOWGjOa1geeoi+eahOWkhOeQhgotIOWvhueggemHjee9ruWSjOi1hOaWmee7tOaKpOa1geeoiwotIFZpc3VhbGZvcmNl44CBQXVyYSDkuI4gQXBleCDkuYvpl7TnmoQgVUkg5LiOIENvbnRyb2xsZXIg5Y2P5L2cCi0g5Zyo6Z2i6K+V5Lit5a655piT6K6y5riF5qWa55qEIEV4cGVyaWVuY2UgQ2xvdWQg6aOO5qC85YWl5Y+jCgojIyMgMi4g5a6J5YWo55qEIFJFU1Qg56uv54K5Cgrku6PooajmgKfmlofku7Y6CgotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvU2hvd2Nhc2VDb250YWN0UmVzdFJlc291cmNlLmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL1Nob3djYXNlQ29udGFjdFJlc3RSZXNvdXJjZVRlc3QuY2xzYAoK5pys56S65L6L5bGV56S65LqGOgoKLSBgQFJlc3RSZXNvdXJjZWAKLSBgd2l0aCBzaGFyaW5nYAotIGBTZWN1cml0eS5zdHJpcEluYWNjZXNzaWJsZWAKLSDor7fmsYLmoKHpqozkuI7lk43lupTmlbTlvaIKLSDlr7nor4TlrqHlj4vlpb3nmoTlronlhajmlbDmja7mmrTpnLLmqKHlvI8KCiMjIyAzLiDlh7rnq5npm4bmiJAgLyBIVFRQIENhbGxvdXQKCuS7o+ihqOaAp+aWh+S7tjoKCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9TaG93Y2FzZUNvbnRhY3RTeW5jU2VydmljZS5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9TaG93Y2FzZUNvbnRhY3RTeW5jU2VydmljZVRlc3QuY2xzYAoK5pys56S65L6L5bGV56S65LqGOgoKLSDlh7rnq5kgSFRUUCBDYWxsb3V0Ci0g5Z+65LqOIE5hbWVkIENyZWRlbnRpYWwg55qE56uv54K56YWN572uCi0g57G75Z6L5YyW55qE6K+35rGC5LiO5ZON5bqU5YyF6KOF57G7Ci0g5Z+65LqOIE1vY2sg55qEIENhbGxvdXQg5rWL6K+VCi0g6Z2i5ZCR6ZuG5oiQ55qEIEFwZXggU2VydmljZSDorr7orqEKCiMjIyA0LiBQbGF0Zm9ybSBFdmVudCDkuI7ln7rkuo4gVHJpZ2dlciDnmoTlpITnkIYKCuS7o+ihqOaAp+aWh+S7tjoKCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvdHJpZ2dlcnMvT3JkZXJFdmVudFRyaWdnZXIudHJpZ2dlcmAKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL09yZGVyRXZlbnRUcmlnZ2VyVGVzdC5jbHNgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvb2JqZWN0cy9PcmRlcl9FdmVudF9fZS9PcmRlcl9FdmVudF9fZS5vYmplY3QtbWV0YS54bWxgCgrmnKznpLrkvovlsZXnpLrkuoY6CgotIFBsYXRmb3JtIEV2ZW50IOeahOWumuS5iQotIOWfuuS6jiBUcmlnZ2VyIOeahOS6i+S7tuWkhOeQhgotIOS6i+S7tumpseWKqOeahOWQjue7reiHquWKqOWMlgotIOS9v+eUqCBgRXZlbnRCdXMucHVibGlzaGAg6L+b6KGM5rWL6K+VCgojIyMgNS4gTFdDICsgQXBleCDljY/kvZwKCuS7o+ihqOaAp+aWh+S7tjoKCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9TaG93Y2FzZUNvbnRhY3RDb250cm9sbGVyLmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL1Nob3djYXNlQ29udGFjdENvbnRyb2xsZXJUZXN0LmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9sd2Mvc2hvd2Nhc2VDb250YWN0TGlzdC9zaG93Y2FzZUNvbnRhY3RMaXN0LmpzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2x3Yy9zaG93Y2FzZUNvbnRhY3RDcmVhdGUvc2hvd2Nhc2VDb250YWN0Q3JlYXRlLmpzYAoK5pys56S65L6L5bGV56S65LqGOgoKLSDnlLEgQXBleCDmlK/mkpHnmoTogZTns7vkurrliJfooajmn6Xor6IKLSDnlLEgQXBleCDmlK/mkpHnmoTogZTns7vkurrliJvlu7oKLSBMV0Mg5LiOIEFwZXgg55qE5a6i5oi356uvL+acjeWKoeWZqOWNj+S9nAotIOWcqOS9nOWTgembhuivhOWuoeWSjOmdouivleS4reaYk+S6juiuqOiuuueahOeugOa0gSBVSSDmqKHlvI8KCiMjIyA2LiDkvZzkuLrovoXliqnotYTmlpnkv53nlZnnmoTlhbbku5blubPlj7DnpLrkvosKCuS7o+ihqOaAp+aWh+S7tjoKCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvY2xhc3Nlcy9BcGV4U2VjdXJpdHlSZXN0LmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL0FwZXhTZWN1cml0eVJlc3RUZXN0LmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL0FjY291bnRfYmF0Y2hhYmxlLmNsc2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL1Rlc3RfYWNjb3VudF9iYXRjaGFibGUuY2xzYAotIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2Zsb3dzL05ld19Db250YWN0LmZsb3ctbWV0YS54bWxgCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvZmxvd3MvQ2xvdWRfbmV3X3Byb2Nlc3MuZmxvdy1tZXRhLnhtbGAKCui/meS6m+aWh+S7tuS7jeeEtuaYr+acieeUqOeahOi+heWKqei1hOaWmSzkvYbkuI3mmK/mnKzku5PlupPnmoTkuLvopoHor4TlrqHot6/lvoTjgIIKCiMjIOS7k+W6k+e7k+aehAoK5Li76KaB6K+E5a6h5a+56LGhOgoKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9wYWdlcy9gCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvYXVyYS9gCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvbHdjL2AKLSBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC90cmlnZ2Vycy9gCi0gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvb2JqZWN0cy9gCgrovoXliqnpobnnm67mlofku7Y6CgotIGBzZmR4LXByb2plY3QuanNvbmAKLSBgcGFja2FnZS5qc29uYAotIGBqZXN0LmNvbmZpZy5qc2AKLSBgcGxheXdyaWdodC5jb25maWcuanNgCgojIyDmnrbmnoTor7TmmI4KCuacrOS7k+W6k+mBteW+quS4gOS4queugOWNleeahOS9nOWTgembhuWOn+WImToKCi0g6K6p6K+E5a6h6Z2i5L+d5oyB5bCP5benCi0g6K6p5LuT5bqT5Li76aKY5L+d5oyB5riF5pmwCi0g5bGV56S65YW35pyJ5Luj6KGo5oCn55qE5bmz5Y+w5LiO6ZuG5oiQ5qih5byPCi0g5L+d55WZ5pyA5by655qEIEV4cGVyaWVuY2UgQ2xvdWQg56S65L6LCi0g6YG/5YWN5oqK5LuT5bqT5Y+Y5oiQ5omA5pyJ5Y6G5Y+y5qC35pys55qE5aCG5pS+5ZywCgrlrp7pmYXmnaXnnIss5pys5LuT5bqT55qE5qC45b+D5Y+Z5LqL5pivOgoKMS4gYGNob2dlZXJgIOS4reW3sue7j+WtmOWcqOeahCBFeHBlcmllbmNlIENsb3VkIC8g6K6k6K+B5rWB56iLCjIuIOS4uuaJqeWxleimhueblumdouiAjOeyvumAieWKoOWFpeeahOS4gOe7hOW5s+WPsOS4jumbhuaIkOekuuS+iwozLiDkuIDlpZfmnInmhI/nmoTor4TlrqHpobrluo8s6K6p5oub6IGY5pa55Y+v5Lul5b+r6YCf55CG6Kej5oqA5pyv5L+h5Y+3CgojIyDlpoLkvZXor4TlrqHmnKzku5PlupMKCuW7uuiurueahOivhOWuoemhuuW6jzoKCjEuIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvQ29tbXVuaXRpZXNMb2dpbkNvbnRyb2xsZXIuY2xzYAoyLiBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL0NvbW11bml0aWVzU2VsZlJlZ0NvbnRyb2xsZXIuY2xzYAozLiBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL015UHJvZmlsZVBhZ2VDb250cm9sbGVyLmNsc2AKNC4gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvcGFnZXMvQ29tbXVuaXRpZXNMb2dpbi5wYWdlYAo1LiBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9hdXJhL2xvZ2luRm9ybS9sb2dpbkZvcm0uY21wYAo2LiBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL1Nob3djYXNlQ29udGFjdFJlc3RSZXNvdXJjZS5jbHNgCjcuIGBmb3JjZS1hcHAvbWFpbi9kZWZhdWx0L2NsYXNzZXMvU2hvd2Nhc2VDb250YWN0U3luY1NlcnZpY2UuY2xzYAo4LiBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC90cmlnZ2Vycy9PcmRlckV2ZW50VHJpZ2dlci50cmlnZ2VyYAo5LiBgZm9yY2UtYXBwL21haW4vZGVmYXVsdC9jbGFzc2VzL1Nob3djYXNlQ29udGFjdENvbnRyb2xsZXIuY2xzYAoxMC4gYGZvcmNlLWFwcC9tYWluL2RlZmF1bHQvbHdjL3Nob3djYXNlQ29udGFjdExpc3Qvc2hvd2Nhc2VDb250YWN0TGlzdC5qc2AKCiMjIOacrOWcsOW8gOWPkQoK5a6J6KOF5L6d6LWWOgoKYGBgYmFzaApucG0gaW5zdGFsbApgYGAKCueZu+W9lSBTYWxlc2ZvcmNlIE9yZzoKCmBgYGJhc2gKc2Ygb3JnIGxvZ2luIHdlYiAtLWFsaWFzIDx5b3VyLW9yZy1hbGlhcz4KYGBgCgrpg6jnvbLmupDnoIE6CgpgYGBiYXNoCnNmIHByb2plY3QgZGVwbG95IHN0YXJ0IC0tdGFyZ2V0LW9yZyA8eW91ci1vcmctYWxpYXM+CmBgYAoK6L+Q6KGMIEFwZXgg5rWL6K+VOgoKYGBgYmFzaApzZiBhcGV4IHJ1biB0ZXN0IC0tdGFyZ2V0LW9yZyA8eW91ci1vcmctYWxpYXM+IC0tdGVzdC1sZXZlbCBSdW5Mb2NhbFRlc3RzCmBgYAoK6L+Q6KGMIExXQyDljZXlhYPmtYvor5U6CgpgYGBiYXNoCm5wbSBydW4gdGVzdDp1bml0CmBgYAoK6L+Q6KGMIFBsYXl3cmlnaHQgRTJFIOa1i+ivlToKCmBgYGJhc2gKbnBtIHJ1biB0ZXN0OmUyZQpgYGAKCk5hbWVkIENyZWRlbnRpYWwg55u45YWz6K+05piOOgoKLSDlh7rnq5kgQ2FsbG91dCDnpLrkvovmnJ/mnJvlrZjlnKjkuIDkuKrlkI3kuLogYEN1c3RvbWVyUHJvZmlsZVNlcnZpY2VgIOeahCBOYW1lZCBDcmVkZW50aWFs44CCCgojIyDlpIfms6gKCi0g5pys5LuT5bqT5a6a5L2N5Li6IueyvumAieWxleekuiIs6ICM6Z2eIFNhbGVzZm9yY2Ug5omA5pyJ5a6e6aqM5qC35pys55qE5a6M5pW05b2S5qGj44CCCi0g5LuT5bqT5Lit5LuN5L+d55WZ5LiA5Lqb6YGX55WZ55qE5oiW57uD5Lmg5oCn6LSo55qE5paH5Lu2LOS9huS4iui/sOWQhOiKguWumuS5ieS6huacn+acm+eahOivhOWuoei3r+W+hOOAggotIOWcqCBTYWxlc2ZvcmNlIOS5i+Wklizmm7Tlub/kuYnnmoTlhajmoIjog73lipvnmoTor4Hmja4s5Y+v5Y+C6ICD54us56uL55qE6aKE57qm57O757uf5LuT5bqT44CCCgojIyDkvZzogIUKClppeGkgVGFvCgojIyDnm67moIflspfkvY0KClNlbmlvciBTYWxlc2ZvcmNlIFBsYXRmb3JtIC8gSW50ZWdyYXRpb24gRW5naW5lZXIKCi0tLQoKIyMg8J+Hr/Cfh7Ug5pel5pys6KqeIHwg8J+HrPCfh6cgRW5nbGlzaAoKLSBb5pel5pys6Kqe54mIXSguL1JFQURNRS5tZCkKLSBbRW5nbGlzaCB2ZXJzaW9uXSguL1JFQURNRS5lbi5tZCkK
+# Salesforce 平台与集成展示项目
+
+本仓库是一个精心策划的 Salesforce DX 作品集项目,面向 `Senior Salesforce Platform / Integration Engineer` 岗位。
+
+项目刻意只展示平台、集成、UI 以及 Experience Cloud 风格认证流程中少量具有代表性的实现,以便评审者无需翻阅大量实验性历史代码,即可快速理解其中蕴含的技术信号。
+
+本仓库刻意做了精选,旨在展示具有代表性的 Salesforce 平台与集成模式,而非展示所有的实验性或练习性产物。
+
+## 本仓库展示的内容
+
+- 使用 Apex、Visualforce 和 Aura 实现的 Experience Cloud 风格认证流程
+- 结合 `@RestResource`、`with sharing` 和 `Security.stripInaccessible` 的安全 Apex REST 设计
+- 基于 HTTP Callout 和 Named Credential 的出站集成端点设计
+- 由 Platform Event 驱动的处理逻辑,以及对应的 Apex Trigger 测试
+- 由 Apex Controller 支撑的 Lightning Web Components 列表与创建流程
+- 覆盖主要展示实现的 Apex 单元测试
+
+## 涉及的 Salesforce 技能
+
+- Apex Controller 与 Service 类
+- Apex 单元测试
+- Visualforce
+- Aura Components
+- Lightning Web Components
+- Experience Cloud 风格的认证和自助注册流程
+- `@RestResource`
+- `with sharing`
+- `Security.stripInaccessible`
+- HTTP Callout
+- 基于 Named Credential 的集成配置
+- Platform Events
+- 基于 Trigger 的事件处理
+- 对评审友好的仓库策划与架构说明能力
+
+## 代表性实现
+
+### 1. Experience Cloud / 认证流程
+
+代表性 Apex 文件:
+
+- `force-app/main/default/classes/CommunitiesLoginController.cls`
+- `force-app/main/default/classes/CommunitiesSelfRegController.cls`
+- `force-app/main/default/classes/ForgotPasswordController.cls`
+- `force-app/main/default/classes/ChangePasswordController.cls`
+- `force-app/main/default/classes/MyProfilePageController.cls`
+- `force-app/main/default/classes/LightningLoginFormController.cls`
+- `force-app/main/default/classes/LightningSelfRegisterController.cls`
+- `force-app/main/default/classes/LightningForgotPasswordController.cls`
+- `force-app/main/default/classes/SiteLoginController.cls`
+- `force-app/main/default/classes/SiteRegisterController.cls`
+
+代表性测试文件:
+
+- `force-app/main/default/classes/CommunitiesLoginControllerTest.cls`
+- `force-app/main/default/classes/CommunitiesSelfRegControllerTest.cls`
+- `force-app/main/default/classes/ForgotPasswordControllerTest.cls`
+- `force-app/main/default/classes/ChangePasswordControllerTest.cls`
+- `force-app/main/default/classes/MyProfilePageControllerTest.cls`
+- `force-app/main/default/classes/LightningLoginFormControllerTest.cls`
+- `force-app/main/default/classes/LightningSelfRegisterControllerTest.cls`
+- `force-app/main/default/classes/LightningForgotPasswordControllerTest.cls`
+- `force-app/main/default/classes/SiteLoginControllerTest.cls`
+- `force-app/main/default/classes/SiteRegisterControllerTest.cls`
+
+代表性 Visualforce 页面:
+
+- `force-app/main/default/pages/CommunitiesLogin.page`
+- `force-app/main/default/pages/CommunitiesSelfReg.page`
+- `force-app/main/default/pages/ForgotPassword.page`
+- `force-app/main/default/pages/ChangePassword.page`
+- `force-app/main/default/pages/MyProfilePage.page`
+- `force-app/main/default/pages/SiteLogin.page`
+- `force-app/main/default/pages/SiteRegister.page`
+
+代表性 Aura 文件:
+
+- `force-app/main/default/aura/loginForm/loginForm.cmp`
+- `force-app/main/default/aura/selfRegister/selfRegister.cmp`
+- `force-app/main/default/aura/forgotPassword/forgotPassword.cmp`
+
+这些示例展示了:
+
+- 登录与自助注册流程的处理
+- 密码重置和资料维护流程
+- Visualforce、Aura 与 Apex 之间的 UI 与 Controller 协作
+- 在面试中容易讲清楚的 Experience Cloud 风格入口
+
+### 2. 安全的 REST 端点
+
+代表性文件:
+
+- `force-app/main/default/classes/ShowcaseContactRestResource.cls`
+- `force-app/main/default/classes/ShowcaseContactRestResourceTest.cls`
+
+本示例展示了:
+
+- `@RestResource`
+- `with sharing`
+- `Security.stripInaccessible`
+- 请求校验与响应整形
+- 对评审友好的安全数据暴露模式
+
+### 3. 出站集成 / HTTP Callout
+
+代表性文件:
+
+- `force-app/main/default/classes/ShowcaseContactSyncService.cls`
+- `force-app/main/default/classes/ShowcaseContactSyncServiceTest.cls`
+
+本示例展示了:
+
+- 出站 HTTP Callout
+- 基于 Named Credential 的端点配置
+- 类型化的请求与响应包装类
+- 基于 Mock 的 Callout 测试
+- 面向集成的 Apex Service 设计
+
+### 4. Platform Event 与基于 Trigger 的处理
+
+代表性文件:
+
+- `force-app/main/default/triggers/OrderEventTrigger.trigger`
+- `force-app/main/default/classes/OrderEventTriggerTest.cls`
+- `force-app/main/default/objects/Order_Event__e/Order_Event__e.object-meta.xml`
+
+本示例展示了:
+
+- Platform Event 的定义
+- 基于 Trigger 的事件处理
+- 事件驱动的后续自动化
+- 使用 `EventBus.publish` 进行测试
+
+### 5. LWC + Apex 协作
+
+代表性文件:
+
+- `force-app/main/default/classes/ShowcaseContactController.cls`
+- `force-app/main/default/classes/ShowcaseContactControllerTest.cls`
+- `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
+- `force-app/main/default/lwc/showcaseContactCreate/showcaseContactCreate.js`
+
+本示例展示了:
+
+- 由 Apex 支撑的联系人列表查询
+- 由 Apex 支撑的联系人创建
+- LWC 与 Apex 的客户端/服务器协作
+- 在作品集评审和面试中易于讨论的简洁 UI 模式
+
+### 6. 作为辅助资料保留的其他平台示例
+
+代表性文件:
+
+- `force-app/main/default/classes/ApexSecurityRest.cls`
+- `force-app/main/default/classes/ApexSecurityRestTest.cls`
+- `force-app/main/default/classes/Account_batchable.cls`
+- `force-app/main/default/classes/Test_account_batchable.cls`
+- `force-app/main/default/flows/New_Contact.flow-meta.xml`
+- `force-app/main/default/flows/Cloud_new_process.flow-meta.xml`
+
+这些文件仍然是有用的辅助资料,但不是本仓库的主要评审路径。
+
+## 仓库结构
+
+主要评审对象:
+
+- `force-app/main/default/classes/`
+- `force-app/main/default/pages/`
+- `force-app/main/default/aura/`
+- `force-app/main/default/lwc/`
+- `force-app/main/default/triggers/`
+- `force-app/main/default/objects/`
+
+辅助项目文件:
+
+- `sfdx-project.json`
+- `package.json`
+- `jest.config.js`
+- `playwright.config.js`
+
+## 架构说明
+
+本仓库遵循一个简单的作品集原则:
+
+- 让评审面保持小巧
+- 让仓库主题保持清晰
+- 展示具有代表性的平台与集成模式
+- 保留最强的 Experience Cloud 示例
+- 避免把仓库变成所有历史样本的堆放地
+
+实际来看,本仓库的核心叙事是:
+
+1. `chogeer` 中已经存在的 Experience Cloud / 认证流程
+2. 为扩展覆盖面而精选加入的一组平台与集成示例
+3. 一套有意的评审顺序,让招聘方可以快速理解技术信号
+
+## 如何评审本仓库
+
+建议的评审顺序:
+
+1. `force-app/main/default/classes/CommunitiesLoginController.cls`
+2. `force-app/main/default/classes/CommunitiesSelfRegController.cls`
+3. `force-app/main/default/classes/MyProfilePageController.cls`
+4. `force-app/main/default/pages/CommunitiesLogin.page`
+5. `force-app/main/default/aura/loginForm/loginForm.cmp`
+6. `force-app/main/default/classes/ShowcaseContactRestResource.cls`
+7. `force-app/main/default/classes/ShowcaseContactSyncService.cls`
+8. `force-app/main/default/triggers/OrderEventTrigger.trigger`
+9. `force-app/main/default/classes/ShowcaseContactController.cls`
+10. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
+
+## 本地开发
+
+安装依赖:
+
+```bash
+npm install
+```
+
+登录 Salesforce Org:
+
+```bash
+sf org login web --alias <your-org-alias>
+```
+
+部署源码:
+
+```bash
+sf project deploy start --target-org <your-org-alias>
+```
+
+运行 Apex 测试:
+
+```bash
+sf apex run test --target-org <your-org-alias> --test-level RunLocalTests
+```
+
+运行 LWC 单元测试:
+
+```bash
+npm run test:unit
+```
+
+运行 Playwright E2E 测试:
+
+```bash
+npm run test:e2e
+```
+
+Named Credential 相关说明:
+
+- 出站 Callout 示例期望存在一个名为 `CustomerProfileService` 的 Named Credential。
+
+## 备注
+
+- 本仓库定位为"精选展示",而非 Salesforce 所有实验样本的完整归档。
+- 仓库中仍保留一些遗留的或练习性质的文件,但上述各节定义了期望的评审路径。
+- 在 Salesforce 之外,更广义的全栈能力的证据,可参考独立的预约系统仓库。
+
+## 作者
+
+Zixi Tao
+
+## 目标岗位
+
+Senior Salesforce Platform / Integration Engineer
+
+---
+
+## 🇯🇵 日本語 | 🇬🇧 English
+
+- [日本語版](./README.md)
+- [English version](./README.en.md)
