@@ -1,42 +1,42 @@
-# Salesforce Platform and Integration Showcase
+# Salesforce プラットフォーム & インテグレーション ショーケース
 
-This repository is a curated Salesforce DX portfolio project aimed at a `Senior Salesforce Platform / Integration Engineer` role.
+このリポジトリは、`Senior Salesforce Platform / Integration Engineer` 職位を想定して厳選した Salesforce DX のポートフォリオプロジェクトです。
 
-It is intentionally designed to show a small number of representative implementations across platform, integration, UI, and Experience Cloud style authentication flows, so reviewers can understand the technical signal quickly without digging through a large archive of experiments.
+プラットフォーム、インテグレーション、UI、そして Experience Cloud スタイルの認証フローについて、代表的な実装を少数だけ厳選して提示することを目的としています。レビュー担当者が実験成果物の巨大なアーカイブを掘り起こすことなく、技術的なシグナルを迅速に理解できるように設計されています。
 
-This repository is intentionally curated to showcase representative Salesforce platform and integration patterns, rather than every experimental or training artifact.
+このリポジトリは、あらゆる実験的・学習的な成果物を見せるのではなく、代表的な Salesforce プラットフォームとインテグレーションのパターンを示すものとして、意図的に厳選されています。
 
-## What This Repository Demonstrates
+## このリポジトリで示していること
 
-- Experience Cloud style authentication flows using Apex, Visualforce, and Aura
-- Secure Apex REST design with `@RestResource`, `with sharing`, and `Security.stripInaccessible`
-- Outbound integration with HTTP callouts and Named Credential based endpoint design
-- Platform Event driven processing with Apex trigger tests
-- Lightning Web Components backed by Apex controllers for list and create flows
-- Apex unit tests covering the main showcase implementations
+- Apex、Visualforce、Aura を用いた Experience Cloud スタイルの認証フロー
+- `@RestResource`、`with sharing`、`Security.stripInaccessible` による安全な Apex REST 設計
+- HTTP Callout と Named Credential ベースのエンドポイント設計による外部連携
+- Platform Event 駆動の処理と Apex トリガのテスト
+- Apex コントローラーをバックエンドとする Lightning Web Components による一覧・作成フロー
+- 主なショーケース実装をカバーする Apex ユニットテスト
 
-## Salesforce Skills Covered
+## カバーしている Salesforce のスキル
 
-- Apex controllers and service classes
-- Apex unit testing
+- Apex コントローラーとサービスクラス
+- Apex ユニットテスト
 - Visualforce
 - Aura Components
 - Lightning Web Components
-- Experience Cloud style authentication and self-registration flows
+- Experience Cloud スタイルの認証およびセルフ登録フロー
 - `@RestResource`
 - `with sharing`
 - `Security.stripInaccessible`
-- HTTP callouts
-- Named Credential based integration configuration
+- HTTP Callout
+- Named Credential ベースのインテグレーション設定
 - Platform Events
-- trigger-based event processing
-- reviewer-friendly repository curation and architecture explanation
+- トリガベースのイベント処理
+- レビュアーフレンドリーなリポジトリのキュレーションとアーキテクチャ説明
 
-## Representative Implementations
+## 代表的な実装
 
-### 1. Experience Cloud / Authentication Flows
+### 1. Experience Cloud / 認証フロー
 
-Representative Apex files:
+代表的な Apex ファイル:
 
 - `force-app/main/default/classes/CommunitiesLoginController.cls`
 - `force-app/main/default/classes/CommunitiesSelfRegController.cls`
@@ -49,7 +49,7 @@ Representative Apex files:
 - `force-app/main/default/classes/SiteLoginController.cls`
 - `force-app/main/default/classes/SiteRegisterController.cls`
 
-Representative test files:
+代表的なテストファイル:
 
 - `force-app/main/default/classes/CommunitiesLoginControllerTest.cls`
 - `force-app/main/default/classes/CommunitiesSelfRegControllerTest.cls`
@@ -62,7 +62,7 @@ Representative test files:
 - `force-app/main/default/classes/SiteLoginControllerTest.cls`
 - `force-app/main/default/classes/SiteRegisterControllerTest.cls`
 
-Representative Visualforce pages:
+代表的な Visualforce ページ:
 
 - `force-app/main/default/pages/CommunitiesLogin.page`
 - `force-app/main/default/pages/CommunitiesSelfReg.page`
@@ -72,83 +72,83 @@ Representative Visualforce pages:
 - `force-app/main/default/pages/SiteLogin.page`
 - `force-app/main/default/pages/SiteRegister.page`
 
-Representative Aura files:
+代表的な Aura ファイル:
 
 - `force-app/main/default/aura/loginForm/loginForm.cmp`
 - `force-app/main/default/aura/selfRegister/selfRegister.cmp`
 - `force-app/main/default/aura/forgotPassword/forgotPassword.cmp`
 
-These examples demonstrate:
+これらの例は次のことを示しています:
 
-- login and self-registration flow handling
-- password reset and profile maintenance flows
-- UI-to-controller coordination across Visualforce, Aura, and Apex
-- Experience Cloud oriented entry points that are easy to explain in interviews
+- ログインおよびセルフ登録フローのハンドリング
+- パスワードリセットとプロフィール管理フロー
+- Visualforce、Aura、Apex をまたぐ UI とコントローラーの連携
+- 面接で説明しやすい Experience Cloud 志向のエントリーポイント
 
-### 2. Secure REST Endpoint
+### 2. 安全な REST エンドポイント
 
-Representative files:
+代表的なファイル:
 
 - `force-app/main/default/classes/ShowcaseContactRestResource.cls`
 - `force-app/main/default/classes/ShowcaseContactRestResourceTest.cls`
 
-This example demonstrates:
+この例は次のことを示しています:
 
 - `@RestResource`
 - `with sharing`
 - `Security.stripInaccessible`
-- request validation and response shaping
-- reviewer-friendly secure data exposure patterns
+- リクエストバリデーションとレスポンス整形
+- レビュアーフレンドリーな安全なデータ公開パターン
 
-### 3. Outbound Integration / HTTP Callout
+### 3. 外部連携 / HTTP Callout
 
-Representative files:
+代表的なファイル:
 
 - `force-app/main/default/classes/ShowcaseContactSyncService.cls`
 - `force-app/main/default/classes/ShowcaseContactSyncServiceTest.cls`
 
-This example demonstrates:
+この例は次のことを示しています:
 
-- outbound HTTP callout
-- Named Credential based endpoint configuration
-- typed request and response wrappers
-- mock-based callout testing
-- integration-oriented Apex service design
+- 外部への HTTP Callout
+- Named Credential ベースのエンドポイント設定
+- 型付けされたリクエスト/レスポンスのラッパー
+- モックベースの Callout テスト
+- インテグレーション志向の Apex サービス設計
 
-### 4. Platform Event and Trigger-Based Processing
+### 4. Platform Event とトリガベースの処理
 
-Representative files:
+代表的なファイル:
 
 - `force-app/main/default/triggers/OrderEventTrigger.trigger`
 - `force-app/main/default/classes/OrderEventTriggerTest.cls`
 - `force-app/main/default/objects/Order_Event__e/Order_Event__e.object-meta.xml`
 
-This example demonstrates:
+この例は次のことを示しています:
 
-- Platform Event definition
-- trigger-based event processing
-- event-driven follow-up automation
-- testing with `EventBus.publish`
+- Platform Event の定義
+- トリガベースのイベント処理
+- イベント駆動の後続自動化
+- `EventBus.publish` によるテスト
 
-### 5. LWC + Apex Coordination
+### 5. LWC + Apex の連携
 
-Representative files:
+代表的なファイル:
 
 - `force-app/main/default/classes/ShowcaseContactController.cls`
 - `force-app/main/default/classes/ShowcaseContactControllerTest.cls`
 - `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
 - `force-app/main/default/lwc/showcaseContactCreate/showcaseContactCreate.js`
 
-This example demonstrates:
+この例は次のことを示しています:
 
-- Apex-backed contact list retrieval
-- Apex-backed contact creation
-- client/server coordination between LWC and Apex
-- a simple UI pattern that is easy to discuss in portfolio review and interviews
+- Apex をバックエンドとする連絡先の一覧取得
+- Apex をバックエンドとする連絡先の作成
+- LWC と Apex のクライアント/サーバー連携
+- ポートフォリオレビューや面接で簡単に説明できるシンプルな UI パターン
 
-### 6. Additional Platform Samples Kept As Supporting Material
+### 6. 補助資料として残している追加のプラットフォームサンプル
 
-Representative files:
+代表的なファイル:
 
 - `force-app/main/default/classes/ApexSecurityRest.cls`
 - `force-app/main/default/classes/ApexSecurityRestTest.cls`
@@ -157,11 +157,11 @@ Representative files:
 - `force-app/main/default/flows/New_Contact.flow-meta.xml`
 - `force-app/main/default/flows/Cloud_new_process.flow-meta.xml`
 
-These files remain useful as supporting material, but they are not the primary review path for this repository.
+これらのファイルは補助資料として有用ですが、本リポジトリの主なレビューパスではありません。
 
-## Repository Structure
+## リポジトリ構成
 
-Primary review surface:
+主たるレビュー対象:
 
 - `force-app/main/default/classes/`
 - `force-app/main/default/pages/`
@@ -170,32 +170,32 @@ Primary review surface:
 - `force-app/main/default/triggers/`
 - `force-app/main/default/objects/`
 
-Supporting project files:
+補助的なプロジェクトファイル:
 
 - `sfdx-project.json`
 - `package.json`
 - `jest.config.js`
 - `playwright.config.js`
 
-## Architecture Notes
+## アーキテクチャノート
 
-This repository follows a simple portfolio principle:
+このリポジトリは、シンプルなポートフォリオ原則に従っています:
 
-- keep the review surface small
-- keep the repository theme clear
-- show representative platform and integration patterns
-- preserve the strongest existing Experience Cloud examples
-- avoid turning the repo into a dump of every historical sample
+- レビュー対象を小さく保つ
+- リポジトリのテーマを明確にする
+- プラットフォームとインテグレーションの代表的なパターンを示す
+- 既存の Experience Cloud の最良の例を保持する
+- 過去のあらゆるサンプルを寄せ集めた"捨て場"にしない
 
-In practice, that means the core story of this repository is:
+実際のところ、本リポジトリの中核となるストーリーは次のとおりです:
 
-1. Experience Cloud / authentication flows already present in `chogeer`
-2. a curated set of platform and integration examples added to improve breadth
-3. a deliberate review order so hiring teams can understand the signal quickly
+1. `chogeer` 内にすでに存在する Experience Cloud / 認証フロー
+2. 幅を広げるために厳選して追加された、プラットフォームとインテグレーションの一連のサンプル
+3. 採用チームがシグナルを迅速に理解できるように設計された、意図的なレビュー順
 
-## How To Review This Repository
+## このリポジトリのレビュー方法
 
-Suggested review order:
+推奨されるレビュー順:
 
 1. `force-app/main/default/classes/CommunitiesLoginController.cls`
 2. `force-app/main/default/classes/CommunitiesSelfRegController.cls`
@@ -208,58 +208,65 @@ Suggested review order:
 9. `force-app/main/default/classes/ShowcaseContactController.cls`
 10. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
 
-## Local Development
+## ローカル開発
 
-Install dependencies:
+依存パッケージをインストールします:
 
 ```bash
 npm install
 ```
 
-Authenticate to a Salesforce org:
+Salesforce Org への認証:
 
 ```bash
 sf org login web --alias <your-org-alias>
 ```
 
-Deploy source:
+ソースのデプロイ:
 
 ```bash
 sf project deploy start --target-org <your-org-alias>
 ```
 
-Run Apex tests:
+Apex テストの実行:
 
 ```bash
 sf apex run test --target-org <your-org-alias> --test-level RunLocalTests
 ```
 
-Run LWC unit tests:
+LWC ユニットテストの実行:
 
 ```bash
 npm run test:unit
 ```
 
-Run Playwright E2E tests:
+Playwright E2E テストの実行:
 
 ```bash
 npm run test:e2e
 ```
 
-Named Credential note:
+Named Credential に関する注意:
 
-- The outbound callout example expects a Named Credential called `CustomerProfileService`.
+- 外部 Callout の例では、`CustomerProfileService` という Named Credential が必要です。
 
-## Notes
+## 注記
 
-- This repository is positioned as a curated showcase, not a complete archive of all Salesforce experiments.
-- Some additional legacy or practice-oriented files remain in the repo, but the sections above define the intended review path.
-- For broader full-stack evidence outside Salesforce, the separate booking system repositories are the stronger reference point.
+- このリポジトリは、すべての Salesforce 実験を網羅したアーカイブではなく、厳選されたショーケースとして位置付けられています。
+- レガシーや練習目的の追加ファイルも一部リポジトリ内に残っていますが、上記のセクションが意図されたレビューパスを定義します。
+- Salesforce 以外の、より広範なフルスタックの証跡としては、別の予約システムのリポジトリ群がより有力な参照ポイントです。
 
-## Author
+## 作者
 
 Zixi Tao
 
-## Target Role
+## 想定役割
 
 Senior Salesforce Platform / Integration Engineer
+
+---
+
+## 🇬🇧 English | 🇨🇳 中文
+
+- [English version](./README.en.md)
+- [中文版本](./README.zh.md)
