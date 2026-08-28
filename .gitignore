@@ -67,3 +67,7 @@ docs/*
 scripts/
 code_analyzation/
 force-app/main/default/staticresources
+
+# Local tool artifacts
+.mimosa/
+.video_agent/
