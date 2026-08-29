@@ -1,0 +1,178 @@
+.THIS .cardHeader {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.THIS .divTable,
+.THIS .divTable_relative {
+  width: 100%;
+}
+
+.THIS.tzxCard.account-context {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 50vh;
+}
+
+.THIS.tzxCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.THIS.tzxCard.account-context .bulk-table-section {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 50vh;
+}
+
+.THIS.tzxCard.account-context .divTable,
+.THIS.tzxCard.account-context .divTable_relative,
+.THIS.tzxCard.account-context .divTable_static {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.THIS.tzxCard.account-context .divTable_static {
+  max-height: none;
+  overflow-y: auto;
+}
+
+.THIS.tzxCard.account-context .flex-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.THIS.tzxCard.account-context .flex-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.THIS.tzxCard.app-page-context {
+  height: 100vh;
+  min-height: 100vh;
+}
+
+.THIS.tzxCard.app-page-context .bulk-table-section {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.THIS.tzxCard.app-page-context .divTable,
+.THIS.tzxCard.app-page-context .divTable_relative,
+.THIS.tzxCard.app-page-context .divTable_static {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.THIS.tzxCard.app-page-context .divTable_static {
+  max-height: none;
+  overflow-y: auto;
+}
+
+.THIS.tzxCard.app-page-context .flex-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.THIS.tzxCard.app-page-context .flex-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.THIS .divTable_static {
+  height: auto;
+  max-height: 50vh;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.THIS .flex-table {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid #dddbda;
+  border-bottom: 0;
+}
+
+.THIS .flex-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.THIS .flex-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  align-items: center;
+  min-height: 2.25rem;
+  background: #f3f2f2;
+  border-bottom: 1px solid #dddbda;
+  font-weight: 700;
+}
+
+.THIS .flex-header:focus-within {
+  z-index: 30;
+}
+
+.THIS .flex-header:focus-within .action-cell {
+  position: relative;
+  z-index: 31;
+}
+
+.THIS .flex-header .last-name-cell,
+.THIS .flex-header .first-name-cell,
+.THIS .flex-header .account-cell,
+.THIS .flex-header .record-type-cell {
+  text-align: left;
+}
+
+.THIS .flex-cell {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+}
+
+.THIS .checkbox-cell {
+  flex: 0 0 4%;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  padding-right: 0.25rem;
+}
+
+.THIS .last-name-cell,
+.THIS .first-name-cell {
+  flex: 1 1 0;
+}
+
+.THIS .last-name-cell {
+  padding-left: 0.25rem;
+}
+
+.THIS .account-cell,
+.THIS .record-type-cell {
+  flex: 1.35 1 0;
+}
+
+.THIS .action-cell {
+  flex: 0 0 9%;
+  justify-content: center;
+  z-index: auto;
+}
