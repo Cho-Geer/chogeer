@@ -71,3 +71,4 @@ force-app/main/default/staticresources
 # Local tool artifacts
 .mimosa/
 .video_agent/
+.tmp-*/

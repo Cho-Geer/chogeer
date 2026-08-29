@@ -60,13 +60,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Cho-Geer/chogeer.gi.git"
+    "url": "git+https://github.com/Cho-Geer/chogeer.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Cho-Geer/chogeer.gi/issues"
+    "url": "https://github.com/Cho-Geer/chogeer/issues"
   },
-  "homepage": "https://github.com/Cho-Geer/chogeer.gi#readme"
+  "homepage": "https://github.com/Cho-Geer/chogeer#readme"
 }
