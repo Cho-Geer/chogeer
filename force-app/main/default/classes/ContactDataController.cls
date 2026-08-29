@@ -1,6 +1,12 @@
 public with sharing class ContactDataController {
+  private static final Integer ACCOUNT_PAGE_SIZE = 25;
+
   @AuraEnabled
-  public static ReturnValue getAccountForLookup() {
+  public static ReturnValue getAccountForLookup(
+    String searchStr,
+    String lastAccountName,
+    Id lastAccountId
+  ) {
     ReturnValue rt = new ReturnValue();
     try {
       // Check CRUD/FLS permissions before query
@@ -9,12 +15,66 @@ public with sharing class ContactDataController {
           'ユーザーに取引先の参照権限がありません。'
         );
       }
-      List<Account> accountList = [
-        SELECT Id, Name
-        FROM Account
-        WITH SECURITY_ENFORCED
-        LIMIT 10
-      ];
+      String normalizedSearch = String.isBlank(searchStr)
+        ? null
+        : searchStr.trim();
+      String searchPattern = normalizedSearch == null
+        ? null
+        : '%' + normalizedSearch + '%';
+      Boolean hasCursor =
+        String.isNotBlank(lastAccountName) && lastAccountId != null;
+      Integer queryLimit = ACCOUNT_PAGE_SIZE + 1;
+      List<Account> accountList;
+
+      // Keyset pagination keeps loading reliable even when an org has more
+      // than Salesforce's OFFSET limit. The Id tie-breaker handles duplicate
+      // Account names without skipping or repeating records.
+      if (String.isBlank(normalizedSearch) && !hasCursor) {
+        accountList = [
+          SELECT Id, Name
+          FROM Account
+          WITH SECURITY_ENFORCED
+          ORDER BY Name ASC, Id ASC
+          LIMIT :queryLimit
+        ];
+      } else if (String.isBlank(normalizedSearch)) {
+        accountList = [
+          SELECT Id, Name
+          FROM Account
+          WHERE
+            (Name > :lastAccountName
+            OR (Name = :lastAccountName AND Id > :lastAccountId))
+          WITH SECURITY_ENFORCED
+          ORDER BY Name ASC, Id ASC
+          LIMIT :queryLimit
+        ];
+      } else if (!hasCursor) {
+        accountList = [
+          SELECT Id, Name
+          FROM Account
+          WHERE Name LIKE :searchPattern
+          WITH SECURITY_ENFORCED
+          ORDER BY Name ASC, Id ASC
+          LIMIT :queryLimit
+        ];
+      } else {
+        accountList = [
+          SELECT Id, Name
+          FROM Account
+          WHERE
+            Name LIKE :searchPattern
+            AND (Name > :lastAccountName
+            OR (Name = :lastAccountName AND Id > :lastAccountId))
+          WITH SECURITY_ENFORCED
+          ORDER BY Name ASC, Id ASC
+          LIMIT :queryLimit
+        ];
+      }
+
+      Boolean hasMore = accountList.size() > ACCOUNT_PAGE_SIZE;
+      if (hasMore) {
+        accountList.remove(accountList.size() - 1);
+      }
       // Apply FLS (Field Level Security) checks
       SObjectAccessDecision securityDecision = Security.stripInaccessible(
         AccessType.READABLE,
@@ -23,6 +83,7 @@ public with sharing class ContactDataController {
       rt.isSuccess = true;
       rt.message = '';
       rt.dataList = securityDecision.getRecords();
+      rt.hasMore = hasMore;
     } catch (Exception e) {
       rt.isSuccess = false;
       rt.message = 'アカウント取得エラー: ' + e.getMessage();
@@ -38,26 +99,31 @@ public with sharing class ContactDataController {
   public static ReturnValue getRecordType() {
     ReturnValue rt = new ReturnValue();
     try {
-      // Check CRUD/FLS permissions before query
-      if (!Schema.SObjectType.RecordType.isAccessible()) {
+      // Check object permission before reading the Contact record type metadata.
+      if (!Schema.SObjectType.Contact.isAccessible()) {
         throw new AuraHandledException(
-          'ユーザーにレコードタイプの参照権限がありません。'
+          'ユーザーに取引先責任者の参照権限がありません。'
         );
       }
-      List<RecordType> recordTypeList = [
-        SELECT Id, Name
-        FROM RecordType
-        WHERE SobjectType = 'Contact'
-        WITH SECURITY_ENFORCED
-      ];
-      // Apply FLS (Field Level Security) checks
-      SObjectAccessDecision securityDecision = Security.stripInaccessible(
-        AccessType.READABLE,
-        recordTypeList
-      );
+      // SOQL does not return the implicit Master record type when no custom
+      // Contact record types exist. Schema metadata includes all record types
+      // available to the current user, including Master.
+      List<RecordType> recordTypeList = new List<RecordType>();
+      for (
+        Schema.RecordTypeInfo recordTypeInfo : Schema.SObjectType.Contact.getRecordTypeInfos()
+      ) {
+        if (recordTypeInfo.isActive() && recordTypeInfo.isAvailable()) {
+          recordTypeList.add(
+            new RecordType(
+              Id = recordTypeInfo.getRecordTypeId(),
+              Name = recordTypeInfo.getName()
+            )
+          );
+        }
+      }
       rt.isSuccess = true;
       rt.message = '';
-      rt.dataList = securityDecision.getRecords();
+      rt.dataList = recordTypeList;
     } catch (Exception e) {
       rt.isSuccess = false;
       rt.message = 'レコードタイプ取得エラー: ' + e.getMessage();
@@ -201,6 +267,80 @@ public with sharing class ContactDataController {
   }
 
   @AuraEnabled
+  public static ReturnValue saveContactsForAccount(
+    Id accountId,
+    List<Contact> contactList
+  ) {
+    ReturnValue returnValue = new ReturnValue();
+    try {
+      if (accountId == null) {
+        returnValue.isSuccess = false;
+        returnValue.message = '取引先を指定してください。';
+        return returnValue;
+      }
+      if (!Schema.SObjectType.Account.isAccessible()) {
+        throw new AuraHandledException(
+          'ユーザーに取引先の参照権限がありません。'
+        );
+      }
+      if (!Schema.SObjectType.Contact.isCreateable()) {
+        throw new AuraHandledException(
+          'ユーザーに取引先責任者の作成権限がありません。'
+        );
+      }
+      if (!Schema.SObjectType.Contact.fields.AccountId.isCreateable()) {
+        throw new AuraHandledException(
+          'ユーザーに取引先責任者の取引先項目を書き込む権限がありません。'
+        );
+      }
+
+      // with sharing plus SECURITY_ENFORCED ensures that the current user can
+      // access the target Account before any Contact is inserted.
+      Account targetAccount = [
+        SELECT Id
+        FROM Account
+        WHERE Id = :accountId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+
+      List<Contact> contactsToInsert = new List<Contact>();
+      for (Contact con : contactList) {
+        Contact newContact = con.clone(false, false, false, false);
+        // Never trust the AccountId supplied by the client payload.
+        newContact.AccountId = accountId;
+        contactsToInsert.add(newContact);
+      }
+
+      SObjectAccessDecision securityDecision = Security.stripInaccessible(
+        AccessType.CREATABLE,
+        contactsToInsert
+      );
+      insert securityDecision.getRecords();
+      returnValue.isSuccess = true;
+      returnValue.dataList = securityDecision.getRecords();
+      returnValue.message =
+        securityDecision.getRecords().size() +
+        '件の取引先責任者を作成しました。';
+    } catch (DmlException e) {
+      returnValue.isSuccess = false;
+      returnValue.message = 'データ登録エラー: ' + e.getDmlMessage(0);
+      System.debug(
+        'ContactDataController.saveContactsForAccount DML error: ' +
+        e.getMessage()
+      );
+    } catch (Exception e) {
+      returnValue.isSuccess = false;
+      returnValue.message = 'システムエラー: ' + e.getMessage();
+      System.debug(
+        'ContactDataController.saveContactsForAccount error: ' +
+        e.getStackTraceString()
+      );
+    }
+    return returnValue;
+  }
+
+  @AuraEnabled
   public static ReturnValue deleteRow(Id id) {
     ReturnValue rv = new ReturnValue();
     try {
@@ -283,5 +423,8 @@ public with sharing class ContactDataController {
 
     @AuraEnabled
     public List<Object> dataList { get; set; }
+
+    @AuraEnabled
+    public Boolean hasMore { get; set; }
   }
 }

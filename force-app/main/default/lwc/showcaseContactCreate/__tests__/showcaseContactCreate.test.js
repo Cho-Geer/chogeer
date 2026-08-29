@@ -1,6 +1,42 @@
 import { createElement } from "lwc";
-import ShowcaseContactCreate from "c/showcaseContactCreate";
 import createContact from "@salesforce/apex/ShowcaseContactController.createContact";
+
+const mockPublish = jest.fn();
+
+jest.mock(
+  "lightning/actions",
+  () => ({
+    CloseActionScreenEvent: class extends CustomEvent {
+      constructor() {
+        super("closeactionscreen", { bubbles: true, composed: true });
+      }
+    }
+  }),
+  { virtual: true }
+);
+
+jest.mock(
+  "lightning/messageService",
+  () => {
+    const { createTestWireAdapter } = require("@salesforce/sfdx-lwc-jest");
+    return {
+      MessageContext: createTestWireAdapter(jest.fn()),
+      publish: mockPublish
+    };
+  },
+  { virtual: true }
+);
+
+jest.mock(
+  "@salesforce/messageChannel/ContactCreated__c",
+  () => ({
+    default: "ContactCreated__c"
+  }),
+  { virtual: true }
+);
+
+const ShowcaseContactCreate = require("c/showcaseContactCreate").default;
+const { MessageContext } = require("lightning/messageService");
 
 jest.mock(
   "@salesforce/apex/ShowcaseContactController.createContact",
@@ -22,19 +58,24 @@ describe("c-showcase-contact-create", () => {
     jest.clearAllMocks();
   });
 
-  it("creates a contact, fires events, and resets the form", async () => {
+  it("creates a contact, fires events, and closes the action", async () => {
     createContact.mockResolvedValue("003000000000010AAA");
 
     const element = createElement("c-showcase-contact-create", {
       is: ShowcaseContactCreate
     });
+    element.recordId = "001000000000001AAA";
 
     const toastHandler = jest.fn();
     const contactCreatedHandler = jest.fn();
+    const closeActionHandler = jest.fn();
     element.addEventListener("lightning__showtoast", toastHandler);
     element.addEventListener("contactcreated", contactCreatedHandler);
+    element.addEventListener("closeactionscreen", closeActionHandler);
 
     document.body.appendChild(element);
+    MessageContext.emit({});
+    await flushPromises();
 
     const inputs = element.shadowRoot.querySelectorAll("lightning-input");
     inputs[0].value = "Ava";
@@ -53,12 +94,20 @@ describe("c-showcase-contact-create", () => {
       firstName: "Ava",
       lastName: "Li",
       email: "ava.li@example.com",
-      title: "Integration Lead"
+      title: "Integration Lead",
+      accountId: "001000000000001AAA"
     });
     expect(contactCreatedHandler).toHaveBeenCalledTimes(1);
     expect(contactCreatedHandler.mock.calls[0][0].detail.contactId).toBe(
       "003000000000010AAA"
     );
+    expect(mockPublish).toHaveBeenCalledTimes(1);
+    expect(mockPublish.mock.calls[0][1]).toBe("ContactCreated__c");
+    expect(mockPublish.mock.calls[0][2]).toEqual({
+      accountId: "001000000000001AAA",
+      contactId: "003000000000010AAA"
+    });
+    expect(closeActionHandler).toHaveBeenCalledTimes(1);
     expect(toastHandler).toHaveBeenCalledTimes(1);
     expect(toastHandler.mock.calls[0][0].detail.title).toBe("Contact created");
   });
@@ -87,5 +136,34 @@ describe("c-showcase-contact-create", () => {
     expect(toastHandler.mock.calls[0][0].detail.message).toBe(
       "Last name is required."
     );
+  });
+
+  it("keeps the successful creation result when publishing the refresh fails", async () => {
+    createContact.mockResolvedValue("003000000000010AAA");
+    mockPublish.mockImplementationOnce(() => {
+      throw new Error("Message service unavailable.");
+    });
+
+    const element = createElement("c-showcase-contact-create", {
+      is: ShowcaseContactCreate
+    });
+    element.recordId = "001000000000001AAA";
+    const toastHandler = jest.fn();
+    const closeActionHandler = jest.fn();
+    element.addEventListener("lightning__showtoast", toastHandler);
+    element.addEventListener("closeactionscreen", closeActionHandler);
+
+    document.body.appendChild(element);
+    MessageContext.emit({});
+    await flushPromises();
+
+    element.shadowRoot.querySelector("lightning-button").click();
+    await flushPromises();
+
+    expect(toastHandler.mock.calls[0][0].detail.title).toBe("Contact created");
+    expect(toastHandler.mock.calls[0][0].detail.message).toContain(
+      "automatic list refresh failed"
+    );
+    expect(closeActionHandler).toHaveBeenCalledTimes(1);
   });
 });
