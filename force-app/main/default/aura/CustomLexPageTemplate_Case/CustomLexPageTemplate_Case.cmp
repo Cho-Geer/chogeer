@@ -85,11 +85,7 @@
               aura:id="middleSlider"
               data-id="middleSlider"
               class="slds-badge slds-theme_inverse customLexToolbarButton"
-              onclick="
-                {
-                  !c.handleSizeLabel;
-                }
-              "
+              onclick="{!c.handleSizeLabel}"
             >
               {!v.isMiddleLabelOpen}
             </button>
@@ -104,11 +100,7 @@
               aura:id="middlePathSlider"
               data-id="middlePathSlider"
               class="slds-badge slds-theme_inverse customLexToolbarButton"
-              onclick="
-                {
-                  !c.handleSizeLabel;
-                }
-              "
+              onclick="{!c.handleSizeLabel}"
             >
               {!v.isMiddlePathLabelOpen}
             </button>

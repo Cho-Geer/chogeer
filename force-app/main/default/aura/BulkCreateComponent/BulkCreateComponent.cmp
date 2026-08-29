@@ -1,5 +1,9 @@
-<aura:component controller="ContactDataController">
+<aura:component controller="ContactDataController" implements="flexipage:availableForAllPageTypes">
   <lightning:notificationsLibrary aura:id="notifLib" />
+  <lightning:messageChannel
+    aura:id="contactCreatedChannel"
+    type="ContactCreated__c"
+  />
   <c:EventService aura:id="eventService"></c:EventService>
   <aura:handler name="init" value="{!this}" action="{!c.doInit}"></aura:handler>
   <aura:attribute
@@ -14,128 +18,112 @@
   ></aura:attribute>
   <aura:attribute name="check" type="Boolean" default="false"></aura:attribute>
   <aura:attribute name="options" type="List"></aura:attribute>
+  <aura:attribute name="accountOptions" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="accountHasMore" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="accountLoading" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="accountSearchTerm" type="String" default=""></aura:attribute>
+  <aura:attribute name="accountCursorName" type="String" default=""></aura:attribute>
+  <aura:attribute name="accountCursorId" type="String" default=""></aura:attribute>
+  <aura:attribute name="accountSearchToken" type="Integer" default="0"></aura:attribute>
+  <aura:attribute name="recordId" type="Id"></aura:attribute>
+  <aura:attribute name="accountName" type="String" default=""></aura:attribute>
+  <aura:attribute name="isAccountContext" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="activeMenuIndex" type="Integer" default="-1"></aura:attribute>
   <aura:handler
     name="registerCompEvent"
     event="c:Fw_CompEvent"
     action="{!c.handleCompEvent}"
   ></aura:handler>
-  <div class="tzxCard">
-    <div>
+  <div
+    class="{!v.isAccountContext ? 'tzxCard account-context' : 'tzxCard app-page-context'}"
+  >
+    <div class="bulk-actions">
       <div class="cardHeader" title="取引先責任者一括登録">
-        <div class="mediaFigure">
-          <lightning:icon
-            iconName="custom:custom51"
-            class="mediaIcon"
-          ></lightning:icon>
-        </div>
-        <div class="mediaTitle">取引先責任者一括登録</div>
         <div>
           <lightning:button
             label="一括登録"
             variant="brand"
-            onclick="
-              {
-                !c.handleBulkCreate;
-              }
-            "
+            onclick="{!c.handleBulkCreate}"
           ></lightning:button>
         </div>
       </div>
     </div>
-    <div>
+    <div class="bulk-table-section">
       <div class="divTable">
         <div class="divTable_relative">
           <div class="divTable_static">
-            <table
-              class="slds-table slds-table_cell-buffer slds-table_bordered"
-            >
-              <thead>
-                <tr class="slds-line-height_reset">
-                  <th class="" scope="col">
-                    <div>
-                      <lightning:input
-                        type="checkbox"
-                        value=""
-                        checked="{!v.check}"
-                      ></lightning:input>
-                    </div>
-                  </th>
-                  <th class="" scope="col">
-                    <div>姓</div>
-                  </th>
-                  <th class="" scope="col">
-                    <div>名</div>
-                  </th>
-                  <th class="" scope="col">
-                    <div>取引先名</div>
-                  </th>
-                  <th class="" scope="col">
-                    <div>レコードタイプ</div>
-                  </th>
-                  <th class="" scope="col">
-                    <div>
-                      <lightning:buttonMenu
-                        menuAlignment="right"
-                        iconSize="small"
-                        variant="container"
-                        class="buttonMenu"
-                        alternativeText="Show menu"
-                        iconName="utility:settings"
-                        onselect="
-                          {
-                            !c.handleButtonSelect;
-                          }
-                        "
-                      >
-                        <lightning:menuItem
-                          class="buttonMenuItem"
-                          value="AddRow"
-                          label="Add Row"
-                          iconName="utility:add"
-                        />
-                        <lightning:menuItem
-                          class="buttonMenuItem"
-                          value="DeleteRow"
-                          label="Delete Row"
-                          iconName="utility:delete"
-                        />
-                      </lightning:buttonMenu>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody style="margin-right: 0; margin-left: 0">
+            <div class="flex-table" role="table">
+              <div class="flex-row flex-header slds-line-height_reset" role="row">
+                <div class="flex-cell checkbox-cell" role="columnheader">
+                  <lightning:input
+                    type="checkbox"
+                    value=""
+                    checked="{!v.check}"
+                    onchange="{!c.handleCheckAll}"
+                  ></lightning:input>
+                </div>
+                <div class="flex-cell last-name-cell" role="columnheader">
+                  <abbr class="slds-required" title="必須">*</abbr>姓
+                </div>
+                <div class="flex-cell first-name-cell" role="columnheader">
+                  名
+                </div>
+                <div class="flex-cell account-cell" role="columnheader">取引先名</div>
+                <div class="flex-cell record-type-cell" role="columnheader">レコードタイプ</div>
+                <div class="flex-cell action-cell" role="columnheader">
+                  <lightning:buttonMenu
+                    menuAlignment="auto"
+                    iconSize="small"
+                    variant="container"
+                    class="buttonMenu"
+                    alternativeText="Show menu"
+                    iconName="utility:settings"
+                    onselect="{!c.handleButtonSelect}"
+                  >
+                    <lightning:menuItem
+                      class="buttonMenuItem"
+                      value="AddRow"
+                      label="Add Row"
+                      iconName="utility:add"
+                    />
+                    <lightning:menuItem
+                      class="buttonMenuItem"
+                      value="DeleteRow"
+                      label="Delete Row"
+                      iconName="utility:delete"
+                    />
+                  </lightning:buttonMenu>
+                </div>
+              </div>
+              <div class="flex-body" role="rowgroup">
                 <aura:iteration
                   var="contact"
                   items="{!v.contactList}"
                   indexVar="index"
                 >
                   <c:BulkCreateComponentChild
+                    aura:id="bulkCreateRow"
                     contact="{!contact}"
                     options="{!v.options}"
+                    accountOptions="{!v.accountOptions}"
+                    accountHasMore="{!v.accountHasMore}"
+                    accountLoading="{!v.accountLoading}"
+                    defaultAccountId="{!v.recordId}"
+                    defaultAccountName="{!v.accountName}"
+                    accountLocked="{!v.isAccountContext}"
                     index="{!index}"
+                    menuLayer="normal"
                     check="{!v.check}"
                     checkFlag="{!v.checkedIndexList.length > 0 ? true : false}"
                   ></c:BulkCreateComponentChild>
                 </aura:iteration>
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div>
-      <div>
-        <lightning:button
-          label="一括登録"
-          variant="brand"
-          onclick="
-            {
-              !c.handleBulkCreate;
-            }
-          "
-        ></lightning:button>
-      </div>
     </div>
   </div>
 </aura:component>

@@ -152,10 +152,23 @@ public with sharing class ShowcaseContactController {
   }
 
   @AuraEnabled(cacheable=true)
-  public static List<ContactSummary> getRecentContacts() {
+  public static List<ContactSummary> getRecentContacts(Id accountId) {
+    if (accountId == null) {
+      return new List<ContactSummary>();
+    }
+
     List<Contact> queriedContacts = [
-      SELECT Id, FirstName, LastName, Email, Title, Account.Name
+      SELECT
+        Id,
+        FirstName,
+        LastName,
+        Email,
+        Title,
+        Account.Name,
+        CreatedDate,
+        LastModifiedDate
       FROM Contact
+      WHERE AccountId = :accountId
       WITH SECURITY_ENFORCED
       ORDER BY LastModifiedDate DESC
       LIMIT 10
@@ -173,30 +186,108 @@ public with sharing class ShowcaseContactController {
     return results;
   }
 
+  /**
+   * @description 获取指定取引先的联系人分页数据
+   */
+  @AuraEnabled(cacheable=true)
+  public static PaginatedResult getContactsByAccountPage(
+    Id accountId,
+    Integer pageNumber,
+    Integer pageSize
+  ) {
+    if (pageNumber == null) {
+      pageNumber = 1;
+    }
+    if (pageSize == null) {
+      pageSize = DEFAULT_PAGE_SIZE;
+    }
+    validatePaginationParams(pageNumber, pageSize);
+
+    if (accountId == null) {
+      return new PaginatedResult(
+        new List<ContactSummary>(),
+        pageNumber,
+        pageSize,
+        0
+      );
+    }
+
+    Integer totalRecords = [
+      SELECT COUNT()
+      FROM Contact
+      WHERE AccountId = :accountId
+      WITH SECURITY_ENFORCED
+    ];
+    Integer totalPages = totalRecords > 0
+      ? (Integer) Math.ceil((Decimal) totalRecords / pageSize)
+      : 0;
+
+    if (totalPages > 0 && pageNumber > totalPages) {
+      pageNumber = totalPages;
+    }
+
+    Integer offset = (pageNumber - 1) * pageSize;
+    List<Contact> queriedContacts = [
+      SELECT
+        Id,
+        FirstName,
+        LastName,
+        Email,
+        Title,
+        Account.Name,
+        CreatedDate,
+        LastModifiedDate
+      FROM Contact
+      WHERE AccountId = :accountId
+      WITH SECURITY_ENFORCED
+      ORDER BY LastModifiedDate DESC, Id DESC
+      LIMIT :pageSize
+      OFFSET :offset
+    ];
+
+    SObjectAccessDecision accessDecision = Security.stripInaccessible(
+      AccessType.READABLE,
+      queriedContacts
+    );
+
+    List<ContactSummary> summaries = new List<ContactSummary>();
+    for (SObject accessibleRecord : accessDecision.getRecords()) {
+      summaries.add(new ContactSummary((Contact) accessibleRecord));
+    }
+
+    return new PaginatedResult(summaries, pageNumber, pageSize, totalRecords);
+  }
+
   @AuraEnabled
   public static Id createContact(
     String firstName,
     String lastName,
     String email,
-    String title
+    String title,
+    Id accountId
   ) {
     if (String.isBlank(lastName)) {
       throw new AuraHandledException('Last name is required.');
+    }
+    if (accountId == null) {
+      throw new AuraHandledException('Account is required.');
     }
 
     Contact contactRecord = new Contact(
       FirstName = normalizeValue(firstName),
       LastName = normalizeValue(lastName),
       Email = normalizeValue(email),
-      Title = normalizeValue(title)
+      Title = normalizeValue(title),
+      AccountId = accountId
     );
     SObjectAccessDecision decision = Security.stripInaccessible(
       AccessType.CREATABLE,
       new List<Contact>{ contactRecord }
     );
-    insert decision.getRecords();
+    List<Contact> recordsToInsert = (List<Contact>) decision.getRecords();
+    insert recordsToInsert;
 
-    return contactRecord.Id;
+    return recordsToInsert[0].Id;
   }
 
   private static String normalizeValue(String input) {

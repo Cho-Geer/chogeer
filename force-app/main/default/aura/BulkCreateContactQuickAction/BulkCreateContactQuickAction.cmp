@@ -1,0 +1,34 @@
+<aura:component access="global" implements="force:lightningQuickAction,force:hasRecordId">
+  <aura:attribute name="recordId" type="Id" />
+  <aura:attribute name="accountRecord" type="Account" />
+  <aura:attribute name="state" type="String" default="loading" />
+
+  <force:recordData
+    aura:id="accountLoader"
+    recordId="{!v.recordId}"
+    fields="Name"
+    targetFields="{!v.accountRecord}"
+    recordUpdated="{!c.handleRecordUpdated}"
+  />
+
+  <aura:if isTrue="{!v.state == 'ready'}">
+    <c:BulkCreateComponent
+      recordId="{!v.recordId}"
+      accountName="{!v.accountRecord.Name}"
+      isAccountContext="true"
+    />
+    <aura:set attribute="else">
+      <aura:if isTrue="{!v.state == 'error'}">
+        <div class="slds-p-around_medium slds-text-color_error">
+          取引先情報を読み込めませんでした。
+        </div>
+        <aura:set attribute="else">
+          <lightning:spinner
+            alternativeText="取引先情報を読み込み中"
+            size="medium"
+          />
+        </aura:set>
+      </aura:if>
+    </aura:set>
+  </aura:if>
+</aura:component>

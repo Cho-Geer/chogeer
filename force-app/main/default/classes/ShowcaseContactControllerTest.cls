@@ -109,12 +109,29 @@ private with sharing class ShowcaseContactControllerTest {
    */
   @IsTest
   static void testGetRecentContacts() {
+    Id accountId = [
+      SELECT Id
+      FROM Account
+      WHERE Name = 'Test Corporation'
+      LIMIT 1
+    ].Id;
+
     Test.startTest();
-    List<ShowcaseContactController.ContactSummary> results = ShowcaseContactController.getRecentContacts();
+    List<ShowcaseContactController.ContactSummary> results = ShowcaseContactController.getRecentContacts(
+      accountId
+    );
     Test.stopTest();
 
     System.assertNotEquals(null, results, '结果不应为空');
-    System.assert(results.size() > 0, '应返回至少一个联系人');
+    System.assertEquals(3, results.size(), '只应返回当前取引先的联系人');
+
+    for (ShowcaseContactController.ContactSummary result : results) {
+      System.assertEquals(
+        'Test Corporation',
+        result.accountName,
+        '不应返回其他取引先的联系人'
+      );
+    }
 
     // 验证结果格式
     ShowcaseContactController.ContactSummary firstResult = results[0];
@@ -122,6 +139,73 @@ private with sharing class ShowcaseContactControllerTest {
     System.assertNotEquals(null, firstResult.firstName, '应有名');
     System.assertNotEquals(null, firstResult.lastName, '应有姓');
     System.assertNotEquals(null, firstResult.status, '应有状态');
+    System.assertEquals(
+      'Test Corporation',
+      firstResult.accountName,
+      '只应返回当前取引先的联系人'
+    );
+  }
+
+  @IsTest
+  static void testGetRecentContactsWithoutAccountId() {
+    Test.startTest();
+    List<ShowcaseContactController.ContactSummary> results = ShowcaseContactController.getRecentContacts(
+      null
+    );
+    Test.stopTest();
+
+    System.assertEquals(0, results.size(), '取引先IDがない場合は空を返す');
+  }
+
+  @IsTest
+  static void testGetContactsByAccountPage() {
+    Id accountId = [
+      SELECT Id
+      FROM Account
+      WHERE Name = 'Test Corporation'
+      LIMIT 1
+    ].Id;
+
+    Test.startTest();
+    ShowcaseContactController.PaginatedResult result = ShowcaseContactController.getContactsByAccountPage(
+      accountId,
+      1,
+      2
+    );
+    Test.stopTest();
+
+    System.assertEquals(1, result.pageNumber, '页码应为1');
+    System.assertEquals(2, result.pageSize, '页大小应为2');
+    System.assertEquals(3, result.totalRecords, '当前取引先应有3条联系人');
+    System.assertEquals(2, result.totalPages, '总页数应为2');
+    System.assertEquals(2, result.records.size(), '第一页应返回2条联系人');
+    for (ShowcaseContactController.ContactSummary summary : result.records) {
+      System.assertEquals(
+        'Test Corporation',
+        summary.accountName,
+        '只能返回当前取引先的联系人'
+      );
+    }
+  }
+
+  @IsTest
+  static void testGetContactsByAccountPageWithoutAccountId() {
+    Test.startTest();
+    ShowcaseContactController.PaginatedResult result = ShowcaseContactController.getContactsByAccountPage(
+      null,
+      null,
+      null
+    );
+    Test.stopTest();
+
+    System.assertEquals(1, result.pageNumber, '默认页码应为1');
+    System.assertEquals(
+      ShowcaseContactController.DEFAULT_PAGE_SIZE,
+      result.pageSize,
+      '应使用默认页大小'
+    );
+    System.assertEquals(0, result.totalRecords, '没有取引先时应返回0条记录');
+    System.assertEquals(0, result.records.size(), '没有取引先时应返回空列表');
   }
 
   /**
@@ -129,12 +213,20 @@ private with sharing class ShowcaseContactControllerTest {
    */
   @IsTest
   static void testCreateContact() {
+    Id accountId = [
+      SELECT Id
+      FROM Account
+      WHERE Name = 'Test Corporation'
+      LIMIT 1
+    ].Id;
+
     Test.startTest();
     Id contactId = ShowcaseContactController.createContact(
       'Test',
       'Create',
       'test.create@example.com',
-      'Test Title'
+      'Test Title',
+      accountId
     );
     Test.stopTest();
 
@@ -142,7 +234,7 @@ private with sharing class ShowcaseContactControllerTest {
 
     // 验证数据库记录
     Contact createdContact = [
-      SELECT FirstName, LastName, Email, Title
+      SELECT FirstName, LastName, Email, Title, AccountId
       FROM Contact
       WHERE Id = :contactId
     ];
@@ -151,6 +243,7 @@ private with sharing class ShowcaseContactControllerTest {
     System.assertEquals('Create', createdContact.LastName);
     System.assertEquals('test.create@example.com', createdContact.Email);
     System.assertEquals('Test Title', createdContact.Title);
+    System.assertEquals(accountId, createdContact.AccountId);
   }
 
   /**
@@ -162,7 +255,7 @@ private with sharing class ShowcaseContactControllerTest {
 
     Test.startTest();
     try {
-      ShowcaseContactController.createContact('Test', null, null, null);
+      ShowcaseContactController.createContact('Test', null, null, null, null);
     } catch (AuraHandledException ex) {
       didThrow = true;
       System.assert(
@@ -765,10 +858,11 @@ private with sharing class ShowcaseContactControllerTest {
   @IsTest
   static void testPerformanceMultipleQueries() {
     Long startTime = DateTime.now().getTime();
+    Id accountId = [SELECT Id FROM Account LIMIT 1].Id;
 
     Test.startTest();
     // 执行多次查询
-    ShowcaseContactController.getRecentContacts();
+    ShowcaseContactController.getRecentContacts(accountId);
     ShowcaseContactController.searchContacts('User', 5);
     ShowcaseContactController.getContactsByPage(1, 5, null, 'LastName', 'ASC');
     ShowcaseContactController.getContactStatistics();

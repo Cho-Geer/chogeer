@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >Notifies contact list components when a contact is created.</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description
+    >The Account Id associated with the created Contact.</description>
+        <fieldName>accountId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>The Id of the created Contact.</description>
+        <fieldName>contactId</fieldName>
+    </lightningMessageFields>
+    <masterLabel>Contact Created</masterLabel>
+</LightningMessageChannel>

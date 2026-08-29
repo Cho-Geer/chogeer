@@ -1,92 +1,197 @@
 <aura:component>
   <aura:attribute name="contact" type="Map" default="{}"></aura:attribute>
   <aura:attribute name="options" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="accountOptions" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="accountHasMore" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="accountLoading" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="accountDropdownOpen" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="accountSearchTerm" type="String" default=""></aura:attribute>
+  <aura:attribute name="recordTypeDropdownOpen" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="recordTypeSearchTerm" type="String" default=""></aura:attribute>
+  <aura:attribute name="recordTypeFilteredOptions" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="defaultAccountId" type="Id"></aura:attribute>
+  <aura:attribute name="defaultAccountName" type="String" default=""></aura:attribute>
+  <aura:attribute name="accountLocked" type="Boolean" default="false"></aura:attribute>
   <aura:attribute name="index" type="Integer"></aura:attribute>
+  <aura:attribute name="menuLayer" type="String" default="normal"></aura:attribute>
   <aura:attribute name="check" type="Boolean" default="false"></aura:attribute>
   <aura:attribute
     name="checkFlag"
     type="Boolean"
     default="false"
   ></aura:attribute>
-  <aura:attribute
-    name="spinnerFlag"
-    type="Boolean"
-    default="false"
-  ></aura:attribute>
   <c:EventService aura:id="eventService"></c:EventService>
-  <aura:handler name="init" value="{!this}" action="{!c.doInit}"></aura:handler>
+  <aura:handler name="init" value="{!this}" action="{!c.handleInit}"></aura:handler>
+  <aura:handler
+    name="change"
+    value="{!v.defaultAccountName}"
+    action="{!c.handleDefaultAccountChange}"
+  ></aura:handler>
+  <aura:handler
+    name="change"
+    value="{!v.contact}"
+    action="{!c.handleContactChange}"
+  ></aura:handler>
+  <aura:handler
+    name="change"
+    value="{!v.options}"
+    action="{!c.handleRecordTypeOptionsChange}"
+  ></aura:handler>
   <aura:handler
     name="registerCompEvent"
     event="c:Fw_CompEvent"
     action="{!c.handleCompEvent}"
   ></aura:handler>
-  <tr>
-    <td>
+  <div
+    class="{!v.menuLayer == 'active' ? 'flex-row data-row menu-active' : v.menuLayer == 'adjacent' ? 'flex-row data-row menu-adjacent' : 'flex-row data-row menu-normal'}"
+    role="row"
+  >
+    <div class="flex-cell checkbox-cell" role="cell">
       <lightning:input
         type="checkbox"
         aura:id="checkbox"
         checked="{!v.contact.checked}"
-        onchange="
-          {
-            !c.handleCheck;
-          }
-        "
+        onchange="{!c.handleCheck}"
       ></lightning:input>
-    </td>
-    <td>
-      <lightning:input
-        type="text"
-        value="{!v.contact.LastName}"
-        name="lastName"
-        label=""
-        required="true"
-      ></lightning:input>
-    </td>
-    <td>
-      <lightning:input
-        type="text"
-        value="{!v.contact.FirstName}"
-        name="firstName"
-        label=""
-        required="true"
-      ></lightning:input>
-    </td>
-    <td>
-      <lightning:input
-        type="text"
-        value="{!v.contact.AccountId}"
-        label=""
-        name="account"
-      ></lightning:input>
-    </td>
-    <td>
-      <lightning:combobox
-        name="select"
-        label=""
-        value="{!v.contact.RecordTypeId}"
-        options="{!v.options}"
-        placeholder="選択..."
-        onchange="
-          {
-            !c.handleChange;
-          }
-        "
-      ></lightning:combobox>
-    </td>
-    <td>
-      <div>
+    </div>
+    <div class="flex-cell last-name-cell" role="cell">
+      <div class="field-container">
+        <lightning:input
+          type="text"
+          value="{!v.contact.LastName}"
+          name="lastName"
+          label=""
+          variant="label-hidden"
+          required="true"
+          messageWhenValueMissing=" "
+        ></lightning:input>
+        <div class="field-error-tooltip" role="alert">
+          この項目を入力してください。
+        </div>
+      </div>
+    </div>
+    <div class="flex-cell first-name-cell" role="cell">
+      <div class="field-container">
+        <lightning:input
+          type="text"
+          value="{!v.contact.FirstName}"
+          name="firstName"
+          label=""
+          variant="label-hidden"
+        ></lightning:input>
+      </div>
+    </div>
+    <div class="flex-cell account-cell" role="cell">
+      <div class="field-container">
+        <aura:if isTrue="{!v.accountLocked}">
+          <lightning:input
+            type="text"
+            value="{!v.defaultAccountName}"
+            label=""
+            variant="label-hidden"
+            name="account"
+            disabled="true"
+          ></lightning:input>
+          <aura:set attribute="else">
+            <div class="account-lookup">
+              <lightning:input
+                type="search"
+                value="{!v.accountSearchTerm}"
+                label=""
+                variant="label-hidden"
+                name="account"
+                placeholder="検索または選択..."
+                onfocus="{!c.handleAccountFocus}"
+                onblur="{!c.handleAccountBlur}"
+                onkeyup="{!c.handleAccountSearch}"
+              ></lightning:input>
+              <aura:if isTrue="{!v.accountDropdownOpen}">
+                <div class="account-dropdown" role="listbox">
+                  <aura:iteration items="{!v.accountOptions}" var="accountOption">
+                    <div class="account-option" role="presentation">
+                      <lightning:button
+                        variant="base"
+                        class="account-option-button"
+                        label="{!accountOption.label}"
+                        name="{!accountOption.value}"
+                        onclick="{!c.handleAccountSelect}"
+                      ></lightning:button>
+                    </div>
+                  </aura:iteration>
+                  <aura:if isTrue="{!v.accountLoading}">
+                    <div class="account-status">読み込み中...</div>
+                  </aura:if>
+                  <aura:if isTrue="{!v.accountOptions.length == 0}">
+                    <div class="account-status">該当する取引先がありません。</div>
+                  </aura:if>
+                  <aura:if isTrue="{!v.accountHasMore}">
+                    <lightning:button
+                      variant="base"
+                      class="account-load-more"
+                      label="さらに読み込む"
+                      onclick="{!c.handleAccountLoadMore}"
+                      disabled="{!v.accountLoading}"
+                    ></lightning:button>
+                  </aura:if>
+                </div>
+              </aura:if>
+            </div>
+          </aura:set>
+        </aura:if>
+      </div>
+    </div>
+    <div class="flex-cell record-type-cell" role="cell">
+      <div class="field-container">
+        <div class="record-type-lookup">
+          <lightning:input
+            type="search"
+            value="{!v.recordTypeSearchTerm}"
+            label=""
+            variant="label-hidden"
+            name="recordType"
+            placeholder="検索または選択..."
+            onfocus="{!c.handleRecordTypeFocus}"
+            onblur="{!c.handleRecordTypeBlur}"
+            onkeyup="{!c.handleRecordTypeSearch}"
+          ></lightning:input>
+          <aura:if isTrue="{!v.recordTypeDropdownOpen}">
+            <div class="record-type-dropdown" role="listbox">
+              <aura:iteration
+                items="{!v.recordTypeFilteredOptions}"
+                var="recordTypeOption"
+              >
+                <div class="record-type-option" role="presentation">
+                  <lightning:button
+                    variant="base"
+                    class="record-type-option-button"
+                    label="{!recordTypeOption.label}"
+                    name="{!recordTypeOption.value}"
+                    onclick="{!c.handleRecordTypeSelect}"
+                  ></lightning:button>
+                </div>
+              </aura:iteration>
+              <aura:if isTrue="{!v.recordTypeFilteredOptions.length == 0}">
+                <div class="record-type-status">該当するレコードタイプがありません。</div>
+              </aura:if>
+            </div>
+          </aura:if>
+        </div>
+      </div>
+    </div>
+    <div class="flex-cell action-cell" role="cell">
+      <div
+        class="field-container action-menu-container"
+        onfocusin="{!c.handleMenuFocus}"
+        onfocusout="{!c.handleMenuBlur}"
+      >
         <lightning:buttonMenu
-          menuAlignment="right"
+          menuAlignment="auto"
           iconSize="small"
           variant="container"
           class="buttonMenu"
           alternativeText="Show menu"
           iconName="utility:settings"
-          onselect="
-            {
-              !c.handleButtonSelect;
-            }
-          "
+          onselect="{!c.handleButtonSelect}"
         >
           <lightning:menuItem
             class="buttonMenuItem"
@@ -102,6 +207,6 @@
           />
         </lightning:buttonMenu>
       </div>
-    </td>
-  </tr>
+    </div>
+  </div>
 </aura:component>
