@@ -135,7 +135,7 @@ This repository follows a simple portfolio principle:
 
 In practice, that means the core story of this repository is:
 
-1. a curated set of platform and integration examples added to improve breadth
+1. a curated set of examples covering breadth across platform, integration, and UI
 2. a deliberate review order so hiring teams can understand the signal quickly
 
 ## How To Review This Repository
