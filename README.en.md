@@ -2,13 +2,12 @@
 
 This repository is a curated Salesforce DX portfolio project aimed at a `Senior Salesforce Platform / Integration Engineer` role.
 
-It is intentionally designed to show a small number of representative implementations across platform, integration, UI, and Experience Cloud style authentication flows, so reviewers can understand the technical signal quickly without digging through a large archive of experiments.
+It is intentionally designed to show a small number of representative implementations across platform, integration, and UI, so reviewers can understand the technical signal quickly without digging through a large archive of experiments.
 
 This repository is intentionally curated to showcase representative Salesforce platform and integration patterns, rather than every experimental or training artifact.
 
 ## What This Repository Demonstrates
 
-- Experience Cloud style authentication flows using Apex, Visualforce, and Aura
 - Secure Apex REST design with `@RestResource`, `with sharing`, and `Security.stripInaccessible`
 - Outbound integration with HTTP callouts and Named Credential based endpoint design
 - Platform Event driven processing with Apex trigger tests
@@ -22,7 +21,6 @@ This repository is intentionally curated to showcase representative Salesforce p
 - Visualforce
 - Aura Components
 - Lightning Web Components
-- Experience Cloud style authentication and self-registration flows
 - `@RestResource`
 - `with sharing`
 - `Security.stripInaccessible`
@@ -34,58 +32,7 @@ This repository is intentionally curated to showcase representative Salesforce p
 
 ## Representative Implementations
 
-### 1. Experience Cloud / Authentication Flows
-
-Representative Apex files:
-
-- `force-app/main/default/classes/CommunitiesLoginController.cls`
-- `force-app/main/default/classes/CommunitiesSelfRegController.cls`
-- `force-app/main/default/classes/ForgotPasswordController.cls`
-- `force-app/main/default/classes/ChangePasswordController.cls`
-- `force-app/main/default/classes/MyProfilePageController.cls`
-- `force-app/main/default/classes/LightningLoginFormController.cls`
-- `force-app/main/default/classes/LightningSelfRegisterController.cls`
-- `force-app/main/default/classes/LightningForgotPasswordController.cls`
-- `force-app/main/default/classes/SiteLoginController.cls`
-- `force-app/main/default/classes/SiteRegisterController.cls`
-
-Representative test files:
-
-- `force-app/main/default/classes/CommunitiesLoginControllerTest.cls`
-- `force-app/main/default/classes/CommunitiesSelfRegControllerTest.cls`
-- `force-app/main/default/classes/ForgotPasswordControllerTest.cls`
-- `force-app/main/default/classes/ChangePasswordControllerTest.cls`
-- `force-app/main/default/classes/MyProfilePageControllerTest.cls`
-- `force-app/main/default/classes/LightningLoginFormControllerTest.cls`
-- `force-app/main/default/classes/LightningSelfRegisterControllerTest.cls`
-- `force-app/main/default/classes/LightningForgotPasswordControllerTest.cls`
-- `force-app/main/default/classes/SiteLoginControllerTest.cls`
-- `force-app/main/default/classes/SiteRegisterControllerTest.cls`
-
-Representative Visualforce pages:
-
-- `force-app/main/default/pages/CommunitiesLogin.page`
-- `force-app/main/default/pages/CommunitiesSelfReg.page`
-- `force-app/main/default/pages/ForgotPassword.page`
-- `force-app/main/default/pages/ChangePassword.page`
-- `force-app/main/default/pages/MyProfilePage.page`
-- `force-app/main/default/pages/SiteLogin.page`
-- `force-app/main/default/pages/SiteRegister.page`
-
-Representative Aura files:
-
-- `force-app/main/default/aura/loginForm/loginForm.cmp`
-- `force-app/main/default/aura/selfRegister/selfRegister.cmp`
-- `force-app/main/default/aura/forgotPassword/forgotPassword.cmp`
-
-These examples demonstrate:
-
-- login and self-registration flow handling
-- password reset and profile maintenance flows
-- UI-to-controller coordination across Visualforce, Aura, and Apex
-- Experience Cloud oriented entry points that are easy to explain in interviews
-
-### 2. Secure REST Endpoint
+### 1. Secure REST Endpoint
 
 Representative files:
 
@@ -100,7 +47,7 @@ This example demonstrates:
 - request validation and response shaping
 - reviewer-friendly secure data exposure patterns
 
-### 3. Outbound Integration / HTTP Callout
+### 2. Outbound Integration / HTTP Callout
 
 Representative files:
 
@@ -115,7 +62,7 @@ This example demonstrates:
 - mock-based callout testing
 - integration-oriented Apex service design
 
-### 4. Platform Event and Trigger-Based Processing
+### 3. Platform Event and Trigger-Based Processing
 
 Representative files:
 
@@ -130,7 +77,7 @@ This example demonstrates:
 - event-driven follow-up automation
 - testing with `EventBus.publish`
 
-### 5. LWC + Apex Coordination
+### 4. LWC + Apex Coordination
 
 Representative files:
 
@@ -146,7 +93,7 @@ This example demonstrates:
 - client/server coordination between LWC and Apex
 - a simple UI pattern that is easy to discuss in portfolio review and interviews
 
-### 6. Additional Platform Samples Kept As Supporting Material
+### 5. Additional Platform Samples Kept As Supporting Material
 
 Representative files:
 
@@ -184,29 +131,22 @@ This repository follows a simple portfolio principle:
 - keep the review surface small
 - keep the repository theme clear
 - show representative platform and integration patterns
-- preserve the strongest existing Experience Cloud examples
 - avoid turning the repo into a dump of every historical sample
 
 In practice, that means the core story of this repository is:
 
-1. Experience Cloud / authentication flows already present in `chogeer`
-2. a curated set of platform and integration examples added to improve breadth
-3. a deliberate review order so hiring teams can understand the signal quickly
+1. a curated set of platform and integration examples added to improve breadth
+2. a deliberate review order so hiring teams can understand the signal quickly
 
 ## How To Review This Repository
 
 Suggested review order:
 
-1. `force-app/main/default/classes/CommunitiesLoginController.cls`
-2. `force-app/main/default/classes/CommunitiesSelfRegController.cls`
-3. `force-app/main/default/classes/MyProfilePageController.cls`
-4. `force-app/main/default/pages/CommunitiesLogin.page`
-5. `force-app/main/default/aura/loginForm/loginForm.cmp`
-6. `force-app/main/default/classes/ShowcaseContactRestResource.cls`
-7. `force-app/main/default/classes/ShowcaseContactSyncService.cls`
-8. `force-app/main/default/triggers/OrderEventTrigger.trigger`
-9. `force-app/main/default/classes/ShowcaseContactController.cls`
-10. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
+1. `force-app/main/default/classes/ShowcaseContactRestResource.cls`
+2. `force-app/main/default/classes/ShowcaseContactSyncService.cls`
+3. `force-app/main/default/triggers/OrderEventTrigger.trigger`
+4. `force-app/main/default/classes/ShowcaseContactController.cls`
+5. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
 
 ## Local Development
 
