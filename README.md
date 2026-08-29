@@ -2,13 +2,12 @@
 
 このリポジトリは、`Senior Salesforce Platform / Integration Engineer` 職位を想定して厳選した Salesforce DX のポートフォリオプロジェクトです。
 
-プラットフォーム、インテグレーション、UI、そして Experience Cloud スタイルの認証フローについて、代表的な実装を少数だけ厳選して提示することを目的としています。レビュー担当者が実験成果物の巨大なアーカイブを掘り起こすことなく、技術的なシグナルを迅速に理解できるように設計されています。
+プラットフォーム、インテグレーション、UI について、代表的な実装を少数だけ厳選して提示することを目的としています。レビュー担当者が実験成果物の巨大なアーカイブを掘り起こすことなく、技術的なシグナルを迅速に理解できるように設計されています。
 
 このリポジトリは、あらゆる実験的・学習的な成果物を見せるのではなく、代表的な Salesforce プラットフォームとインテグレーションのパターンを示すものとして、意図的に厳選されています。
 
 ## このリポジトリで示していること
 
-- Apex、Visualforce、Aura を用いた Experience Cloud スタイルの認証フロー
 - `@RestResource`、`with sharing`、`Security.stripInaccessible` による安全な Apex REST 設計
 - HTTP Callout と Named Credential ベースのエンドポイント設計による外部連携
 - Platform Event 駆動の処理と Apex トリガのテスト
@@ -22,7 +21,6 @@
 - Visualforce
 - Aura Components
 - Lightning Web Components
-- Experience Cloud スタイルの認証およびセルフ登録フロー
 - `@RestResource`
 - `with sharing`
 - `Security.stripInaccessible`
@@ -34,58 +32,7 @@
 
 ## 代表的な実装
 
-### 1. Experience Cloud / 認証フロー
-
-代表的な Apex ファイル:
-
-- `force-app/main/default/classes/CommunitiesLoginController.cls`
-- `force-app/main/default/classes/CommunitiesSelfRegController.cls`
-- `force-app/main/default/classes/ForgotPasswordController.cls`
-- `force-app/main/default/classes/ChangePasswordController.cls`
-- `force-app/main/default/classes/MyProfilePageController.cls`
-- `force-app/main/default/classes/LightningLoginFormController.cls`
-- `force-app/main/default/classes/LightningSelfRegisterController.cls`
-- `force-app/main/default/classes/LightningForgotPasswordController.cls`
-- `force-app/main/default/classes/SiteLoginController.cls`
-- `force-app/main/default/classes/SiteRegisterController.cls`
-
-代表的なテストファイル:
-
-- `force-app/main/default/classes/CommunitiesLoginControllerTest.cls`
-- `force-app/main/default/classes/CommunitiesSelfRegControllerTest.cls`
-- `force-app/main/default/classes/ForgotPasswordControllerTest.cls`
-- `force-app/main/default/classes/ChangePasswordControllerTest.cls`
-- `force-app/main/default/classes/MyProfilePageControllerTest.cls`
-- `force-app/main/default/classes/LightningLoginFormControllerTest.cls`
-- `force-app/main/default/classes/LightningSelfRegisterControllerTest.cls`
-- `force-app/main/default/classes/LightningForgotPasswordControllerTest.cls`
-- `force-app/main/default/classes/SiteLoginControllerTest.cls`
-- `force-app/main/default/classes/SiteRegisterControllerTest.cls`
-
-代表的な Visualforce ページ:
-
-- `force-app/main/default/pages/CommunitiesLogin.page`
-- `force-app/main/default/pages/CommunitiesSelfReg.page`
-- `force-app/main/default/pages/ForgotPassword.page`
-- `force-app/main/default/pages/ChangePassword.page`
-- `force-app/main/default/pages/MyProfilePage.page`
-- `force-app/main/default/pages/SiteLogin.page`
-- `force-app/main/default/pages/SiteRegister.page`
-
-代表的な Aura ファイル:
-
-- `force-app/main/default/aura/loginForm/loginForm.cmp`
-- `force-app/main/default/aura/selfRegister/selfRegister.cmp`
-- `force-app/main/default/aura/forgotPassword/forgotPassword.cmp`
-
-これらの例は次のことを示しています:
-
-- ログインおよびセルフ登録フローのハンドリング
-- パスワードリセットとプロフィール管理フロー
-- Visualforce、Aura、Apex をまたぐ UI とコントローラーの連携
-- 面接で説明しやすい Experience Cloud 志向のエントリーポイント
-
-### 2. 安全な REST エンドポイント
+### 1. 安全な REST エンドポイント
 
 代表的なファイル:
 
@@ -100,7 +47,7 @@
 - リクエストバリデーションとレスポンス整形
 - レビュアーフレンドリーな安全なデータ公開パターン
 
-### 3. 外部連携 / HTTP Callout
+### 2. 外部連携 / HTTP Callout
 
 代表的なファイル:
 
@@ -115,7 +62,7 @@
 - モックベースの Callout テスト
 - インテグレーション志向の Apex サービス設計
 
-### 4. Platform Event とトリガベースの処理
+### 3. Platform Event とトリガベースの処理
 
 代表的なファイル:
 
@@ -130,7 +77,7 @@
 - イベント駆動の後続自動化
 - `EventBus.publish` によるテスト
 
-### 5. LWC + Apex の連携
+### 4. LWC + Apex の連携
 
 代表的なファイル:
 
@@ -146,7 +93,7 @@
 - LWC と Apex のクライアント/サーバー連携
 - ポートフォリオレビューや面接で簡単に説明できるシンプルな UI パターン
 
-### 6. 補助資料として残している追加のプラットフォームサンプル
+### 5. 補助資料として残している追加のプラットフォームサンプル
 
 代表的なファイル:
 
@@ -184,29 +131,22 @@
 - レビュー対象を小さく保つ
 - リポジトリのテーマを明確にする
 - プラットフォームとインテグレーションの代表的なパターンを示す
-- 既存の Experience Cloud の最良の例を保持する
 - 過去のあらゆるサンプルを寄せ集めた"捨て場"にしない
 
 実際のところ、本リポジトリの中核となるストーリーは次のとおりです:
 
-1. `chogeer` 内にすでに存在する Experience Cloud / 認証フロー
-2. 幅を広げるために厳選して追加された、プラットフォームとインテグレーションの一連のサンプル
-3. 採用チームがシグナルを迅速に理解できるように設計された、意図的なレビュー順
+1. プラットフォーム、インテグレーション、UI を幅広くカバーするよう厳選して追加した一連のサンプル
+2. 採用チームがシグナルを迅速に理解できるように設計された、意図的なレビュー順
 
 ## このリポジトリのレビュー方法
 
 推奨されるレビュー順:
 
-1. `force-app/main/default/classes/CommunitiesLoginController.cls`
-2. `force-app/main/default/classes/CommunitiesSelfRegController.cls`
-3. `force-app/main/default/classes/MyProfilePageController.cls`
-4. `force-app/main/default/pages/CommunitiesLogin.page`
-5. `force-app/main/default/aura/loginForm/loginForm.cmp`
-6. `force-app/main/default/classes/ShowcaseContactRestResource.cls`
-7. `force-app/main/default/classes/ShowcaseContactSyncService.cls`
-8. `force-app/main/default/triggers/OrderEventTrigger.trigger`
-9. `force-app/main/default/classes/ShowcaseContactController.cls`
-10. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
+1. `force-app/main/default/classes/ShowcaseContactRestResource.cls`
+2. `force-app/main/default/classes/ShowcaseContactSyncService.cls`
+3. `force-app/main/default/triggers/OrderEventTrigger.trigger`
+4. `force-app/main/default/classes/ShowcaseContactController.cls`
+5. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
 
 ## ローカル開発
 
