@@ -28,12 +28,32 @@
     action.setCallback(this, (response) => {
       let state = response.getState();
       let returnValue = response.getReturnValue();
-      if (state === "SUCCESS" && returnValue.isSuccess) {
-        callback(response.getReturnValue());
+      if (state === "SUCCESS" && returnValue && returnValue.isSuccess) {
+        callback(returnValue);
       } else {
+        const responseErrors = response.getError() || [];
+        const errorMessage = responseErrors
+          .map((error) => {
+            if (!error) {
+              return "";
+            }
+            if (error.message) {
+              return error.message;
+            }
+            const pageErrors = error.pageErrors || [];
+            return pageErrors.length && pageErrors[0]
+              ? pageErrors[0].message
+              : "";
+          })
+          .filter(Boolean)
+          .join("; ");
         component.find("notifLib").showToast({
           title: "ERROR",
-          message: "失敗原因：" + returnValue.message,
+          message:
+            "失敗原因：" +
+            ((returnValue && returnValue.message) ||
+              errorMessage ||
+              "サーバー処理に失敗しました。"),
           variant: "error"
         });
       }
