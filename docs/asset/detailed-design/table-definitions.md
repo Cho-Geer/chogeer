@@ -375,6 +375,7 @@ Salesforce 側の 2 オブジェクトは SF プラットフォームが DDL を
 | 13 | Admin_Note__c | 管理者メモ | 長いテキストエリア | SF ローカル・唯一の SF 側編集対象（P1 表示項目・REQ-036） |
 
 - 注記：レコード Name＝AutoNumber（`B-{00000}`・起点 1・2026-09-02 拍板・S-1 実施時確定）
+- 裁定注記（P0-2 レビュー R-3/R-4/R-5）：テキスト桁数は IF 設計に定義がないため schema.prisma 実測に基づき裁定（appointmentNumber 20・syncStatus 16 等）／Account__c lookup＝SetNull（Account 削除を阻挡せず・投影記録存続・可視性キー喪失の副作用あり）／enableReports・enableSearch＝true（DD-01 未明示・無害）
 
 制約（設計値・BD-07 §3 境界制約）：canonical 項目の書込入口は投影 REST（BookingProjectionRest）のみ。PII 5 項目（氏名・電話・メール・WeChat・備考）は Booking__c に一切出現しない（RULE-11）。External ID の二択は同時に両方を使わない。
 
@@ -402,6 +403,7 @@ Salesforce 側の 2 オブジェクトは SF プラットフォームが DDL を
 | 16 | ResponseBodyRedacted__c | 応答ボディ（秘匿） | テキスト | 応答記録（PII 非含有） |
 
 - 注記：レコード Name＝AutoNumber（`CMD-{00000}`・起点 1・2026-09-02 拍板・S-1 実施時確定）
+- 裁定注記（P0-2 レビュー R-3/R-5）：テキスト桁数は schema.prisma 実測に基づき裁定（commandId 32/64 等）／LastError__c・ResponseBodyRedacted__c は Text(255) 上限・長大エラー本文は切り捨て留意（LongTextArea 採用見送り）／enableReports・enableSearch＝true
 
 ## 5. 未決事項
 
