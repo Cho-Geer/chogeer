@@ -70,7 +70,7 @@ docs/asset/*
 !docs/asset/basic-design/
 !docs/asset/detailed-design/
 !docs/asset/requirement-definition/
-!docs/asset/要件×機能×画面_覆盖率矩阵模板.xlsx
+!docs/asset/coverage-matrix-summary.xlsx
 scripts/
 code_analyzation/
 force-app/main/default/staticresources
