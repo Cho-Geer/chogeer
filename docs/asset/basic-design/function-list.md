@@ -54,13 +54,13 @@
 |---|---|---|---|---|---|---|---|
 | F-20 | 予約投影：予約正本（TERM-08）の変更（作成・変更・キャンセル全て＝顧客自身の標準取消を含む）を Booking__c（TERM-09）へ冪等投影。External ID 定位＋version ゲート＋eventId 再送時は初回結果を返す。投影ホワイトリストに顧客 PII を含まない | REQ-018（主）・REQ-019/024/029/033 | BIZ-12 | システム（Booking API → Apex） | 新規（P0-3 計画） | Must | 検証アンカー MV-04・MV-05・MV-06。ホワイトリストは RULE-11（契約凍結・PII 5 項目除外）。遅延コマンドへの 404/409 フォールバックは REQ-033（G7 決定） |
 | F-21 | 管理者入口遷移：Booking 管理コンソールに「Salesforce 管理ワークベンチ」ボタンを表示（ADMIN＋静的マッピング active のときのみ有効）し、Site ログインページへ遷移（遷移＝SSO ではない） | REQ-017（前提 REQ-026） | BIZ-10 | 管理者 | 新規（P0-4 計画） | Must | 検証アンカー MV-02。表示条件は RULE-16。現状はボタンなし |
-| F-22 | Site 独立ログイン：外部ユーザーが `/02/login` から Experience Site に独立ログイン（Booking の PW/JWT/Cookie は送信しない・RULE-18） | REQ-016 | BIZ-11 | 管理者（外部ユーザーとして・TERM-07） | 既存（P0-1 構築済み・ログイン部分 ✅ 検証済み） | Must | 検証アンカー MV-03（ログイン部分）。判定基準の後半「権限付与済みページのみ閲覧可能」は MV-07（P0-2〜）で実施 |
+| F-22 | Site 独立ログイン：外部ユーザーが `/02/login` から Experience Site に独立ログイン（Booking の PW/JWT/Cookie は送信しない・RULE-18） | REQ-016 | BIZ-11 | 管理者（外部ユーザーとして・TERM-07） | 既存（P0-1 構築済み・ログイン部分 ✅ 検証済み） | Must | 検証アンカー MV-03（ログイン部分）。判定基準の後半「権限付与済みページのみ閲覧可能」は MV-07（準備＝P0-2・実行＝P0-4〔F-23 完了時〕・PPT-01 †4 窓表現）で実施 |
 | F-23 | 投影リスト表示：Site 内 LWC で自 Account の予約投影を閲覧（行級限定・読取専用） | REQ-020（＋REQ-030） | BIZ-13 | 管理者（外部ユーザーとして） | 新規（P0-4 計画） | Must | 検証アンカー MV-07。行級範囲は RULE-13（OWD Private＋Sharing Set＋CRUD/FLS）。現サイトはサンプルテンプレート |
 | F-24 | キャンセルコマンド受理：Site から CANCEL_BOOKING を送信し、Booking_Command__c（TERM-11）を生成して commandId／QUEUED を即時返却。状態はポーリングで取得 | REQ-021（＋REQ-030） | BIZ-14 | 管理者（送信）＋システム（受付） | 新規（P0-3/P0-4 計画） | Must | 検証アンカー MV-07/08。唯一の逆方向コマンド種別 |
 | F-25 | コマンドバックグラウンド実行：Queueable が Named Credential で Booking 統合端点を呼出。Booking 側は Integration Guard・静的マッピング・ADMIN/ACTIVE・状態・expectedVersion を検証し、同一トランザクションで正本を CANCELLED に更新。409＝業務競合（リトライしない）・429/503/timeout＝一時的障害（限定回数リトライ）。FAILED／ERROR は同一 commandId で手動 Retry 可能 | REQ-022（主）・REQ-023・REQ-024・REQ-026・REQ-027・REQ-028・REQ-029・REQ-031 | BIZ-14・BIZ-15 | システム | 新規（P0-3 計画） | Must | 検証アンカー MV-08/09/10/11。エラー区分は RULE-09・手動 Retry は RULE-10（原 commandId・Retry UI は P1 保留）。監査フィールド（CorrelationId・AttemptCount・HttpStatus・NextAttemptAt・LastError）は REQ-031 |
 | F-26 | 結果書き戻し：コマンド成功後、バージョンゲート付きで canonical result を Booking__c に書き戻す（incomingVersion が現行より高い場合のみ更新） | REQ-025（＋REQ-024） | BIZ-14 | システム | 新規（P0-3 計画） | Must | 検証アンカー MV-08。終状態の書込みは明示 200/409 のみ（RULE-14） |
 
-Booking 側の新規追加キャリア（P0-3 計画）：統合端点 `POST /v1/integrations/salesforce/booking-commands`、HTTP クライアントと OAuth 依存の新規導入（現状 `package.json` に HTTP クライアント依存なし＝実測）、静的操作者マッピング（TERM-26・`salesforceUserId ↔ bookingUserId` の事前登録 active 1 件）、同期状態フィールド（`version`／`syncStatus` の migration・現行 13 モデルに該当フィールドなし＝BD-07 実測、P0-2 契約凍結時に確定）。
+Booking 側の新規追加キャリア（P0-3 計画）：統合端点 `POST /v1/integrations/salesforce/booking-commands`、HTTP クライアントと OAuth 依存の新規導入（現状 `package.json` に HTTP クライアント依存なし＝実測）、静的操作者マッピング（TERM-26・`salesforceUserId ↔ bookingUserId` の事前登録 active 1 件）、同期状態フィールド（`version`／`syncStatus` の migration・現行 13 モデルに該当フィールドなし＝BD-07 実測、確定済（2026-09-01・CHK-01 B-1））。
 
 ## 5. Salesforce 側既存・共通機能
 
