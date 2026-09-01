@@ -55,6 +55,7 @@ $RECYCLE.BIN/
 playwright-report/
 test-results/
 playwright/.cache/
+.playwright-mcp/
 .huskyrc
 .husky
 .vscode
@@ -64,11 +65,19 @@ playwright/.cache/
 .devcontainer
 
 docs/*
+!docs/asset/
+docs/asset/*
+!docs/asset/basic-design/
+!docs/asset/detailed-design/
+!docs/asset/requirement-definition/
+!docs/asset/要件×機能×画面_覆盖率矩阵模板.xlsx
 scripts/
 code_analyzation/
 force-app/main/default/staticresources
 
 # Local tool artifacts
 .mimosa/
+**/.mimosa/
 .video_agent/
 .tmp-*/
+.v2c/
