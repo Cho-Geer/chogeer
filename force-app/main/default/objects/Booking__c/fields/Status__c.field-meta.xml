@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Status__c</fullName>
+    <label>予約状態</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>false</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>PENDING</fullName>
+                <default>false</default>
+                <label>PENDING</label>
+            </value>
+            <value>
+                <fullName>CONFIRMED</fullName>
+                <default>false</default>
+                <label>CONFIRMED</label>
+            </value>
+            <value>
+                <fullName>CANCELLED</fullName>
+                <default>false</default>
+                <label>CANCELLED</label>
+            </value>
+            <value>
+                <fullName>COMPLETED</fullName>
+                <default>false</default>
+                <label>COMPLETED</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

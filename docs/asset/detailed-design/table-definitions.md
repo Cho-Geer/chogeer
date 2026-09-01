@@ -374,6 +374,8 @@ Salesforce 側の 2 オブジェクトは SF プラットフォームが DDL を
 | 12 | Account__c | 管理元Account | 参照（lookup・Account） | Sharing Set のキー |
 | 13 | Admin_Note__c | 管理者メモ | 長いテキストエリア | SF ローカル・唯一の SF 側編集対象（P1 表示項目・REQ-036） |
 
+- 注記：レコード Name＝AutoNumber（`B-{00000}`・起点 1・2026-09-02 拍板・S-1 実施時確定）
+
 制約（設計値・BD-07 §3 境界制約）：canonical 項目の書込入口は投影 REST（BookingProjectionRest）のみ。PII 5 項目（氏名・電話・メール・WeChat・備考）は Booking__c に一切出現しない（RULE-11）。External ID の二択は同時に両方を使わない。
 
 ### 4.2 Booking_Command__c（予約キャンセルコマンド・TERM-11）
@@ -398,6 +400,8 @@ Salesforce 側の 2 オブジェクトは SF プラットフォームが DDL を
 | 14 | CorrelationId__c | 相関ID | テキスト | TERM-17 |
 | 15 | LastError__c | 最終エラー | テキスト | REQ-031 監査 |
 | 16 | ResponseBodyRedacted__c | 応答ボディ（秘匿） | テキスト | 応答記録（PII 非含有） |
+
+- 注記：レコード Name＝AutoNumber（`CMD-{00000}`・起点 1・2026-09-02 拍板・S-1 実施時確定）
 
 ## 5. 未決事項
 
