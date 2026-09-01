@@ -75,6 +75,15 @@ scripts/
 code_analyzation/
 force-app/main/default/staticresources
 
+# P0-1 Experience Cloud org-side metadata (retrieved 2026-08-30 during MV-03 fix; contains personal emails; re-retrievable from DE org)
+# NOTE: future P0-3+ permission sets / settings will need these lines removed or `git add -f`.
+force-app/main/default/experiences/
+force-app/main/default/networkBranding/
+force-app/main/default/networks/
+force-app/main/default/permissionsets/
+force-app/main/default/settings/
+force-app/main/default/sites/
+
 # Local tool artifacts
 .mimosa/
 **/.mimosa/
