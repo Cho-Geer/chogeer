@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SharingSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <accessMappings>
+        <accessLevel>Read</accessLevel>
+        <object>Booking__c</object>
+        <objectField>Account__c</objectField>
+        <userField>Account</userField>
+    </accessMappings>
+    <description>予約投影の行レベル共有（Account__c キー・自 Account のみ・BD-03 §10.1 表1【凍結済 2026-09-01】）</description>
+    <name>Booking_Projection_Sharing</name>
+    <profiles>Customer Community Plus User</profiles>
+</SharingSet>
