@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Version_Monotonic</fullName>
+    <active>true</active>
+    <description>ADR-2b（interview-portfolio-tech-decisions :33-35）：版本单调性纵深防御采用声明式 validation rule（非 trigger）。insert 路径＝CurrentVersion__c &gt;= 1 边界；update 路径＝变更时不得小于等于原值（只能单调增加）。与 BookingProjectionRest 应用层版本门（FOR UPDATE 后 incomingVersion &gt; CurrentVersion）形成二重防线（RULE-01）</description>
+    <errorConditionFormula>IF(ISNEW(), CurrentVersion__c &lt; 1, AND(ISCHANGED(CurrentVersion__c), CurrentVersion__c &lt;= PRIORVALUE(CurrentVersion__c)))</errorConditionFormula>
+    <errorMessage>版本单调性违反（RULE-01）：insert 时 CurrentVersion__c 必须大于等于 1；update 时 CurrentVersion__c 只能单调增加、不得降级</errorMessage>
+    <errorDisplayField>CurrentVersion__c</errorDisplayField>
+</ValidationRule>
