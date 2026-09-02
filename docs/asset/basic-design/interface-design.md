@@ -53,8 +53,8 @@
 | 5 | サービス名 | `ServiceName__c` | 文字列 | — | 提供メニュー名（TERM-03）。サービス未指定予約では空を許容 |
 | 6 | 予約状態 | `Status__c` | 文字列・canonical 値（§3.6 変換表） | ○ | PENDING／CONFIRMED／CANCELLED／COMPLETED |
 | 7 | バージョン | 正本 `version` → `CurrentVersion__c` | 整数・単調増加（TERM-10） | ○ | バージョンゲート判定の入力 |
-| 8 | イベントID | `eventId` → `LastEventId__c` | 文字列（TERM-18） | ○ | 投影イベントの冪等判定キー |
-| 9 | 相関ID | `correlationId` → `CorrelationId__c` | 文字列（TERM-17） | ○ | 一連の連携処理を横断追跡する識別子（採番方針は BD-11 CF-05） |
+| 8 | イベントID | `eventId` → `LastEventId__c` | 文字列（TERM-18・UUID v4） | ○ | 投影イベントの冪等判定キー |
+| 9 | 相関ID | `correlationId` → `CorrelationId__c` | 文字列（TERM-17・UUID v4） | ○ | 一連の連携処理を横断追跡する識別子（採番方針は BD-11 CF-05・UUID v4 決定済 2026-09-02） |
 
 応答（Apex → Booking）：受理結果として `eventId`・受理後の `CurrentVersion__c` を返す（sequence 文書 F3 の SL-->>BA 応答に準拠）。旧バージョン／同バージョン別イベントの拒否時は、拒否と現行 version が判別可能な競合応答を返す（RULE-01）。
 
@@ -157,11 +157,11 @@ flowchart TB
 | No. | 項目名（論理） | 物理名候補 | 型・桁数（論理） | 必須 | 説明 |
 |---|---|---|---|---|---|
 | 1 | コマンド種別 | `commandType` | 文字列・`CANCEL_BOOKING` 固定 | ○ | 唯一のコマンド種別（RULE-13） |
-| 2 | コマンドID | `commandId` | 文字列（TERM-12） | ○ | 冪等キー。再送時は初回結果を返す（RULE-03） |
+| 2 | コマンドID | `commandId` | 文字列（TERM-12・UUID v4） | ○ | 冪等キー。再送時は初回結果を返す（RULE-03） |
 | 3 | 外部ID | `bookingExternalId` | 文字列（TERM-14） | ○ | 取消対象予約の定位（投影と同一キー体系）（uuid `id`・決定済 2026-09-01） |
 | 4 | 期待バージョン | `expectedVersion` | 整数（TERM-10） | ○ | 正本現在 version と一致しない場合は 409（RULE-02） |
 | 5 | 要求者（SF ユーザーID） | `requestedBySalesforceUserId` | 文字列 | ○ | 静的マッピング検証の入力（ブラウザ申告 ID は採用しない・RULE-12） |
-| 6 | 相関ID | `correlationId` | 文字列（TERM-17） | ○ | 追跡用（`Booking_Command__c.CorrelationId__c` にも記録） |
+| 6 | 相関ID | `correlationId` | 文字列（TERM-17・UUID v4） | ○ | 追跡用（`Booking_Command__c.CorrelationId__c` にも記録） |
 
 応答（Booking → Salesforce）：
 

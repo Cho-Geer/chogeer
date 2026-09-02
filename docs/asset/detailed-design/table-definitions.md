@@ -344,7 +344,7 @@ schema.prisma に明示指定のある `onDelete: Cascade` は次表の 4 本の
 - ①保存対象は **200 成功結果のみ**（409 は決定論的に再現・503/timeout は DB 未触・404 の監査は SF 側 Booking_Command__c が担う＝両側職責対称・handoff §一）
 - ②書込みは RULE-08 正本更新と**同一トランザクション**（BD-03 §8.6・crash 窗口で冪等性を保証）
 - ③cleanup は P0 不要（デモ規模）、P1 で retention ジョブへの接続を検討（DD-03 関連）
-- ④型・制約の最終値は migration 時に確定（CHK-01 B-3・正式モデル名は P0-3 確定フロー・IDR-01 登録済み）
+- ④型・制約の最終値は migration 時に確定（CHK-01 B-3・IDR-01 登録済み）。**正式モデル名確定（2026-09-02・CHK-02 C-6）＝`IntegrationCommand`／`integration_commands` 維持**（schema.prisma :374-388・migration 71c88c8 実測と一致・追加 migration 不要）
 
 ## 3. パーティション方針
 
