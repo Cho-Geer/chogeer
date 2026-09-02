@@ -87,4 +87,4 @@
 |---|---|---|
 | 1 | 【決定済 2026-09-02】採番形式＝**UUID v4**（小文字・ハイフン付き 36 文字）。eventId・correlationId＝Booking 側生成（Node `crypto.randomUUID`／Prisma `uuid()`）・commandId＝Salesforce 側生成（Apex・S-5 実装時）。BD-09 §3.3/§4.3 の型列へ反映済み（CHK-02 C-8） | 決定済み（2026-09-02） |
 | 2 | CF-06 のバックエンド UTC 日付部生成と JST 表示の境界挙動の確認（深夜予約） | 詳細設計・実装時（本書 §3.6 未確認点） |
-| 3 | Integration Guard 端点と CSRF 中間件（CSRF_ENABLED）の干渉可否・CSRF 免除構成の要否の確認 | P0-3 実装設計時 |
+| 3 | 【決定済 2026-09-02】干渉なし・免除構成の追加不要（CSRF middleware の Bearer 豁免が適用・`csrf.middleware.ts:32-36` 実測）。B-2 実装時に JwtAuthGuard の @Public 放行を確認（CHK-02 C-9） | 決定済み（2026-09-02） |

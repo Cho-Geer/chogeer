@@ -378,7 +378,7 @@ Booking 側の検証順序（すべてサーバ側で実施・RULE-02/03/05/07/1
 
 | No. | 未決事項 | 決定期限 |
 |---|---|---|
-| 1 | Integration Guard の secret 鍵バージョン管理方式（ローテーション手順を含む） | P0-3 実装設計時 |
+| 1 | 【決定済 2026-09-02】secret 鍵バージョン管理＝kid 対照方式（env `INTEGRATION_SECRET_<kid>` 複数併存・未知 kid=401）＋無停止ローテーション 3 步（追加→切替→旧鍵削除）（CHK-02 C-2） | 決定済み（2026-09-02） |
 | 2 | リトライ上限回数・間隔・NextAttemptAt の具体値 | P0-3 実装時 |
 | 3 | 【決定済 2026-09-01】404 の resultCode 区分＝CD-12 NOT_FOUND（HttpStatus 区分・非終態扱いは BD-09 §5 補記のとおり）。REQ-033 の決定記録は 2026-09-01 に成文済み（CHK-01 C-3 [x]・p0-2/interview-portfolio-req033-decision-record.md 参照） | 決定済み（2026-09-01） |
 

@@ -21,12 +21,12 @@
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | **クラス名は P0-3 で確定**（TERM-23 のとおり）。本書では「Integration Guard」と表記。配置は `src/common/guards/`（既存ガード群と同じ） |
+| モジュール/クラス名 | **`IntegrationGuard`（2026-09-02 確定・CHK-02 C-2）**。配置は `src/common/guards/integration.guard.ts`（既存ガード群と同じ `src/common/guards/`） |
 | 命名と職責 | サービス間認証（A3）の検証。secret の鍵バージョン・audience・scope=`booking.integration.command`・時刻偏差を検証し、統合端点への呼出が「正しいシステムからの呼出」であることを担保する（REQ-029・BD-01 §4 A3） |
 | メソッド名・引数・戻り値 | `canActivate(context: ExecutionContext): Promise<boolean>`（NestJS CanActivate 規約）。内部ヘルパー：`verifySignature(header: string, payload: unknown): Promise<boolean>`・`verifyClaims(payload: JwtPayload): boolean`（設計値） |
-| 処理概要 | 1) Authorization ヘッダの Bearer token を取得。2) secret の鍵バージョン照合。3) 署名検証（secret は環境変数／secret 管理・P0-3 で確定）。4) audience が自環境の想定値と一致。5) scope に `booking.integration.command` を含む。6) 時刻偏差（例：±数分・具体値は P0-3）以内。すべて合格で true、不合格で 401/403 を返す |
+| 処理概要 | 1) Authorization ヘッダの Bearer token を取得。2) secret の鍵バージョン照合（kid 対照・env `INTEGRATION_SECRET_<kid>`／未知 kid=401・2026-09-02 確定）。3) 署名検証（HS256 JWT・対応 kid の secret で検証）。4) audience が `booking-api`（環境変数化・2026-09-02 確定）と一致。5) scope に `booking.integration.command` を含む。6) 時刻偏差 ±300 秒以内（\|now−iat\|・2026-09-02 確定）。すべて合格で true、不合格で 401/403 を返す |
 | 呼び出し関係 | 呼出元：統合端点（BookingCommandsController §2.2）のルートにガードとして登録。呼出先：なし（設定値のみ参照）。既存の `JwtAuthGuard`（APP_GUARD）とは独立したガードであり、**JWT ガードを迂回した匿名端点としてではなく独立ガードで保護する**（CF-01 の制約・BD-10 §3.2） |
-| 例外処理 | 検証 NG 時に `AuthenticationException`（401）／`AuthorizationException`（403）を throw（実在クラス・`src/common/exceptions/business.exceptions.ts`）。業務状態遷移・コマンド状態は一切変更しない（RULE-14 注記・MV-11）。CSRF ミドルウェアとの干渉は BD-11 未決事項 3 として確認対象 |
+| 例外処理 | 検証 NG 時に `AuthenticationException`（401）／`AuthorizationException`（403）を throw（実在クラス・`src/common/exceptions/business.exceptions.ts`）。業務状態遷移・コマンド状態は一切変更しない（RULE-14 注記・MV-11）。CSRF ミドルウェアとの干渉は BD-11 未決事項 3 として確認対象 → 【解決 2026-09-02】干渉なし（CSRF middleware の Bearer 豁免が適用・CHK-02 C-9） |
 | 使用 SQL | なし（SQL・Prisma クエリを使用しない） |
 | 対応機能 ID | F-25（IF-02 の A3 認証・NFR-04） |
 
@@ -147,7 +147,7 @@ BD-03 §2 と同一口径で、既存モジュールは次表の一覧とコー�
 | No. | 未決事項 | 決定期限 |
 |---|---|---|
 | 1 | 【決定済 2026-09-01】integration_commands（第 14 モデル・暫定名・正式名は P0-3 確定フロー・IDR-01 登録済み）に確定。RULE-08 同一トランザクション書込み・応答キャッシュ否決・P0-2 凍結ウィンドウへ前倒し（migration は CHK-01 B-3）。詳細は DD-01 §2.15。**正式名確定（2026-09-02・CHK-02 C-6）＝`IntegrationCommand`／`integration_commands` 維持** | 決定済み（2026-09-01／正式名 2026-09-02） |
-| 2 | Integration Guard のクラス名・secret 鍵バージョン管理方式（ローテーション手順含む） | P0-3 実装設計時（TERM-23・BD-03 §8.9） |
+| 2 | 【決定済 2026-09-02】クラス名＝`IntegrationGuard`・トークン＝HS256 JWT（kid/aud=`booking-api`/scope/iat）・時刻偏差 ±300 秒・secret＝kid 対照 env 複数鍵＋3 步無停止ローテーション。SF 側 secret 保管場所は S-2/S-4 で確定（CHK-02 C-2） | 決定済み（2026-09-02） |
 | 3 | 静的マッピングの実装方式（Prisma モデル vs 設定ファイル） | P0-3 実装設計時（BD-03 §4.9・TERM-26） |
 | 4 | 投影送信サービスのクラス名・投影呼出失敗時の同期ブロック有無 | P0-3 実装設計時（BD-03 §3.9 未決事項 2） |
 | 5 | LWC バンドル名・ポーリング間隔・取消可否表示条件 | P0-4 着手時（BD-03 §6.9・§7.9） |
