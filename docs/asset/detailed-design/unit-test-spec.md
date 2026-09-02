@@ -67,7 +67,7 @@
 | TC-11 | BookingCommandQueueable.execute | 異常（認証 NG 401/403） | HttpCalloutMock が 401/403（誤 audience/scope/旧 key）を返す前提 | 業務状態遷移・コマンド終状態（SUCCEEDED/CONFLICT/FAILED）を書込まず、エラー記録のみ（RULE-14 注記・REQ-029） | 未実施（P0-3 計画） | F-25（MV-11・RULE-09 注記・REQ-029） |
 | TC-12 | BookingSiteController.getProjections | 異常（行級限定・越権拒否） | 外部ユーザー A が他 Account の Booking__c ID を直指定で照会（External OWD=Private＋Sharing Set 前提） | 行級範囲により取得不能（空／権限不足挙動）。他 Account の投影は表示されない | 未実施（P0-3 計画） | F-23（MV-07・RULE-13・REQ-030） |
 | TC-13 | BookingSiteController.submitCancel | 境界（取消不可状態の事前抑制） | CANCELLED／COMPLETED の投影に対して取消送信を試行 | 送信前に抑制（ボタン無効・MSG-04 相当）。Booking_Command__c は生成されない（最終判定は Booking 側 409・F-25） | 未実施（P0-3 計画） | F-24（BD-03 §7.5・RULE-07） |
-| TC-14 | BookingCommandQueueable.execute | 境界（受入端点の入力境界） | リクエスト境界：expectedVersion 同値（正本一致）・`expectedVersion` null・`bookingExternalId` 空・`commandType` 不正値・`requestedBySalesforceUserId` null を各 1 件 | 同値は受理 200。null／空／不正は 400（または設計上の判定）で返し、正本・コマンド状態を変えない（P0 では Mock 応答の境界として検証） | 未実施（P0-3 計画） | F-25（BD-09 §4.3・RULE-02/12/13） |
+| TC-14 | BookingCommandQueueable.execute | 境界（受入端点の入力境界） | リクエスト境界：expectedVersion 同値（正本一致）・`expectedVersion` null・`bookingExternalId` 空・`commandType` 不正値・`requestedBySalesforceUserId` null を各 1 件 | 同値は受理 200。null／空／不正は **400（ValidationException・判定制確定 2026-09-02・CHK-02 C-11：必須 6 項目＋commandType 完全一致＋expectedVersion 型検証のみ）** で返し、正本・コマンド状態を変えない（P0 では Mock 応答の境界として検証） | 未実施（P0-3 計画） | F-25（BD-09 §4.3・RULE-02/12/13） |
 | TC-15 | BookingSiteController.getProjections | 境界（投影 0 件） | 自 Account に投影レコードが存在しない状態 | 空一覧を返す（MSG-01 相当・異常にしない） | 未実施（P0-3 計画） | F-23（BD-03 §6.5） |
 | TC-16 | BookingSiteController.getCommandStatus | 正常（状態遷移表示） | コマンド生成後、QUEUED→RUNNING→SUCCEEDED の順にポーリング | 各状態が正しく返り、最終的に SUCCEEDED（/CONFLICT/FAILED）が表示される | 未実施（P0-3 計画） | F-24（BD-03 §7・S-11-07） |
 
@@ -84,7 +84,7 @@
 | TC-21 | BookingsIntegrationService.executeCancelCommand | 異常（静的マッピング NG） | `requestedBySalesforceUserId` に対応するマッピング不存在／inactive、または Booking ユーザーが非 ADMIN／非 ACTIVE | 403（AuthorizationException）を返し、正本を更新しない（RULE-12） | 未実施（P0-3 計画） | F-25（RULE-12・REQ-026） |
 | TC-22 | BookingsIntegrationService.executeCancelCommand | 異常（予約定位 404） | `bookingExternalId` が既存予約に一致しない（削除済み予約宛を含む） | 404（ResourceNotFoundException）を返し、曖昧な成功としない（REQ-033・G7） | 未実施（P0-3 計画） | F-25（REQ-033・RULE-15） |
 | TC-23 | BookingsIntegrationService.executeCancelCommand | 異常（状態遷移 NG） | COMPLETED 宛取消・CANCELLED 宛の新 commandId 取消 | 409（BusinessRuleException）を返し、正本を更新しない（RULE-05/07） | 未実施（P0-3 計画） | F-25（MV-09・RULE-05/07） |
-| TC-24 | BookingsIntegrationService.executeCancelCommand | 境界（バージョンゲート） | expectedVersion 同値（正本一致）→受理／expectedVersion が正本より 1 低い→409／expectedVersion 0 件（初回・正本 version=1 想定） | 同値は 200、不一致は 409＋currentVersion＋correlationId（RULE-02）。0 件は初回登録として扱うか 409（P0-3 で確定） | 未実施（P0-3 計画） | F-25（RULE-02・REQ-024） |
+| TC-24 | BookingsIntegrationService.executeCancelCommand | 境界（バージョンゲート） | expectedVersion 同値（正本一致）→受理／expectedVersion が正本より 1 低い→409／expectedVersion 0 件（初回・正本 version=1 想定） | 同値は 200、不一致は 409＋currentVersion＋correlationId（RULE-02）。**0 件も不一致として 409（決定済 2026-09-02・CHK-02 C-10・特殊扱いなし）** | 未実施（P0-3 計画） | F-25（RULE-02・REQ-024） |
 | TC-25 | BookingsIntegrationService.executeCancelCommand | 正常（正本更新トランザクション） | 全検証合格（PENDING・expectedVersion 一致・マッピング active） | 同一トランザクションで status=CANCELLED・`version+1`・`syncStatus=PENDING`・`cancelledAt` 設定（RULE-08）。応答 200＋canonicalVersion＋resultCode | 未実施（P0-3 計画） | F-25（RULE-08・BD-03 §8.6） |
 | TC-26 | BookingsIntegrationService.executeCancelCommand | 異常（DB 例外ロールバック） | 正本更新時に DB エラー（接続断等）を注入 | 例外を throw し、検証〜正本更新のトランザクション全体がロールバック（正本不変・整合保持） | 未実施（P0-3 計画） | F-25（BD-03 §8.6） |
 | TC-27 | 投影送信サービス.projectBooking | 正常（投影成功） | 正本変更確定後の Appointment に対し、ホワイトリスト 9 項目ペイロードを生成して IF-01 呼出（Mock で受理応答） | 応答受理後 `syncStatus=SYNCED` に更新。ペイロードに PII 5 項目が含まれない（構造的排除） | 未実施（P0-3 計画） | F-20（REQ-018/019・RULE-11・IF-01） |
@@ -107,6 +107,6 @@
 
 | No. | 未決事項 | 決定期限 |
 |---|---|---|
-| 1 | TC-24 の「version 0 件（初回）」の扱い（受理 vs 409） | P0-3 実装時（REQ-024・BD-09 §5 と併せて） |
-| 2 | TC-14 の 400 判定（Booking 側 DTO 検証の厳密仕様） | P0-3 実装時 |
+| 1 | 【決定済 2026-09-02】TC-24 の「version 0 件」＝特殊扱いなし・不一致として 409＋currentVersion（単純整数一致維持・CHK-02 C-10） | 決定済み（2026-09-02） |
+| 2 | 【決定済 2026-09-02】TC-14 の 400 判定＝必須 6 項目＋commandType 完全一致＋expectedVersion 型検証のみ（UUID 形式検証なし・CHK-02 C-11） | 決定済み（2026-09-02） |
 | 3 | 既存テスト実行結果（パス/失敗）の取得と、既存テストの日本語化要否 | テスト実行フェーズ／P1 検討 |
