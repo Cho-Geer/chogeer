@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtlClntAppGlobalOauthSettings xmlns="http://soap.sforce.com/2006/04/metadata">
+    <callbackUrl>https://softcode-dev-ed.develop.my.salesforce.com/services/oauth2/success</callbackUrl>
+    <certificate>MIIDWzCCAkOgAwIBAgIUbe4Kc2U1b4QbfSUa6hcB3sKuH3EwDQYJKoZIhvcNAQEL
+BQAwPTEcMBoGA1UEAwwTYm9va2luZy1pbnRlZ3JhdGlvbjEQMA4GA1UECgwHY2hv
+Z2VlcjELMAkGA1UEBhMCSlAwHhcNMjYwOTAyMDYyMjMxWhcNNDYwODI4MDYyMjMx
+WjA9MRwwGgYDVQQDDBNib29raW5nLWludGVncmF0aW9uMRAwDgYDVQQKDAdjaG9n
+ZWVyMQswCQYDVQQGEwJKUDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
+AIdaxM2ckQE+bxNC/CChzwwj+VruBgHRih/iJedeCQoAq+f+1vjW6WQ2iYO+Mkh7
+g6yD3YeITZuhfMyARfq97hTxuT/kixNxSwyYHak/2prRb+qsPi71lSbDp6JFQGq0
+VKU/SkWDMvjwO1rKNRzcZglm0HSdcw09yp01vhs2C0pkjyTbXDbgqAE5xiHcoPq+
+fd394OZe++Q3tboD9ChoAG1D4CWR3Hb9r8IWMQScaUL+Wbd46XPECRn4upgrhT5S
+YzjROskNRKA9QTiC7x6hs51ORvpfQDbz3pfqd17CT+/TT1FNZj9fDl62BzlPjsRe
+vYlqCOmQvX7E/dsCSKqwu20CAwEAAaNTMFEwHQYDVR0OBBYEFCkrtAmdNhE1E9b3
+2C8gYQcA3u8yMB8GA1UdIwQYMBaAFCkrtAmdNhE1E9b32C8gYQcA3u8yMA8GA1Ud
+EwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAIVSlDZ9rufRsh7Z/x6QbJAD
+W2ld4c+nfxODhXzH56bfwDHjSMzGNmgH2xP2Jmi744KWf1uWKKnXPYeN82Ongb+E
+CSbmy44lJtUdCO7KMTtnP9f9Ghs3MdTF5QNWNHnPHUsXM3HHhof01/OTkgddBAXV
+aLJDgtAVyOvV/syTkVYoH69raESbqc7bSq0qNSyASNHHsv5SX+R6i7LNoo9dnafT
++5Djc7K/ZGzNRg+kor1KpQDkyrcqS1/aSAjvg2bzo0/3wVMpHWS8g26VLWmlA1Gs
+tKgLwOHQQhpe9PF7/fCGGgN14XGYrJtnt48SGd6FyWHd45bNKkHNh3+7I+5t9/U=</certificate>
+    <consumerKey>3MVG9Ijq7vc89psoWRsSidbeel4EO.xS_txpCyQKbG7YPwK3GxOfAAGgs0BI0ycq7IaRxM60.dwl8SaWt3PW.</consumerKey>
+    <externalClientApplication>Booking_Integration_API</externalClientApplication>
+    <isClientCredentialsFlowEnabled>false</isClientCredentialsFlowEnabled>
+    <isCodeCredFlowEnabled>false</isCodeCredFlowEnabled>
+    <isCodeCredPostOnly>false</isCodeCredPostOnly>
+    <isConsumerSecretOptional>true</isConsumerSecretOptional>
+    <isDPopEnabled>false</isDPopEnabled>
+    <isDeviceFlowEnabled>false</isDeviceFlowEnabled>
+    <isEnforceRefreshTokenTTL>true</isEnforceRefreshTokenTTL>
+    <isIntrospectAllTokens>false</isIntrospectAllTokens>
+    <isNamedUserJwtEnabled>false</isNamedUserJwtEnabled>
+    <isPkceRequired>true</isPkceRequired>
+    <isRefreshTokenRotationEnabled>true</isRefreshTokenRotationEnabled>
+    <isSecretRequiredForRefreshToken>false</isSecretRequiredForRefreshToken>
+    <isSecretRequiredForTokenExchange>true</isSecretRequiredForTokenExchange>
+    <isTokenExchangeEnabled>false</isTokenExchangeEnabled>
+    <label>Booking_Integration_API_glbloauth</label>
+    <shouldRotateConsumerKey>false</shouldRotateConsumerKey>
+    <shouldRotateConsumerSecret>false</shouldRotateConsumerSecret>
+</ExtlClntAppGlobalOauthSettings>

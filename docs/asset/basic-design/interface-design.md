@@ -18,7 +18,7 @@
 
 | I/F ID | I/F 名 | 方向 | 連携先 | 認証 | 対応機能 | 状態 |
 |---|---|---|---|---|---|---|
-| IF-01 | 予約投影 | 送信（Booking → Salesforce） | chogeer DE org・Apex REST `BookingProjectionRest`（TERM-24） | OAuth 2.0 JWT Bearer（Connected App・A2） | F-20 | 🔵 P0-3 計画・未着手 |
+| IF-01 | 予約投影 | 送信（Booking → Salesforce） | chogeer DE org・Apex REST `BookingProjectionRest`（TERM-24） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | F-20 | 🔵 P0-3 計画・未着手 |
 | IF-02 | 予約キャンセルコマンド | 送信（Salesforce → Booking） | Booking 統合端点 `POST /v1/integrations/salesforce/booking-commands` | Named Credential（Bearer secret）＋ Integration Guard（A3） | F-25 | 🔵 P0-3 計画・未着手（Booking 側受入エンドポイント未実装） |
 
 対象外の連携（RD-07 §5 と同一口径）：改期・予約作成・添付・全項目同期・イベント駆動のリアルタイム配信は実施しない。コマンド種別は CANCEL_BOOKING のみ（RULE-13）。
@@ -36,7 +36,7 @@
 | 項目 | 設計値 |
 |---|---|
 | 方式 | HTTPS REST（Apex REST・`POST /services/apexrest/integrations/bookings/projection`）。Salesforce 側で External ID を用いた Upsert（insert または update）を行う |
-| 認証 | OAuth 2.0 JWT Bearer：専用 Connected App＋integration user＋`api` scope。証明書秘密鍵は Booking 側 secret 管理に置く（A2・TERM-20） |
+| 認証 | OAuth 2.0 JWT Bearer：専用外部クライアントアプリケーション（ECA・2026-09-02 Connected App より移行）＋integration user＋`api`＋`refresh_token` scope。証明書秘密鍵は Booking 側 secret 管理に置く（A2・TERM-20） |
 | 呼出元 | Booking API（NestJS・P0-3 で HTTP クライアントと OAuth 依存を新規導入） |
 | タイムアウト | 設計値（未実装）：Apex REST 応答待ちを短時間（数秒程度）に設定し、タイムアウト時は §3.8 の ERROR 記録へ分岐する。**具体値＝3000ms（2026-09-02 確定・CHK-02 C-4）** |
 

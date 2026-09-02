@@ -48,7 +48,7 @@ flowchart LR
         LWC["独自 LWC 🔵（P0-4）<br/>予約リスト＋取消＋状態ポーリング"]
         APEX["Apex 🔵（P0-3）<br/>BookingProjectionRest / BookingSiteController<br/>BookingCommandQueueable"]
         OBJ[("Booking__c / Booking_Command__c 🔵（P0-2）")]
-        NC["Named Credential +<br/>Connected App 🔵（P0-3）"]
+        NC["Named Credential +<br/>外部クライアントアプリケーション ECA 🔵（P0-3）"]
     end
 
     CU -->|"HTTPS"| LP
@@ -59,7 +59,7 @@ flowchart LR
     MOD --> PG
     MOD --> RD
 
-    MOD -.->|"🔵 投影: OAuth JWT bearer（Connected App）<br/>POST /services/apexrest/integrations/bookings/projection"| APEX
+    MOD -.->|"🔵 投影: OAuth JWT bearer（ECA）<br/>POST /services/apexrest/integrations/bookings/projection"| APEX
     APEX --> OBJ
     LWC -->|"with sharing + CRUD/FLS"| APEX
     SITE --> LWC
@@ -120,7 +120,7 @@ flowchart LR
 
 | 方向 | 接続先・内容 | 方式・プロトコル | 認証 | 状態 |
 |---|---|---|---|---|
-| Booking → Salesforce | 予約投影（正本変更の冪等 Upsert・TERM-09）。Apex REST `POST /services/apexrest/integrations/bookings/projection` | HTTPS（Apex REST） | OAuth 2.0 JWT Bearer（Connected App・A2） | 🔵 P0-3 計画 |
+| Booking → Salesforce | 予約投影（正本変更の冪等 Upsert・TERM-09）。Apex REST `POST /services/apexrest/integrations/bookings/projection` | HTTPS（Apex REST） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | 🔵 P0-3 計画 |
 | Salesforce → Booking | 取消コマンド実行（CANCEL_BOOKING のみ・TERM-11）。`POST /v1/integrations/salesforce/booking-commands` | HTTPS（REST） | Named Credential（Bearer secret）＋ Integration Guard（A3） | 🔵 P0-3 計画 |
 | 管理者ブラウザ → Salesforce | 入口ボタンからの Site ログインページ遷移＋外部ユーザー独立ログイン（遷移＝SSO ではない） | HTTPS（ブラウザ） | Salesforce 外部ユーザー認証情報（A4） | 遷移 🔵 P0-4 計画／ログイン ✅ MV-03 検証済み（ログイン部分） |
 
@@ -146,7 +146,7 @@ flowchart LR
 | # | 主体 → 対象 | 仕組み | 状態 | 備考 |
 |---|---|---|---|---|
 | A1 | 顧客／管理者 → Booking API | 電話番号＋6 桁認証コード（TERM-31）でログイン → `access_token`/`refresh_token`/`csrf_token` を HttpOnly Cookie で発行。JWT グローバルガードがリクエストごとに検証し、Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）を確認。ロールはデータベースの値を毎回参照（jwt-auth.guard 実測） | ✅ | ロール変更は `PUT /v1/users/:id`（既存セッションを取り消さない＝P1 強化課題・RULE-17）。状態変更 `PUT /v1/users/:id/status` はセッションを取り消す |
-| A2 | Booking サービス → Salesforce | OAuth 2.0 JWT Bearer：専用 Connected App＋integration user＋`api` scope。証明書秘密鍵は Booking 側 secret 管理（TERM-20） | 🔵 P0-3 | 技術選定の根拠は tech-decisions（Flow／標準 REST 代替は評価のうえ否決） |
+| A2 | Booking サービス → Salesforce | OAuth 2.0 JWT Bearer：専用外部クライアントアプリケーション（ECA・2026-09-02 Connected App より移行）＋integration user＋`api`＋`refresh_token` scope。証明書秘密鍵は Booking 側 secret 管理（TERM-20） | 🔵 P0-3 | 技術選定の根拠は tech-decisions（Flow／標準 REST 代替は評価のうえ否決） |
 | A3 | Salesforce Queueable → Booking API | Named Credential（External Credential の Bearer principal・TERM-21）＋ Booking 側 Integration Guard（secret の鍵バージョン・audience・scope=`booking.integration.command`・時刻偏差を検証・TERM-23） | 🔵 P0-3 | JWT ガードを迂回した匿名エンドポイントにはしない |
 | A4 | 管理者 → Experience Site | Booking ログイン後、入口ボタンから Site ログインページへ遷移し、Salesforce 外部ユーザー認証情報で**独立ログイン**。Booking のパスワード／JWT／Cookie は Booking の外に出ない（RULE-18） | 遷移 🔵（P0-4）／ログイン ✅（MV-03 検証済み・ログイン部分） | 遷移＝SSO ではない。両者のログアウトは相互に独立 |
 
@@ -176,7 +176,7 @@ flowchart LR
 | 外部ユーザー＋Profile/Permission Set＋Sharing Set | 管理者の身元と行級範囲（External OWD=Private・Account 隔離・TERM-32） | ✅ 外部ユーザー 1 名作成済み（P0-1）／権限マトリクス 🔵 P0-2 で凍結（F-32） |
 | `Booking__c` / `Booking_Command__c`＋External ID＋version フィールド | 投影オブジェクト（TERM-09）とコマンドオブジェクト（TERM-11） | 🔵 P0-2 契約凍結 |
 | `BookingProjectionRest` / `BookingSiteController` / `BookingCommandQueueable` | 投影受入口（TERM-24）／Site 用コントローラ（TERM-25）／バックグラウンド呼出（TERM-22） | 🔵 P0-3（Flow／標準 REST による代替は評価のうえ否決済み） |
-| Connected App（JWT Bearer）＋integration user＋Named Credential | 双方向のサービス間認証（A2/A3） | 🔵 P0-3 |
+| 外部クライアントアプリケーション ECA（JWT Bearer）＋integration user＋Named Credential | 双方向のサービス間認証（A2/A3） | 🔵 P0-3 |
 | 独自 LWC（予約リスト・取消ボタン・コマンド状態ポーリング・TERM-33） | Site 制限ページ | 🔵 P0-4（現サイトはサンプルテンプレート） |
 | Outbox/Worker・動的 provisioning（提権・降権） | 信頼性配信と外部ユーザーのライフサイクル管理 | ⚪ P1（REQ-037・REQ-038 保留） |
 

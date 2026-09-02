@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExternalClientApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <contactEmail>zhaogeyinzuo@outlook.com</contactEmail>
+    <description>P0-3 A2: Booking→SF OAuth 2.0 JWT Bearer (CHK-02 C-7/S-1, ECA migration)</description>
+    <distributionState>Local</distributionState>
+    <isProtected>false</isProtected>
+    <label>Booking_Integration_API</label>
+    <orgScopedExternalApp>00DIT000002Kg4l:Booking_Integration_API</orgScopedExternalApp>
+</ExternalClientApplication>
