@@ -34,7 +34,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | `BookingCommandsController`（計画名・設計値。本書限りの管理名であり、既存文書には未出。正式確定は P0-3）。ルーティング `POST /v1/integrations/salesforce/booking-commands`（BD-09 §4.2） |
+| モジュール/クラス名 | **`IntegrationCommandsController`（2026-09-02 確定・CHK-02 C-4。旧計画名 BookingCommandsController は本書内に残存・D-2 で一括改称）**。ルーティング `POST /v1/integrations/salesforce/booking-commands`（BD-09 §4.2・変更なし） |
 | 命名と職責 | 統合端点の HTTP 受付層。Integration Guard 通過後、リクエストボディの入力検証（DTO 検証）を行い、業務処理を BookingsIntegrationService（§2.3）へ委譲する。HTTP 層の関心事（ステータス・envelope）のみを担う |
 | メソッド名・引数・戻り値 | `receiveCommand(@Body() dto: BookingCommandRequestDto): Promise<ApiResponseDto<BookingCommandResultDto>>`（設計値）。DTO 項目は IF-02 §4.3 の 6 項目：`commandType`（CANCEL_BOOKING 固定）・`commandId`・`bookingExternalId`・`expectedVersion`・`requestedBySalesforceUserId`・`correlationId` |
 | 処理概要 | 1) Integration Guard で A3 検証（§2.1）。2) DTO 検証（commandType=CANCEL_BOOKING 以外は ValidationException・RULE-13）。3) BookingsIntegrationService.executeCancelCommand() を呼出。4) 応答を `ApiResponseDto` envelope（code/message/data/requestId/timestamp・api-contract.md 実測）で返す。200 時は `canonicalVersion`＋`resultCode`、409 時は `currentVersion`＋`correlationId` |
@@ -47,20 +47,20 @@
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | `BookingsIntegrationService`（計画名・設計値。本書限りの管理名・正式確定は P0-3）。配置は `src/modules/integrations/`（新規モジュール・P0-3 で AppModule へインポート） |
+| モジュール/クラス名 | **`IntegrationCommandsService`（2026-09-02 確定・CHK-02 C-4。旧計画名 BookingsIntegrationService は本書内に残存・D-2 で一括改称）**。配置は `src/modules/integrations/`（新規モジュール・P0-3 で AppModule へインポート） |
 | 命名と職責 | 統合コマンドの業務判定と正本更新の中核。BD-03 §8.4 の検証順序（2〜7）を実装し、同一トランザクションで正本を CANCELLED に更新する（REQ-022・RULE-02/03/05/07/12） |
 | メソッド名・引数・戻り値 | `executeCancelCommand(dto: BookingCommandRequestDto): Promise<BookingCommandResult>`（設計値）。戻り値：`BookingCommandResult`＝`{ httpStatus, canonicalVersion?, resultCode?, currentVersion? }`（IF-02 §4.3 応答に対応） |
 | 処理概要 | 1) **commandId 冪等判定**：同一 commandId の既処理があれば初回保存済み結果をそのまま返す（RULE-03・業務判定より先行）。冪等結果の保存先＝**integration_commands テーブル（第 14 モデル・DD-01 §2.15）【決定済 2026-09-01】**。RULE-08 正本更新と同一トランザクションで create（応答キャッシュ案は否決）。2) 静的マッピング検証：`requestedBySalesforceUserId` → Booking ユーザーが存在し、現在 ADMIN かつ ACTIVE（RULE-12）。3) 予約定位：`bookingExternalId` で正本を特定。不存在は 404。4) 状態遷移検証：PENDING/CONFIRMED のみ受理（RULE-05/07）。5) バージョンゲート：`expectedVersion != 正本現在 version` は 409＋currentVersion（RULE-02）。6) 全検証合格時、**同一トランザクションで**正本 status=CANCELLED・`version+1`・`syncStatus=PENDING`・`cancelledAt=now()` を更新（RULE-08）。7) 200＋canonicalVersion＋resultCode を返す |
 | 呼び出し関係 | 呼出元：BookingCommandsController。呼出先：PrismaService（`src/common/prisma/prisma.service.ts` 実測）。呼出しを受けた正本変更は投影送信サービス（§2.4・IF-01）の契機となる（RULE-08・トランザクション後の分離呼出） |
 | 例外処理 | 検証 NG を throw：404＝`ResourceNotFoundException`・409＝`ResourceConflictException`（バージョン不整合）／`BusinessRuleException`（状態遷移 NG）・403＝`AuthorizationException`（マッピング不存在/inactive・非 ADMIN/ACTIVE・RULE-12）。**エラー区分の 409/503 分類は RULE-09 のとおり**：409＝リトライせず CONFLICT、503/429/timeout＝一時的障害（SF 側でリトライ）。DB 例外はロールバック（検証〜正本更新の同一トランザクション・途中失敗は全てロールバック・BD-03 §8.6） |
-| 使用 SQL | Prisma クエリ要点（設計値）：正本取得 `appointment.findUnique({ where: { id } })`（External ID は uuid `id` に決定済・2026-09-01 拍板。定位は `findUnique({ where: { id } })` で確定・BD-09 §5 未決 1 は同日クローズ）／静的マッピング取得 `salesforceUserLink.findFirst({ where: { salesforceUserId, active: true } })`（P1 の SalesforceUserLink＝動的 provisioning とは別物。P0 では静的マッピング設定テーブルを想定・命名は P0-3 で確定。実装方式は Prisma モデル vs 設定ファイルの未決・BD-03 §4.9）／正本更新 `appointment.update({ where: { id }, data: { status: 'CANCELLED', version: { increment: 1 }, syncStatus: 'PENDING', cancelledAt: new Date() } })`。**排他の考え方**：コマンド経路では P2034 直列化リトライを導入せず、version ゲート（RULE-02）が楽観的排他を担う（BD-03 §8.6 の「層の異なる補完」に整合。P2034 は既存の予約作成フロー＝在庫競合対策として残る）／冪等判定・記録：`integrationCommand.findUnique({ where: { commandId } })`／同一トランザクション内 `integrationCommand.create({ commandId, httpStatus: 200, resultCode, canonicalVersion, ... })`（DD-01 §2.15・【決定済 2026-09-01】） |
+| 使用 SQL | Prisma クエリ要点（設計値）：正本取得 `appointment.findUnique({ where: { id } })`（External ID は uuid `id` に決定済・2026-09-01 拍板。定位は `findUnique({ where: { id } })` で確定・BD-09 §5 未決 1 は同日クローズ）／静的マッピング取得 `salesforceUserLink.findFirst({ where: { salesforceUserId, active: true } })`（P1 の SalesforceUserLink＝動的 provisioning とは別物。P0 では静的マッピング設定テーブルを想定 →【決定済 2026-09-02・CHK-02 C-3】Prisma モデル `StaticOperatorMapping`（`static_operator_mappings`）・旧仮称 salesforceUserLink の新名への改称は D-2/B-3 で実施）／正本更新 `appointment.update({ where: { id }, data: { status: 'CANCELLED', version: { increment: 1 }, syncStatus: 'PENDING', cancelledAt: new Date() } })`。**排他の考え方**：コマンド経路では P2034 直列化リトライを導入せず、version ゲート（RULE-02）が楽観的排他を担う（BD-03 §8.6 の「層の異なる補完」に整合。P2034 は既存の予約作成フロー＝在庫競合対策として残る）／冪等判定・記録：`integrationCommand.findUnique({ where: { commandId } })`／同一トランザクション内 `integrationCommand.create({ commandId, httpStatus: 200, resultCode, canonicalVersion, ... })`（DD-01 §2.15・【決定済 2026-09-01】） |
 | 対応機能 ID | F-25（REQ-022/023/024/026/027・RULE-02/03/05/07/12） |
 
 ### 2.4 投影送信サービス（IF-01 呼出）
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | 投影送信サービス（計画名は P0-3 で確定。本書では機能名で表記）。配置は `src/modules/integrations/`（§2.3 と同一モジュール内のサービス） |
+| モジュール/クラス名 | **`ProjectionSenderService`（2026-09-02 確定・CHK-02 C-4）**。配置は `src/modules/integrations/`（§2.3 と同一モジュール内のサービス） |
 | 命名と職責 | 予約正本の変更（作成・変更・キャンセル全て＝顧客自身の標準取消を含む）を、IF-01 で Salesforce 側 `Booking__c` へ冪等投影する（F-20・REQ-018）。ペイロード生成は投影ホワイトリスト（RULE-11・契約凍結）のみに限定し、PII 5 項目を構造的に含めない（REQ-019・BD-03 §3.5） |
 | メソッド名・引数・戻り値 | `projectBooking(appointmentId: string): Promise<ProjectionResult>`（設計値）。内部ヘルパー：`buildPayload(appointment): ProjectionPayload`（ホワイトリスト 9 項目・BD-09 §3.3）・`sendProjection(payload): Promise<HttpResponse>`（OAuth JWT Bearer 呼出・A2）・`updateSyncStatus(appointmentId, status)`。戻り値：`ProjectionResult`＝`{ eventId, acceptedVersion?, syncStatus }` |
 | 処理概要 | 1) 正本変更トランザクション確定後に呼出（トランザクション内で version+1・syncStatus=PENDING 済・RULE-08）。2) eventId・correlationId を採番（CF-05・UUID・設計値）。3) ホワイトリストのみからペイロード生成。4) OAuth 2.0 JWT Bearer（Connected App・A2・TERM-20）で `POST /services/apexrest/integrations/bookings/projection` を呼出。5) 応答判定：受理（初回・より新しい version）→ `syncStatus=SYNCED` 更新。拒否・認証系・一時的障害 → `syncStatus=ERROR` 記録（BD-09 §3.8）。6) 手動 Retry（同一 eventId）は BIZ-15 手順に依拠（Retry UI は P1 保留） |
@@ -148,7 +148,7 @@ BD-03 §2 と同一口径で、既存モジュールは次表の一覧とコー�
 |---|---|---|
 | 1 | 【決定済 2026-09-01】integration_commands（第 14 モデル・暫定名・正式名は P0-3 確定フロー・IDR-01 登録済み）に確定。RULE-08 同一トランザクション書込み・応答キャッシュ否決・P0-2 凍結ウィンドウへ前倒し（migration は CHK-01 B-3）。詳細は DD-01 §2.15。**正式名確定（2026-09-02・CHK-02 C-6）＝`IntegrationCommand`／`integration_commands` 維持** | 決定済み（2026-09-01／正式名 2026-09-02） |
 | 2 | 【決定済 2026-09-02】クラス名＝`IntegrationGuard`・トークン＝HS256 JWT（kid/aud=`booking-api`/scope/iat）・時刻偏差 ±300 秒・secret＝kid 対照 env 複数鍵＋3 步無停止ローテーション。SF 側 secret 保管場所は S-2/S-4 で確定（CHK-02 C-2） | 決定済み（2026-09-02） |
-| 3 | 静的マッピングの実装方式（Prisma モデル vs 設定ファイル） | P0-3 実装設計時（BD-03 §4.9・TERM-26） |
-| 4 | 投影送信サービスのクラス名・投影呼出失敗時の同期ブロック有無 | P0-3 実装設計時（BD-03 §3.9 未決事項 2） |
+| 3 | 【決定済 2026-09-02】Prisma モデル＝`StaticOperatorMapping`（`static_operator_mappings`・第 15 モデル・migration は B-5）。TERM-26 対応（CHK-02 C-3） | 決定済み（2026-09-02） |
+| 4 | 【決定済 2026-09-02】クラス名＝`ProjectionSenderService`・同期呼出（正本トランザクション確定後・タイムアウト 3000ms・失敗は正本応答に影響せず syncStatus=ERROR）（CHK-02 C-4） | 決定済み（2026-09-02） |
 | 5 | LWC バンドル名・ポーリング間隔・取消可否表示条件 | P0-4 着手時（BD-03 §6.9・§7.9） |
 | 6 | リトライ上限回数・間隔・NextAttemptAt の具体値 | P0-3 実装時（RULE-09/10・BD-09 §5 未決事項 2） |

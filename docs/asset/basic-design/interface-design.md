@@ -38,7 +38,7 @@
 | 方式 | HTTPS REST（Apex REST・`POST /services/apexrest/integrations/bookings/projection`）。Salesforce 側で External ID を用いた Upsert（insert または update）を行う |
 | 認証 | OAuth 2.0 JWT Bearer：専用 Connected App＋integration user＋`api` scope。証明書秘密鍵は Booking 側 secret 管理に置く（A2・TERM-20） |
 | 呼出元 | Booking API（NestJS・P0-3 で HTTP クライアントと OAuth 依存を新規導入） |
-| タイムアウト | 設計値（未実装）：Apex REST 応答待ちを短時間（数秒程度）に設定し、タイムアウト時は §3.8 の ERROR 記録へ分岐する。具体ミリ秒値は P0-3 実装時に確定 |
+| タイムアウト | 設計値（未実装）：Apex REST 応答待ちを短時間（数秒程度）に設定し、タイムアウト時は §3.8 の ERROR 記録へ分岐する。**具体値＝3000ms（2026-09-02 確定・CHK-02 C-4）** |
 
 ### 3.3 項目一覧（ペイロード 9 項目）
 
