@@ -439,7 +439,7 @@ F-25 の成功応答（明示 200）が前提。200 以外（409・認証系・t
 
 - 概要：`Booking__c`／`Booking_Command__c` に対する外部ユーザーの最小 CRUD/FLS・Sharing Set 行級・External OWD=Private を凍結する（REQ-030・対応業務 BIZ-13/BIZ-14）。
 - 導出根拠：「数値は CHK-01 C-4 方針（外部ユーザー＝投影 Read＋コマンド Create のみ）・DD-02 §3.3 SOQL 実測・DD-01 §4.1/§4.2 項目一覧・BD-07 §3 書込入口制約・REQ-036 から導出（2026-09-01 凍結）」。
-- 適用対象：本マトリクスの適用対象は Site 操作ユーザー（F-23/F-24 経路・Sharing Set 行級）であり、IF-01 §3.2 の統合ユーザー（integration principal・JWT Bearer）には適用しない。統合ユーザー用の権限セットは投影 REST が LastEventId__c／CorrelationId__c／LastError__c を参照するため本表とは別体系となり、P0-3 実装設計時に別途確定する。
+- 適用対象：本マトリクスの適用対象は Site 操作ユーザー（F-23/F-24 経路・Sharing Set 行級）であり、IF-01 §3.2 の統合ユーザー（integration principal・JWT Bearer）には適用しない。統合ユーザー用の権限セットは投影 REST が LastEventId__c／CorrelationId__c／LastError__c を参照するため本表とは別体系となり、**P0-3 で確定済み（2026-09-02・CHK-02 C-7）**：Salesforce Integration license＋Minimum Access - API Only Integrations＋SalesforceAPIIntegrationPsl＋PS `Booking_Integration_User`（Booking__c Read/Create/Edit＋13 項目 FLS＋`BookingProjectionRest` class access＋ユーザー権限「Apex REST サービス」）。
 
 **表 1：Booking__c・外部ユーザー権限（13 項目）**——オブジェクト権限＝**Read のみ**（Create/Update/Delete 不付与）。行級＝OWD Private＋Sharing Set（Account__c キー・自 Account のみ）。
 
