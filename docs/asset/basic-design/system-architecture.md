@@ -184,5 +184,5 @@ flowchart LR
 
 | No. | 未決事項 | 決定期限 |
 |---|---|---|
-| 1 | Named Credential の目標 URL（本機 dev compose と booking-deploy のどちらに向けるか） | P0-3 で NC 設定前（G3） |
+| 1 | 【決定済 2026-09-02】NC 最終指向＝booking-deploy デプロイ環境の公網 HTTPS URL（CHK-02 C-1・方案 1+3）。S-2 設定時は仮値（tunnel／プレースホルダ HTTPS・P0-3 内に実 callout なし）を許容し、P0-4 実リンク検証前に公網デプロイ完了・切替・接続確認を行う | 決定済み（2026-09-02） |
 | 2 | 【決定済 2026-09-01】External ID＝uuid `id` に決定（TERM-14。BD-07 §6 未決 1 と同日クローズ。本書では扱わない方針は維持） | 決定済み（2026-09-01） |
