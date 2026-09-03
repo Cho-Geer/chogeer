@@ -12,13 +12,13 @@
 - 本書は基本設計八文書の一つ（BD-09）。外部システム（Booking System ⇔ Salesforce）間の I/F を 2 本だけ定義する：**IF-01 予約投影（Booking → Salesforce）** と **IF-02 予約キャンセルコマンド（Salesforce → Booking）**。
 - 雛形（交付物雛形集 4.10 インターフェース設計書）の 10 項目＝各 I/F 章の節構成：I/F ID・連携先／方向／方式／項目一覧／頻度・タイミング／データ量／コード変換／異常時処理／担当・責任分界／連絡体制。
 - I/F の事実源は `docs/asset/requirement-definition-draft/interview-portfolio-business-sequence.md`（§2 主時序・§3 異常時序）および `docs/asset/requirement-definition-draft/interview-portfolio-business-flow.md`（F3/F4/F5）である。構成は BD-01（system-architecture.md §3.5・§4 認証境界 A2/A3）、データモデルは BD-07（erd.md §3）に準拠する。
-- **状態の真実性**：両 I/F とも「**P0-3 計画・未着手**」である。IF-02 の Booking 側受入エンドポイント（`POST /v1/integrations/salesforce/booking-commands`）は現状**未実装**であり、Booking の `package.json` に HTTP クライアント／OAuth 依存も存在しない（BD-01 §1 実測と一致）。本書の項目値は設計値（未実装）であり、P0-2 契約凍結で最終確定する。
+- **状態の真実性**：IF-01 は SF 側受入口のみ 2026-09-02 に実施済（6b9d970・Booking 側送信は P0-3 計画・部分実施）、IF-02 は「**P0-3 計画・未着手**」である。IF-02 の Booking 側受入エンドポイント（`POST /v1/integrations/salesforce/booking-commands`）は現状**未実装**であり、Booking の `package.json` に HTTP クライアント／OAuth 依存も存在しない（BD-01 §1 実測と一致）。本書の項目値は設計値（未実装）であり、P0-2 契約凍結で最終確定する。
 
 ## 2. I/F 一覧
 
 | I/F ID | I/F 名 | 方向 | 連携先 | 認証 | 対応機能 | 状態 |
 |---|---|---|---|---|---|---|
-| IF-01 | 予約投影 | 送信（Booking → Salesforce） | chogeer DE org・Apex REST `BookingProjectionRest`（TERM-24） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | F-20 | 🔵 P0-3 計画・未着手 |
+| IF-01 | 予約投影 | 送信（Booking → Salesforce） | chogeer DE org・Apex REST `BookingProjectionRest`（TERM-24） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | F-20 | 🔵 P0-3 計画・部分実施（SF 側受入口済〔6b9d970〕・Booking 側送信未実装） |
 | IF-02 | 予約キャンセルコマンド | 送信（Salesforce → Booking） | Booking 統合端点 `POST /v1/integrations/salesforce/booking-commands` | Named Credential（Bearer secret）＋ Integration Guard（A3） | F-25 | 🔵 P0-3 計画・未着手（Booking 側受入エンドポイント未実装） |
 
 対象外の連携（RD-07 §5 と同一口径）：改期・予約作成・添付・全項目同期・イベント駆動のリアルタイム配信は実施しない。コマンド種別は CANCEL_BOOKING のみ（RULE-13）。

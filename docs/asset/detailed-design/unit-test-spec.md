@@ -9,8 +9,8 @@
 
 ## 1. 文書の位置づけと構成
 
-- 本書は詳細設計四文書の一つ（DD-04）。既存テスト資産の実測概況（§2）と、P0 連携スライスのテスト設計値（§3 Apex／§4 Booking Jest）を記載する。雛形（交付物雛形集 5.4 単体テスト仕様書）の 6 項目（テストケース ID／対象モジュール・メソッド／観点／入力・前提条件／期待結果／実施結果）を §3・§4 のテストケース表に展開し、対応機能 ID・出典を記した備考列（第 7 列）を付す。未実施のテストケースの実施結果欄は「未実施（P0-3 計画）」と記す。
-- 状態表記：✅＝既存実装・実測／🔵＝P0 計画（未実装）。**§3・§4 のテストケースはすべて設計値（未実装）** であり、実装・実行は P0-3 を予定する。既存テストの実測数値（describe 数・it 数）は `booking-backend/src` 配下の 14 個の `*.spec.ts` を grep 計数した（2026-08-31・実測）。
+- 本書は詳細設計四文書の一つ（DD-04）。既存テスト資産の実測概況（§2）と、P0 連携スライスのテスト設計値（§3 Apex／§4 Booking Jest）を記載する。雛形（交付物雛形集 5.4 単体テスト仕様書）の 6 項目（テストケース ID／対象モジュール・メソッド／観点／入力・前提条件／期待結果／実施結果）を §3・§4 のテストケース表に展開し、対応機能 ID・出典を記した備考列（第 7 列）を付す。未実施のテストケースの実施結果欄は「未実施（P0-3 計画）」と記す。ただし SF 側投影系（TC-01〜06）は 2026-09-02 に実施済み（S-3/T-1・BookingProjectionRestTest 15/15 PASS）。
+- 状態表記：✅＝既存実装・実測／🔵＝P0 計画（未実装）。**§3・§4 のテストケースはすべて設計値** であり、実装・実行は P0-3 を予定する。ただし **§3 の SF 側投影系（TC-01〜06）は 2026-09-02 に実施済み**（S-3/T-1・BookingProjectionRestTest 15/15 PASS）、§4 の Booking 側統合経路（TC-07〜28）は未実施（P0-3 計画）。既存テストの実測数値（describe 数・it 数）は `booking-backend/src` 配下の 14 個の `*.spec.ts` を grep 計数した（2026-08-31・実測）。
 - 対応機能 ID（F-xx）・ルール ID（RULE-xx）・検証アンカー（MV-xx）は既存文書の引用のみ使用し、新規の対応関係は製造しない。テストケース ID は TC-xx を本書で新規に採番する（唯一の新規 ID 空間）。
 
 ## 2. 既存テスト実測概況（§A・✅ 実測）
@@ -54,12 +54,12 @@
 
 | テストケース ID | 対象モジュール・メソッド | 観点 | 入力・前提条件 | 期待結果 | 実施結果 | 備考（対応機能 ID・出典） |
 |---|---|---|---|---|---|---|
-| TC-01 | BookingProjectionRest.receiveProjection | 正常（初回投影成功） | 新規予約の投影ペイロード 9 項目（incomingVersion=1・eventId=新規 UUID・External ID 未存在） | `Booking__c` が 1 件 insert され、Status__c・CurrentVersion__c がペイロードと一致。受理応答（eventId・受理後 CurrentVersion__c）を返す | 未実施（P0-3 計画） | F-20（MV-04） |
-| TC-02 | BookingProjectionRest.receiveProjection | 冪等（同一 eventId 再送） | TC-01 実行後、同一 eventId・同一 version のペイロードを再送 | レコードが増えず更新もされず、初回受理結果をそのまま返す（LastEventId__c 判定・RULE-04） | 未実施（P0-3 計画） | F-20（MV-05・RULE-04） |
-| TC-03 | BookingProjectionRest.receiveProjection | 異常（旧 version 拒否） | CurrentVersion__c=5 の既存投影へ incomingVersion=4 を送信 | 拒否応答（競合）を返し、Booking__c は更新されない（incomingVersion <= CurrentVersion・RULE-01） | 未実施（P0-3 計画） | F-20（MV-05・RULE-01・REQ-024） |
-| TC-04 | BookingProjectionRest.receiveProjection | 境界（同 version・別 eventId は拒否・RULE-01 は等号含む） | CurrentVersion__c=5・LastEventId__c=旧 に対し、incomingVersion=5・別 eventId を送信 | 拒否応答（競合）を返し、Booking__c は更新されない | 未実施（P0-3 計画） | F-20（MV-05・RULE-01/04） |
-| TC-05 | BookingProjectionRest.receiveProjection | 並行（並行初回投影） | 同一 External ID へ 2 スレッドで初回投影を同時送信（FOR UPDATE ロック前提） | `Booking__c` は 1 件のみ生成。競合側はロック待ち後にバージョンゲートで判定（重複 insert なし） | 未実施（P0-3 計画） | F-20（MV-06・BD-03 §3.6） |
-| TC-06 | BookingProjectionRest.receiveProjection | 異常（PII 非含有） | ペイロード・Booking__c の全項目を検証（氏名・電話・メール・WeChat・備考の 5 項目） | 投影ペイロード・Booking__c のいずれにも PII 5 項目が出現しない（ホワイトリスト・RULE-11・NFR-08） | 未実施（P0-3 計画） | F-20（MV-04・REQ-019・NFR-09） |
+| TC-01 | BookingProjectionRest.receiveProjection | 正常（初回投影成功） | 新規予約の投影ペイロード 9 項目（incomingVersion=1・eventId=新規 UUID・External ID 未存在） | `Booking__c` が 1 件 insert され、Status__c・CurrentVersion__c がペイロードと一致。受理応答（eventId・受理後 CurrentVersion__c）を返す | ✅ 実施済（2026-09-02・S-3/T-1・BookingProjectionRestTest 15/15 PASS） | F-20（MV-04） |
+| TC-02 | BookingProjectionRest.receiveProjection | 冪等（同一 eventId 再送） | TC-01 実行後、同一 eventId・同一 version のペイロードを再送 | レコードが増えず更新もされず、初回受理結果をそのまま返す（LastEventId__c 判定・RULE-04） | ✅ 実施済（2026-09-02・S-3/T-1・BookingProjectionRestTest 15/15 PASS） | F-20（MV-05・RULE-04） |
+| TC-03 | BookingProjectionRest.receiveProjection | 異常（旧 version 拒否） | CurrentVersion__c=5 の既存投影へ incomingVersion=4 を送信 | 拒否応答（競合）を返し、Booking__c は更新されない（incomingVersion <= CurrentVersion・RULE-01） | ✅ 実施済（2026-09-02・S-3/T-1・BookingProjectionRestTest 15/15 PASS） | F-20（MV-05・RULE-01・REQ-024） |
+| TC-04 | BookingProjectionRest.receiveProjection | 境界（同 version・別 eventId は拒否・RULE-01 は等号含む） | CurrentVersion__c=5・LastEventId__c=旧 に対し、incomingVersion=5・別 eventId を送信 | 拒否応答（競合）を返し、Booking__c は更新されない | ✅ 実施済（2026-09-02・S-3/T-1・BookingProjectionRestTest 15/15 PASS） | F-20（MV-05・RULE-01/04） |
+| TC-05 | BookingProjectionRest.receiveProjection | 並行（並行初回投影） | 同一 External ID へ 2 スレッドで初回投影を同時送信（FOR UPDATE ロック前提） | `Booking__c` は 1 件のみ生成。競合側はロック待ち後にバージョンゲートで判定（重複 insert なし） | ✅ 実施済（2026-09-02・S-3/T-1・BookingProjectionRestTest 15/15 PASS） | F-20（MV-06・BD-03 §3.6） |
+| TC-06 | BookingProjectionRest.receiveProjection | 異常（PII 非含有） | ペイロード・Booking__c の全項目を検証（氏名・電話・メール・WeChat・備考の 5 項目） | 投影ペイロード・Booking__c のいずれにも PII 5 項目が出現しない（ホワイトリスト・RULE-11・NFR-08） | ✅ 実施済（2026-09-02・S-3/T-1・BookingProjectionRestTest 15/15 PASS） | F-20（MV-04・REQ-019・NFR-09） |
 | TC-07 | BookingCommandQueueable.execute | 正常（合法取消成功） | HttpCalloutMock が Booking から 200＋canonicalVersion＋resultCode を返す前提（正常取消シミュレーション） | `Booking_Command__c.Status__c=SUCCEEDED`・HttpStatus__c=200・ResultVersion__c 記録。バージョンゲート付き結果書き戻し（Booking__c.Status__c=CANCELLED） | 未実施（P0-3 計画） | F-25/F-26（MV-08・RULE-14・REQ-025） |
 | TC-08 | BookingCommandQueueable.execute | 異常（409 業務競合） | HttpCalloutMock が 409＋currentVersion＋correlationId を返す前提（業務競合シミュレーション：旧 expectedVersion 等） | `Status__c=CONFLICT`（終状態）・リトライしない・副作用なし。HttpStatus__c・LastError__c・CorrelationId__c 記録 | 未実施（P0-3 計画） | F-25（MV-09・RULE-02/09/14） |
 | TC-09 | BookingCommandQueueable.execute | 異常（503 一時障害・成功回復） | HttpCalloutMock が前 2 回 503・第 3 回 200 を返す前提（Callout Mock・MV-10） | AttemptCount__c が 2 回目まで +1 され、3 回目成功で SUCCEEDED。NextAttemptAt__c・LastError__c 記録 | 未実施（P0-3 計画） | F-25（MV-10・RULE-09） |

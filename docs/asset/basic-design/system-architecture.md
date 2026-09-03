@@ -159,7 +159,7 @@ flowchart LR
 | auth | 認証コードログイン・登録・リフレッシュ・ログアウト・JWT Cookie 発行 | F-01〜F-03 |
 | bookings | 予約 CRUD・取消・日付／ユーザー条件照会・統計 | 取消端点 `PATCH /v1/bookings/:id/cancel`（F-06〜F-08）。競合時は直列化＋限定リトライ（P2034） |
 | services / time-slots | サービスカタログと予約枠（TERM-02/03）管理・空き照会 | 枠容量は現状ハードコード値 1（`getAvailability` の `maxCapacity=1`・RULE-06） |
-| users | ユーザー CRUD・状態／ロール変更・アバター画像 | ロール変更はセッション維持（§4 A1 参照・F-12） |
+| users | ユーザー CRUD・状態／ロール変更・アバター画像 | ロール変更は旧トークン拒否（guard 化・§4 A1 参照・F-12・RULE-17） |
 | email | 予約確認・取消メール（非同期送信） | F-08 の取消確認メール |
 | retention | 期限切れ予約データの周期削除 | **CANCELLED/COMPLETED を 30 日でハードデリート**（BIZ-16・RULE-15・REQ-032 ✅）。投影との関係は BD-07 §3 参照 |
 | prisma | PrismaClient のグローバルラッパ | 実装は `src/common/prisma` |

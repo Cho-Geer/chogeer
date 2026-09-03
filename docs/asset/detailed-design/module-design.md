@@ -133,7 +133,7 @@ BD-03 §2 と同一口径で、既存モジュールは次表の一覧とコー�
 | bookings | `BookingsController`・`BookingsService` | F-06〜F-08・F-10 | 予約 CRUD・取消・照会・統計。競合時は P2034 直列化リトライ。**連携の正本変更フック（F-20）は P0-3 で追記予定**（現状 version/syncStatus なし・実測） |
 | services | `ServicesController`・`ServicesService` | F-04・F-11 | サービスカタログ・管理 |
 | time-slots | `TimeSlotsController`・`TimeSlotsService` | F-05・F-13 | 空き照会・枠管理。**BlockedTimeSlot モデルは在るが端点未実装**（既知課題・REQ-012/F-13 備考） |
-| users | `UsersController`・`UsersService` | F-12・F-14 | ユーザー管理。ロール変更はセッション維持（RULE-17 既知課題） |
+| users | `UsersController`・`UsersService` | F-12・F-14 | ユーザー管理。ロール変更は guard 化済（旧トークン拒否・RULE-17・DB セッション行対応は P1） |
 | email | `EmailService` | F-08（取消確認メール） | 非同期送信 |
 | retention | `RetentionScheduler`・`RetentionService` | REQ-032（機能一覧外・運用機能） | 30 日ハードデリート・cron 毎日 02:30。詳細は DD-03 |
 | prisma（共通） | `PrismaService` | 全機能共通 | `src/common/prisma/` |
