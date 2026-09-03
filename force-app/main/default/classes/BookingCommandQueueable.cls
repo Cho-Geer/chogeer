@@ -6,8 +6,8 @@
  *
  * 処理チェーン（DD-02 §3.2 凍結値・ただし実行順はプラットフォーム制約に合わせて調整）：
  *   1) コマンド取得（SOQL）
- *   2) Named Credential（Booking_Integration_API・認証ヘッダー生成 OFF）へ
- *      POST /v1/integrations/salesforce/booking-commands・setTimeout(10000)
+ *   2) Named Credential（Booking_Integration_API・静的 Bearer Token をカスタムヘッダー経由で
+ *      プラットフォームが注入）へ POST /v1/integrations/salesforce/booking-commands・setTimeout(10000)
  *   3) 応答区分（RULE-09/14・C-5 具体値・IF-02 §4.8）：
  *      200 → SUCCEEDED＋HttpStatus/ResultVersion/ResultCode 記録＋F-26 バージョンゲート付き結果書き戻し
  *      409 → CONFLICT（終状態・リトライしない）＋応答 currentVersion/correlationId を可能な限り記録
@@ -30,17 +30,15 @@
  *     → テストは「順次シミュレーション」（stopTest 後に手動 enqueue→再度 stopTest）で駆動し、
  *       クラス側は scheduleRetry の enqueue を防御的に try/catch する（本番では enqueue は許可され
  *       通常 throw しない。テスト context のみ throw するためのガード）。
- * (b) ConnectApi.NamedCredentials.getCredential は本 org ではコンパイル不能
- *     （「Invalid type: ConnectApi.NamedCredentials.NamedCredential」・匿名/コンパイル済クラス両方で
- *     API 60/67 とも確認）。→ 設計（DD-02 §3.2・C-2⑦）の秘密鍵取得 API が本 org に存在しない。
- *     対応として @TestVisible static な秘密鍵サプライヤシームを設け、テストはスタブ値（test-secret）を注入する。
- *     既定実装は getCredential を呼べないため（コンパイル不可）、秘密鍵未注入時は
- *     CalloutConfigurationException を throw するプレースホルダとし、本番の秘密鍵取得経路は
- *     org が ConnectApi.NamedCredentials 読取 API を公開する前提で要対応（P0-3 未決として報告）。
- * (c) Crypto.generateMac の HMAC-SHA256 アルゴリズム名は 'HMACSHA256'（'HmacSHA256'/'HMAC-SHA256' も
- *     同一出力・実証）。Trailhead 公式レシピ（EncryptionRecipes）も 'HMACSHA512' の enum .name() 形式を使用。
- * (d) Queueable から HTTP callout を行うには implements Database.AllowsCallouts が必須
+ * (b) Queueable から HTTP callout を行うには implements Database.AllowsCallouts が必須
  *     （未実装時は System.CalloutException「Callout not allowed from this future method」・実証）。
+ *
+ * === C-2 修订（2026-09-03） ===
+ * A3 认证从动态 HS256 JWT 改为静态 Bearer Token・EC 認証パラメータ guardSecret＋
+ * カスタムヘッダー Authorization: Bearer {!$Credential.guardSecret} によりプラットフォームが注入
+ * （NC は HTTP ヘッダーの数式を許可 ON・Generate Authorization Header は OFF のまま）。
+ * Apex 不设置认证头・认证单测不可断言（注入在 mock 后）→
+ * 実機验证归 B-2/B-4 実装后冒烟。安全降级（防重放/防篡改）经用户拍板接受・RULE-03 幂等与 TLS 兜底。
  *
  * === F-26 結果書き戻しの実装判断 ===
  * BookingProjectionRest.receiveProjection(ProjectionRequest) は global static であり、
@@ -71,22 +69,7 @@ global class BookingCommandQueueable implements Queueable, Database.AllowsCallou
   private static final Integer TIMEOUT_MS = 10000; // ShowcaseContactSyncService.setTimeout(10000) 実測踏襲
 
   @TestVisible
-  private static final String EXTERNAL_CREDENTIAL = 'Booking_Integration_Guard'; // C-2⑦
-
-  @TestVisible
-  private static final String NAMED_PRINCIPAL = 'BookingGuard'; // C-2⑦・NamedPrincipal 名
-
-  @TestVisible
   private static final String COMMAND_TYPE = 'CANCEL_BOOKING'; // RULE-13 唯一のコマンド種別
-
-  @TestVisible
-  private static final String JWT_KID = 'k1'; // 鍵バージョン（C-2・kid 対照方式）
-
-  @TestVisible
-  private static final String JWT_AUDIENCE = 'booking-api'; // Integration Guard 検証対象（C-2）
-
-  @TestVisible
-  private static final String JWT_SCOPE = 'booking.integration.command'; // Integration Guard 検証対象（C-2）
 
   // ========== 状態コード（CD-08・CD-12 封闭集の値のみ使用） ==========
 
@@ -114,42 +97,7 @@ global class BookingCommandQueueable implements Queueable, Database.AllowsCallou
   @TestVisible
   private static final String RESULT_SYSTEM_ERROR = 'SYSTEM_ERROR';
 
-  // ========== 秘密鍵サプライヤシーム（(b) の実証に基づく） ==========
-
-  /**
-   * @description テスト注入用の秘密鍵スタブ値。テスト context では getCredential が使えないため
-   * ここへスタブ値（例 'test-secret'）を注入する（PPT-01 †7：P0-3 実 callout なし）。
-   * 本番では設計どおり Named Credential から取得するが、本 org は ConnectApi.NamedCredentials の
-   * 読取 API を公開していない（コンパイル不能・実証）ため、既定実装は未注入時に設定例外を throw する。
-   */
-  @TestVisible
-  private static String secretOverride;
-
-  /**
-   * @description 秘密鍵の解決（サプライヤシーム）。
-   * 設計正（DD-02 §3.2・C-2⑦）：ConnectApi.NamedCredentials.getCredential('Booking_Integration_Guard',
-   * 'BookingGuard').CredentialValue.value。本 org では同 API がコンパイル不能のため（実証・(b)）、
-   * シーム経由でスタブ注入（テスト）／設定例外（本番・org 対応待ち）とする。
-   */
-  @TestVisible
-  private static String resolveSecret() {
-    if (secretOverride != null) {
-      return secretOverride;
-    }
-    throw new CalloutConfigurationException(
-      '秘密鍵の解決に失敗しました: ConnectApi.NamedCredentials.getCredential('
-      + EXTERNAL_CREDENTIAL + ', ' + NAMED_PRINCIPAL + ') は本 org で利用不可（コンパイル不能・実証済み 2026-09-03）。'
-      + '設計 DD-02 §3.2・C-2⑦ の取得経路を本番で有効化するには org 側の ConnectApi 公開が前提（P0-3 要確認）。'
-    );
-  }
-
   // ========== 例外クラス（ShowcaseContactSyncService 実測パターン踏襲） ==========
-
-  /**
-   * @description 呼出設定例外（秘密鍵解決不能・設定不備）
-   */
-  public class CalloutConfigurationException extends Exception {
-  }
 
   /**
    * @description 呼出失敗例外（一時的障害・タイムアウト等）
@@ -200,48 +148,33 @@ global class BookingCommandQueueable implements Queueable, Database.AllowsCallou
       return;
     }
 
-    // 2) 秘密鍵/構成の解決を callout より前に実施（P1-2）：
-    //    構成失敗（CalloutConfigurationException）は一時障害に誤分類せず、
-    //    終状態 FAILED＋SYSTEM_ERROR（CD-12）で処理する（リトライしない・AttemptCount 不変）
-    try {
-      resolveSecret();
-    } catch (CalloutConfigurationException ex) {
-      handleConfigurationFailure(cmd, ex);
-      return;
-    }
-
-    // 3) 呼出（Named Credential・IF-02 §4.2・setTimeout(10000)）。
+    // 2) 呼出（Named Credential・IF-02 §4.2・setTimeout(10000)）。
     //    プラットフォーム制約（DML 後の callout 不可）のため callout を先に実行し、
     //    状態・監査フィールドは呼出後の DML で書く
     HttpResponse response;
     try {
       response = sendCommand();
-    } catch (CalloutConfigurationException ex) {
-      // 上で解決済みのため通常到達しない（保険）。同一の構成失敗処理へ
-      handleConfigurationFailure(cmd, ex);
-      return;
     } catch (Exception ex) {
       // タイムアウト・callout 例外 → 一時的障害（RULE-09・C-5：timeout は 503/429 と同列）
       handleTransient(cmd, null, ex.getMessage());
       return;
     }
 
-    // 4) 応答区分（RULE-09/14・IF-02 §4.8）
+    // 3) 応答区分（RULE-09/14・IF-02 §4.8）
     handleResponse(cmd, response);
   }
 
   // ========== 呼出（IF-02 §4.2・§4.1 6 項目ペイロード） ==========
 
   /**
-   * @description Named Credential への POST 呼出。認証ヘッダー生成 OFF のため
-   * Apex 自前で HS256 JWT 署名を Authorization ヘッダへ設定する
+   * @description Named Credential への POST 呼出。認証ヘッダーはカスタムヘッダー
+   * （数式許可 ON）によりプラットフォームが注入（C-2 修订 2026-09-03・静的 Bearer Token）
    */
   private HttpResponse sendCommand() {
     HttpRequest request = new HttpRequest();
     request.setEndpoint('callout:' + NAMED_CREDENTIAL + RESOURCE_PATH);
     request.setMethod('POST');
     request.setHeader('Content-Type', 'application/json');
-    request.setHeader('Authorization', buildAuthorizationHeader());
     request.setTimeout(TIMEOUT_MS);
     request.setBody(buildPayload());
     return new Http().send(request);
@@ -260,33 +193,6 @@ global class BookingCommandQueueable implements Queueable, Database.AllowsCallou
       'correlationId' => this.correlationId
     };
     return JSON.serialize(payload);
-  }
-
-  /**
-   * @description HS256 JWT の Authorization ヘッダ生成。
-   * Header {alg:"HS256",kid:"k1"}・Payload {aud:"booking-api",scope:"booking.integration.command",
-   * iat:<現在 epoch 秒>}（±300 秒偏差は Booking 側 Integration Guard が検証・C-2）。
-   * 署名＝base64url(header).base64url(payload) を 'HMACSHA256'（(c) 実証）で HMAC した値
-   */
-  private static String buildAuthorizationHeader() {
-    String secret = resolveSecret();
-    String header = base64UrlEncode(Blob.valueOf('{"alg":"HS256","kid":"' + JWT_KID + '"}'));
-    String payload = base64UrlEncode(
-      Blob.valueOf(
-        '{"aud":"' + JWT_AUDIENCE + '","scope":"' + JWT_SCOPE + '","iat":'
-        + (DateTime.now().getTime() / 1000) + '}'
-      )
-    );
-    String signingInput = header + '.' + payload;
-    Blob signature = Crypto.generateMac('HMACSHA256', Blob.valueOf(signingInput), Blob.valueOf(secret));
-    return 'Bearer ' + signingInput + '.' + base64UrlEncode(signature);
-  }
-
-  /**
-   * @description base64url エンコード（標準 base64 → URL safe・パディング除去）
-   */
-  private static String base64UrlEncode(Blob input) {
-    return EncodingUtil.base64Encode(input).replace('+', '-').replace('/', '_').replace('=', '');
   }
 
   // ========== 応答区分（RULE-09/14・C-5・IF-02 §4.8） ==========
@@ -335,19 +241,6 @@ global class BookingCommandQueueable implements Queueable, Database.AllowsCallou
       applyCorrelationId(cmd);
       update cmd;
     }
-  }
-
-  /**
-   * @description 構成/秘密鍵の解決失敗処理（P1-2）：一時障害と誤分類せず、
-   * 終状態 FAILED＋ResultCode=SYSTEM_ERROR（CD-12）・リトライしない・AttemptCount 不変・
-   * 例外は上流へ伝播しない（DD-02 §3.2「例外は上流へ伝播しない」）
-   */
-  private void handleConfigurationFailure(Booking_Command__c cmd, Exception ex) {
-    cmd.Status__c = STATUS_FAILED;
-    cmd.ResultCode__c = RESULT_SYSTEM_ERROR;
-    cmd.LastError__c = buildLastError(null, ex.getMessage());
-    applyCorrelationId(cmd);
-    update cmd;
   }
 
   /**

@@ -3,8 +3,9 @@
  * 設計出典：unit-test-spec :63-70（TC-07〜11・TC-14）・DD-02 §3.2・IF-02 §4・CD-08/CD-12・MV-08/09/10/11。
  *
  * テスト方式（PPT-01 †7：P0-3 実 callout なし）：
- * - HttpCalloutMock のみ使用。秘密鍵は BookingCommandQueueable.secretOverride へスタブ値（'test-secret'）を注入
- *   （ConnectApi.NamedCredentials.getCredential は本 org でコンパイル不能＝実証 2026-09-03・クラス側シームで対応）。
+ * - HttpCalloutMock のみ使用。認証ヘッダーはプラットフォーム注入（EC 認証パラメータ guardSecret＋
+ *   カスタムヘッダー方式・C-2 修订 2026-09-03）のため mock では観測不可（ヘッダー未設定＝null であることのみ検証）。
+ *   実機での注入確認は B-2/B-4 実装後の冒烟に帰属。
  * - enqueue 元は S-5 BookingSiteController 未実装のためテスト内 System.enqueueJob で代替
  *   （DD-02 §3.2 呼出元設計との整合・S-5 実装時に置換・handoff §四.7）。
  * - TC-09/10 の連鎖リトライは「1 回の stopTest 前に 3 試行分を enqueue → stopTest 内で逐次実行」で駆動する。
@@ -19,15 +20,7 @@
 private class BookingCommandQueueableTest {
   // ========== 共通ヘルパー ==========
 
-  private static final String TEST_SECRET = 'test-secret';
   private static final String USER_ID = '005000000000001';
-
-  /**
-   * @description テスト開始前の共通準備：秘密鍵スタブ注入
-   */
-  private static void seedSecret() {
-    BookingCommandQueueable.secretOverride = TEST_SECRET;
-  }
 
   /**
    * @description Booking_Command__c fixture（Status=QUEUED・AttemptCount=0）
@@ -118,7 +111,8 @@ private class BookingCommandQueueableTest {
 
   /**
    * @description コマンド呼出 Mock。statuses/bodies を順に返し（末尾で固定）、
-   * 各リクエストの endpoint/method/Authorization/body 6 項目を検証して validationErrors に記録する
+   * 各リクエストの endpoint/method/body 6 項目を検証して validationErrors に記録する
+   * （認証ヘッダーはプラットフォーム注入のため未設定＝null であることのみ検証）
    */
   public class CommandCalloutMock implements HttpCalloutMock {
     public List<Integer> statuses;
@@ -148,15 +142,9 @@ private class BookingCommandQueueableTest {
       if (!'POST'.equals(req.getMethod())) {
         validationErrors.add('method: ' + req.getMethod());
       }
-      // Authorization: Bearer + 3 セグメント（header.payload.signature）
-      String auth = req.getHeader('Authorization');
-      if (auth == null || !auth.startsWith('Bearer ')) {
-        validationErrors.add('auth missing Bearer: ' + auth);
-      } else {
-        List<String> segments = auth.substring(7).split('\\.');
-        if (segments.size() != 3) {
-          validationErrors.add('auth segments: ' + segments.size());
-        }
+      // 認証ヘッダーはプラットフォーム注入（mock では観測不可）・実機検証は B-2/B-4 後
+      if (req.getHeader('Authorization') != null) {
+        validationErrors.add('auth header must be null: ' + req.getHeader('Authorization'));
       }
       // body 6 項目（IF-02 §4.1）
       String body = req.getBody();
@@ -196,33 +184,15 @@ private class BookingCommandQueueableTest {
     }
   }
 
-  // ========== base64url ヘルパー（JWT 内容検証用） ==========
-
-  private static String base64UrlEncode(Blob input) {
-    return EncodingUtil.base64Encode(input).replace('+', '-').replace('/', '_').replace('=', '');
-  }
-
-  private static String base64UrlDecode(String input) {
-    String b64 = input.replace('-', '+').replace('_', '/');
-    Integer mod = Math.mod(b64.length(), 4);
-    if (mod == 2) {
-      b64 += '==';
-    } else if (mod == 3) {
-      b64 += '=';
-    }
-    return EncodingUtil.base64Decode(b64).toString();
-  }
-
   // ========== TC-07 正常（合法取消成功・結果書き戻し）（unit-test-spec :63・MV-08） ==========
 
   /**
    * @description Mock 200＋canonicalVersion=2＋resultCode → コマンド SUCCEEDED・HttpStatus=200・
    * ResultVersion 記録・Booking__c.Status__c=CANCELLED 書き戻し（バージョンゲート：1→2 受理）。
-   * リクエスト検証（endpoint/POST/Bearer 3 セグメント/body 6 項目）も実施
+   * リクエスト検証（endpoint/POST/body 6 項目・認証ヘッダー未設定）も実施
    */
   @isTest
   static void tc07SuccessWritesBackCancellation() {
-    seedSecret();
     String commandId = 'tc07-cmd-0001';
     String externalId = 'tc07-ext-0001';
     String correlationId = 'corr-tc07';
@@ -244,8 +214,8 @@ private class BookingCommandQueueableTest {
     // リクエスト検証（Mock 内検証に加え最終リクエストの内容を明示確認）
     Assert.isTrue(mock.lastRequest.getEndpoint().contains('callout:Booking_Integration_API'));
     Assert.areEqual('POST', mock.lastRequest.getMethod());
-    Assert.isTrue(mock.lastRequest.getHeader('Authorization').startsWith('Bearer '));
-    Assert.areEqual(3, mock.lastRequest.getHeader('Authorization').substring(7).split('\\.').size());
+    // 認証ヘッダーはプラットフォーム注入（mock では観測不可）・実機検証は B-2/B-4 後
+    Assert.isNull(mock.lastRequest.getHeader('Authorization'));
     Map<String, Object> body = (Map<String, Object>) JSON.deserializeUntyped(mock.lastRequest.getBody());
     Assert.areEqual('CANCEL_BOOKING', (String) body.get('commandType'));
     Assert.areEqual(commandId, (String) body.get('commandId'));
@@ -280,7 +250,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void tc08ConflictNoRetry() {
-    seedSecret();
     String commandId = 'tc08-cmd-0001';
     String externalId = 'tc08-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tc08');
@@ -325,7 +294,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void tc09TransientTwiceThenSuccess() {
-    seedSecret();
     String commandId = 'tc09-cmd-0001';
     String externalId = 'tc09-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tc09');
@@ -367,7 +335,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void tc10TransientExhaustedFailed() {
-    seedSecret();
     String commandId = 'tc10-cmd-0001';
     String externalId = 'tc10-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tc10');
@@ -413,7 +380,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void tc11AuthError401NoTerminalState() {
-    seedSecret();
     String commandId = 'tc11-cmd-0001';
     String externalId = 'tc11-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tc11');
@@ -445,7 +411,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void tc11AuthError403NoTerminalState() {
-    seedSecret();
     String commandId = 'tc11b-cmd-0001';
     String externalId = 'tc11b-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tc11b');
@@ -475,7 +440,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void tc14ValidationError400NoTerminalState() {
-    seedSecret();
     String commandId = 'tc14-cmd-0001';
     String externalId = 'tc14-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tc14');
@@ -505,7 +469,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void commandNotFoundReturnsSilently() {
-    seedSecret();
     CommandCalloutMock mock = new CommandCalloutMock();
     mock.statuses = new List<Integer>{ 200 };
     mock.bodies = new List<String>{ '{"code":"SUCCESS","message":"ok","data":{"canonicalVersion":1,"resultCode":"SUCCESS"}}' };
@@ -524,7 +487,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void serverError500MappedSystemErrorAndTransient() {
-    seedSecret();
     String commandId = 'tc500-cmd-0001';
     String externalId = 'tc500-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tc500');
@@ -552,7 +514,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void writebackFailureRecordedOnBooking() {
-    seedSecret();
     String commandId = 'tcwb-cmd-0001';
     String externalId = 'tcwb-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tcwb');
@@ -591,7 +552,6 @@ private class BookingCommandQueueableTest {
    */
   @isTest
   static void timeoutThrowsCalloutExceptionTransient() {
-    seedSecret();
     String commandId = 'tcto-cmd-0001';
     String externalId = 'tcto-ext-0001';
     Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tcto');
@@ -611,89 +571,5 @@ private class BookingCommandQueueableTest {
     Assert.isNotNull(updated.NextAttemptAt__c);
     Assert.isNotNull(updated.LastError__c);
     Assert.areEqual(1, mock.callCount);
-  }
-
-  // ========== P1-3 追加：構成失敗（secret 未注入）→ FAILED/SYSTEM_ERROR・リトライなし ==========
-
-  /**
-   * @description secret サプライヤを注入しない（既定＝CalloutConfigurationException）→
-   * 一時障害に誤分類せず、終状態 FAILED＋SYSTEM_ERROR（CD-12）・AttemptCount 不変（0）・
-   * Mock は呼ばれない（callout 前に解決するため・P1-2）
-   */
-  @isTest
-  static void configurationFailureMapsToFailedSystemError() {
-    // 静的な secretOverride が他テストから残るのを防ぎ、既定（未注入＝throw）にする
-    BookingCommandQueueable.secretOverride = null;
-    String commandId = 'tccfg-cmd-0001';
-    String externalId = 'tccfg-ext-0001';
-    Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tccfg');
-
-    CommandCalloutMock mock = new CommandCalloutMock();
-    mock.statuses = new List<Integer>{ 200 };
-    mock.bodies = new List<String>{ '{"code":"SUCCESS","message":"ok","data":{"canonicalVersion":2,"resultCode":"SUCCESS"}}' };
-    Test.setMock(HttpCalloutMock.class, mock);
-
-    Test.startTest();
-    System.enqueueJob(buildQueueable(cmd.Id, commandId, externalId, 1, 'corr-tccfg'));
-    Test.stopTest();
-
-    Booking_Command__c updated = queryCommand(cmd.Id);
-    Assert.areEqual('FAILED', updated.Status__c); // 終状態（構成問題は再試行しても解決しない）
-    Assert.areEqual('SYSTEM_ERROR', updated.ResultCode__c); // CD-12
-    Assert.areEqual(0, intOf(updated.AttemptCount__c)); // リトライなし＝AttemptCount 不変
-    Assert.isNotNull(updated.LastError__c);
-    Assert.areEqual(0, mock.callCount); // callout 前に解決失敗のため Mock は呼ばれない
-    Assert.areEqual(0, mock.validationErrors.size(), String.join(mock.validationErrors, ';'));
-  }
-
-  // ========== P1-3 追加：JWT 内容検証（header/payload/signature） ==========
-
-  /**
-   * @description Authorization の Bearer 3 セグメントを base64url 復号し、header は
-   * alg=HS256・kid=k1、payload は aud=booking-api・scope=booking.integration.command・iat 数値、
-   * 署名はテスト secret で HMACSHA256 を再計算して一致することを検証（C-2・IF-02 §4.2）
-   */
-  @isTest
-  static void jwtHeaderPayloadSignatureVerified() {
-    seedSecret();
-    String commandId = 'tcjwt-cmd-0001';
-    String externalId = 'tcjwt-ext-0001';
-    Booking_Command__c cmd = insertCommand(commandId, externalId, 1, 'corr-tcjwt');
-
-    CommandCalloutMock mock = new CommandCalloutMock();
-    mock.statuses = new List<Integer>{ 200 };
-    mock.bodies = new List<String>{ '{"code":"SUCCESS","message":"ok","data":{"canonicalVersion":2,"resultCode":"SUCCESS"}}' };
-    Test.setMock(HttpCalloutMock.class, mock);
-
-    Test.startTest();
-    System.enqueueJob(buildQueueable(cmd.Id, commandId, externalId, 1, 'corr-tcjwt'));
-    Test.stopTest();
-
-    Assert.areEqual(0, mock.validationErrors.size(), String.join(mock.validationErrors, ';'));
-    String auth = mock.lastRequest.getHeader('Authorization');
-    Assert.isTrue(auth.startsWith('Bearer '), 'Bearer プレフィックス必須');
-    List<String> segments = auth.substring(7).split('\\.');
-    Assert.areEqual(3, segments.size(), 'JWT は header.payload.signature の 3 セグメント');
-
-    // header：{"alg":"HS256","kid":"k1"}
-    Map<String, Object> header = (Map<String, Object>) JSON.deserializeUntyped(base64UrlDecode(segments[0]));
-    Assert.areEqual('HS256', (String) header.get('alg'));
-    Assert.areEqual('k1', (String) header.get('kid'));
-
-    // payload：{"aud":"booking-api","scope":"booking.integration.command","iat":<数値>}
-    Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(base64UrlDecode(segments[1]));
-    Assert.areEqual('booking-api', (String) payload.get('aud'));
-    Assert.areEqual('booking.integration.command', (String) payload.get('scope'));
-    Object iat = payload.get('iat');
-    Assert.isNotNull(iat);
-    Integer.valueOf(String.valueOf(iat)); // 数値であること（変換不可なら例外）
-    Long now = DateTime.now().getTime() / 1000;
-    Assert.isTrue(Math.abs(Long.valueOf(String.valueOf(iat)) - now) <= 300, 'iat は現在時刻±300 秒内');
-
-    // signature：テスト secret で再計算して一致検証（(c) 'HMACSHA256' 実証）
-    String expectedSignature = base64UrlEncode(
-      Crypto.generateMac('HMACSHA256', Blob.valueOf(segments[0] + '.' + segments[1]), Blob.valueOf(TEST_SECRET))
-    );
-    Assert.areEqual(expectedSignature, segments[2], '署名は HMACSHA256(header.payload, secret) と一致');
   }
 }
