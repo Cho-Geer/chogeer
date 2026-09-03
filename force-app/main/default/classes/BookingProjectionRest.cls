@@ -257,15 +257,18 @@ global with sharing class BookingProjectionRest {
       }
     }
 
-    // 4) Upsert（insert または update・部分成功許容・DD-02 §3.1 原文）
+    // 4) Upsert（insert または update・部分成功許容・DD-02 §3.1 原文）。
+    //    system context 実行は BookingProjectionDmlHelper（without sharing）へ委譲
+    //    （2026-09-03・S-4 登記②解消の DML 側完結・用户拍板 Option 1）：
+    //    with sharing（user mode）下では Site ユーザー（Booking__c Read のみ）の upsert が
+    //    レコードアクセス検証で必ず失敗するため（実測）、写回 DML のみ明示 system context で実行。
+    //    REST 経路＝A2 統合ユーザーは全権限のため挙動不変（ヘルパー呼出元は本投影入口のみ・他用途禁止）
     Booking__c record = buildProjectionRecord(request);
     List<Database.UpsertResult> results;
     try {
-      results = Database.upsert(
-        new List<Booking__c>{ record },
-        Booking__c.BookingExternalId__c,
-        false
-      );
+      results = new List<Database.UpsertResult>{
+        BookingProjectionDmlHelper.upsertProjection(record)
+      };
     } catch (Exception ex) {
       throw new DataAccessException('投影 Upsert に失敗しました: ' + ex.getMessage(), 'UPSERT', new List<Database.Error>());
     }
@@ -286,7 +289,9 @@ global with sharing class BookingProjectionRest {
   }
 
   /**
-   * @description 手順 2：External ID で Booking__c を FOR UPDATE 取得（DD-02 §3.1 指定列＋WITH SECURITY_ENFORCED）
+   * @description 手順 2：External ID で Booking__c を FOR UPDATE 取得（DD-02 §3.1 指定列＋
+   * system context（2026-09-03・S-4 登記②解消：Site ユーザー enqueue 経路の F-26 写回を成立させるため
+   * SECURITY_ENFORCED を除去・with sharing 行級は維持・用户拍板 Option 1））
    */
   private static Booking__c queryForUpdate(String externalId) {
     try {
@@ -300,7 +305,6 @@ global with sharing class BookingProjectionRest {
           LastError__c
         FROM Booking__c
         WHERE BookingExternalId__c = :externalId
-        WITH SECURITY_ENFORCED
         FOR UPDATE
       ];
       return records.isEmpty() ? null : records[0];

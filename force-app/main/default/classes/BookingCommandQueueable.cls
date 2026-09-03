@@ -393,9 +393,11 @@ global class BookingCommandQueueable implements Queueable, Database.AllowsCallou
    *
    * 書き戻し eventId＝commandId（コマンドごとの冪等キー・CF-05）。投影レコード未存在の場合は
    * 書き戻し対象が無いためスキップ（正本の投影は F-20 経由で既に存在する前提）。
-   * P1-4 登録：書き戻し腿（S-3 再利用）は enqueue ユーザー身份で実行される（S-3 with sharing＋
-   * WITH SECURITY_ENFORCED）。S-5 Site ユーザーが enqueue する将来経路では、システム context/
-   * 権限継承の要否を S-5 設計で決定する（本クラスでは変更しない）
+   * P1-4 → **解消（2026-09-03・S-5 Step 2・ユーザー拍板 Option 1）**：Site ユーザー enqueue 経路では
+   * with sharing クラス（S-3）のクエリ/DML がユーザー権限で強制され写回が必然失敗することを実証
+   * （SECURITY_ENFORCED 除去＋AccessLevel.SYSTEM_MODE でも不十分・`without sharing` のみ成立）。
+   * 対処＝S-3 queryForUpdate の SECURITY_ENFORCED 除去＋upsert を
+   * `BookingProjectionDmlHelper`（without sharing・投影入口専用）へ委譲。
    */
   private void writeBackCancellation(Booking_Command__c cmd, Integer canonicalVersion) {
     if (canonicalVersion == null) {

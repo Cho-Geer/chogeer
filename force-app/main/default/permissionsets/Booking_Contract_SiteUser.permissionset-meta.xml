@@ -76,4 +76,8 @@
         <field>Booking_Command__c.Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <classAccesses>
+        <apexClass>BookingSiteController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
 </PermissionSet>
