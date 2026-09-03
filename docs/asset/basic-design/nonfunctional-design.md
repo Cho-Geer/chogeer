@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | BD-10 |
-| 版数 | V1.0（ドラフト・雛形準拠） |
+| 版数 | V1.1（ドラフト・雛形準拠・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（基本設計フェーズ・非機能設計） |
 
@@ -27,7 +27,7 @@
 
 ### 3.1 認証分離（NFR-04）
 
-4 種類の認証境界 A1〜A4 の混用禁止と、A3（Integration Guard：secret の鍵バージョン・audience・scope=`booking.integration.command`・時刻偏差検証）の設計は BD-01 §4 に譲る（本書では重複記載しない）。A1 の Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）とロールの DB 毎回参照は既存実装（`src/common/guards/jwt-auth.guard.ts` 実測・✅）。A2/A3 は 🔵 P0-3 計画。検証は MV-11（誤 audience/scope/旧 key で 401/403）。
+4 種類の認証境界 A1〜A4 の混用禁止と、A3（Integration Guard：受信 Bearer token を env `INTEGRATION_TOKEN` と**定数時間比較**で検証・静的 Bearer Token は EC 認証パラメータ `guardSecret`（既存・新規追加なし・2026-09-02 S-2 時存入値）＋カスタムヘッダー注入・NC 数式許可 ON・C-2 修订 2026-09-03）の設計は BD-01 §4 に譲る（本書では重複記載しない）。A1 の Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）とロールの DB 毎回参照は既存実装（`src/common/guards/jwt-auth.guard.ts` 実測・✅）。A2/A3 は 🔵 P0-3 計画。検証は MV-11（誤 token／欠落 token で 401/403）。
 
 ### 3.2 サービス認証とユーザー認証の分離原則（NFR-04・REQ-029）
 

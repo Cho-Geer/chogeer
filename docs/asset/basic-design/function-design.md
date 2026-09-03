@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | BD-03 |
-| 版数 | V1.0（ドラフト・雛形準拠） |
+| 版数 | V1.1（ドラフト・雛形準拠・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（基本設計フェーズ・機能設計） |
 
@@ -335,7 +335,7 @@ RD-04 図 6（QEU6→IGUARD6→IDEN6→BIZCHK6→CANUPD6→TERM6→RWRITE6）と
 
 Booking 側の検証順序（すべてサーバ側で実施・RULE-02/03/05/07/12 の引用）：
 
-1. Integration Guard：secret の鍵バージョン・audience・scope・時刻偏差の検証（A3・TERM-23）。NG は 401/403。
+1. Integration Guard：受信 `Authorization: Bearer <token>` を env `INTEGRATION_TOKEN` と**定数時間比較**で検証（A3・TERM-23・C-2 修订 2026-09-03）。不一致・欠落は 401/403。
 2. commandId 重複判定：同一 commandId の再到達は初回保存済み結果をそのまま返す（RULE-03・業務判定より先行）。
 3. 静的マッピング検証：`requestedBySalesforceUserId` に対応する Booking ユーザーが存在し active、かつ現在 ADMIN かつ ACTIVE であること。NG は拒否（RULE-12）。
 4. 予約定位：`bookingExternalId` で正本を特定。不存在は 404（削除済み予約宛・REQ-033）。
@@ -370,7 +370,7 @@ Booking 側の検証順序（すべてサーバ側で実施・RULE-02/03/05/07/1
 
 ### 8.8 制約・前提条件
 
-- 静的マッピング（active 1 件）・Integration Guard 設定（secret・鍵バージョン管理）の事前構築が前提（いずれも P0-3・未実装）。
+- 静的マッピング（active 1 件）・Integration Guard 設定（env `INTEGRATION_TOKEN`・単一値。SF 側は EC 既存 auth パラメータ `guardSecret`（新規追加なし・2026-09-02 S-2 時存入値をそのまま使用）・C-2 修订 2026-09-03）の事前構築が前提（いずれも P0-3・未実装）。
 - Queueable は正本 canonical 状態を直接書かない（BD-07 §3 境界制約）。
 - リトライ上限・間隔はパラメータ化対象（RULE-09/10・具体値は P0-3 実装時）。
 
@@ -378,7 +378,7 @@ Booking 側の検証順序（すべてサーバ側で実施・RULE-02/03/05/07/1
 
 | No. | 未決事項 | 決定期限 |
 |---|---|---|
-| 1 | 【決定済 2026-09-02】secret 鍵バージョン管理＝kid 対照方式（env `INTEGRATION_SECRET_<kid>` 複数併存・未知 kid=401）＋無停止ローテーション 3 步（追加→切替→旧鍵削除）（CHK-02 C-2） | 決定済み（2026-09-02） |
+| 1 | 【決定済 2026-09-02】secret 鍵バージョン管理＝kid 対照方式（env `INTEGRATION_SECRET_<kid>` 複数併存・未知 kid=401）＋無停止ローテーション 3 步（追加→切替→旧鍵削除）（CHK-02 C-2） → **C-2 修订（2026-09-03・用户拍板）**：本条は廃止。静的 Bearer Token 化により secret＝EC 既存 auth パラメータ `guardSecret` 1 値（新規追加なし・2026-09-02 S-2 時存入値）（Booking 側 env `INTEGRATION_TOKEN`）・輪换＝**新旧 2 値并存重疊**（kid 対照・3 步廃止） | 決定済み（2026-09-02／C-2 修订 2026-09-03） |
 | 2 | 【決定済 2026-09-02】リトライ上限＝2 回（総 3 試行）・間隔＝即時（Queueable 連鎖）・500 等＝一時的障害に準ずる（CHK-02 C-5） | 決定済み（2026-09-02） |
 | 3 | 【決定済 2026-09-01】404 の resultCode 区分＝CD-12 NOT_FOUND（HttpStatus 区分・非終態扱いは BD-09 §5 補記のとおり）。REQ-033 の決定記録は 2026-09-01 に成文済み（CHK-01 C-3 [x]・p0-2/interview-portfolio-req033-decision-record.md 参照） | 決定済み（2026-09-01） |
 

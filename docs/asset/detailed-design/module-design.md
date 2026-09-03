@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | DD-02 |
-| 版数 | V1.0（ドラフト） |
+| 版数 | V1.1（ドラフト・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（詳細設計フェーズ・モジュール設計） |
 
@@ -21,10 +21,10 @@
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | **`IntegrationGuard`（2026-09-02 確定・CHK-02 C-2）**。配置は `src/common/guards/integration.guard.ts`（既存ガード群と同じ `src/common/guards/`） |
-| 命名と職責 | サービス間認証（A3）の検証。secret の鍵バージョン・audience・scope=`booking.integration.command`・時刻偏差を検証し、統合端点への呼出が「正しいシステムからの呼出」であることを担保する（REQ-029・BD-01 §4 A3） |
-| メソッド名・引数・戻り値 | `canActivate(context: ExecutionContext): Promise<boolean>`（NestJS CanActivate 規約）。内部ヘルパー：`verifySignature(header: string, payload: unknown): Promise<boolean>`・`verifyClaims(payload: JwtPayload): boolean`（設計値） |
-| 処理概要 | 1) Authorization ヘッダの Bearer token を取得。2) secret の鍵バージョン照合（kid 対照・env `INTEGRATION_SECRET_<kid>`／未知 kid=401・2026-09-02 確定）。3) 署名検証（HS256 JWT・対応 kid の secret で検証）。4) audience が `booking-api`（環境変数化・2026-09-02 確定）と一致。5) scope に `booking.integration.command` を含む。6) 時刻偏差 ±300 秒以内（\|now−iat\|・2026-09-02 確定）。すべて合格で true、不合格で 401/403 を返す |
+| モジュール/クラス名 | **`IntegrationGuard`（2026-09-02 確定・CHK-02 C-2／C-2 修订 2026-09-03：静的 Bearer Token 化）**。配置は `src/common/guards/integration.guard.ts`（既存ガード群と同じ `src/common/guards/`） |
+| 命名と職責 | サービス間認証（A3）の検証。受信 `Authorization: Bearer <token>` を env `INTEGRATION_TOKEN` と**定数時間比較**で検証し、統合端点への呼出が「正しいシステムからの呼出」であることを担保する（REQ-029・BD-01 §4 A3・C-2 修订 2026-09-03） |
+| メソッド名・引数・戻り値 | `canActivate(context: ExecutionContext): Promise<boolean>`（NestJS CanActivate 規約）。内部ヘルパー：`constantTimeEquals(received: string, expected: string): boolean`（定数時間比較・設計値） |
+| 処理概要 | 1) `Authorization` ヘッダの Bearer token を取得（欠落・形式不正は 401）。2) env `INTEGRATION_TOKEN` と**定数時間比較**で一致判定（一致で true・不一致で 401/403・401/403 区分維持・C-2 修订 2026-09-03）。**消失概念（旧 5 步検証チェーン）**：HS256・JWT・kid・audience（`booking-api`）・scope（`booking.integration.command`）・iat・±300 秒時刻偏差・鍵バージョン照合はすべて廃止。輪换は「新旧 2 値并存重疊」に簡化 |
 | 呼び出し関係 | 呼出元：統合端点（BookingCommandsController §2.2）のルートにガードとして登録。呼出先：なし（設定値のみ参照）。既存の `JwtAuthGuard`（APP_GUARD）とは独立したガードであり、**JWT ガードを迂回した匿名端点としてではなく独立ガードで保護する**（CF-01 の制約・BD-10 §3.2） |
 | 例外処理 | 検証 NG 時に `AuthenticationException`（401）／`AuthorizationException`（403）を throw（実在クラス・`src/common/exceptions/business.exceptions.ts`）。業務状態遷移・コマンド状態は一切変更しない（RULE-14 注記・MV-11）。CSRF ミドルウェアとの干渉は BD-11 未決事項 3 として確認対象 → 【解決 2026-09-02】干渉なし（CSRF middleware の Bearer 豁免が適用・CHK-02 C-9） |
 | 使用 SQL | なし（SQL・Prisma クエリを使用しない） |
@@ -91,7 +91,7 @@
 | モジュール/クラス名 | `BookingCommandQueueable`（既出・TERM-22・BD-01 §6）。`global class BookingCommandQueueable implements Queueable`（設計値） |
 | 命名と職責 | コマンドのバックグラウンド実行。Named Credential（`Booking_Integration_API`・TERM-21 計画名）で Booking 統合端点を呼出し、応答に応じて `Booking_Command__c` の状態・監査フィールドを更新する。**Queueable は正本 canonical 状態を直接書かない**（BD-07 §3 境界制約） |
 | メソッド名・引数・戻り値 | `global void execute(QueueableContext context)`（Queueable 規約）。コンストラクタで `Booking_Command__c.Id`・`commandId`・`bookingExternalId`・`expectedVersion`・`requestedBySalesforceUserId`・`correlationId` を受け取る（設計値）。内部ヘルパー：`sendCommand(): HttpResponse`・`handleResponse(HttpResponse)`・`recordAttempt(...)` |
-| 処理概要 | 1) コマンド実行開始：`Status__c=RUNNING` 更新。2) Named Credential で `POST /v1/integrations/salesforce/booking-commands` を呼出（IF-02・6 項目ペイロード）。**HttpRequest タイムアウト 10 秒**（`ShowcaseContactSyncService.cls` の `setTimeout(10000)` 実測を踏襲・BD-09 §4.2）。3) 応答区分（RULE-09/14）：200→`SUCCEEDED`＋結果書き戻し（§3.1 経由・F-26）／409→`CONFLICT`（リトライせず）／401/403→終状態を書込まずエラー記録のみ／503/429/timeout→`AttemptCount__c+1`・`NextAttemptAt__c`・`LastError__c` 記録し、上限内で同一 commandId 再実行（上限到達で `FAILED`）。4) `HttpStatus__c`・`ResultCode__c`・`ResultVersion__c` を記録（REQ-031）・ResultCode__c 値域＝CD-12（7 値封闭集・【決定済 2026-09-01】） |
+| 処理概要 | 1) コマンド実行開始：`Status__c=RUNNING` 更新。2) Named Credential で `POST /v1/integrations/salesforce/booking-commands` を呼出（IF-02・6 項目ペイロード）。**認証ヘッダ＝静的 Bearer Token（EC 認証パラメータ `guardSecret`（EC 側は新規追加なし・既存パラメータを再利用・2026-09-02 S-2 時存入値をそのまま使用）＋カスタムヘッダー `Authorization: Bearer {!$Credential.guardSecret}`・NC は「HTTP ヘッダーの数式を許可」ON／Generate Authorization Header は OFF のまま）により平台注入され、Apex は認証に接触しない**（C-2 修订 2026-09-03・旧設計の JWT 自前署名は廃止）。**HttpRequest タイムアウト 10 秒**（`ShowcaseContactSyncService.cls` の `setTimeout(10000)` 実測を踏襲・BD-09 §4.2）。3) 応答区分（RULE-09/14）：200→`SUCCEEDED`＋結果書き戻し（§3.1 経由・F-26）／409→`CONFLICT`（リトライせず）／401/403→終状態を書込まずエラー記録のみ／503/429/timeout→`AttemptCount__c+1`・`NextAttemptAt__c`・`LastError__c` 記録し、上限内で同一 commandId 再実行（上限到達で `FAILED`）。4) `HttpStatus__c`・`ResultCode__c`・`ResultVersion__c` を記録（REQ-031）・ResultCode__c 値域＝CD-12（7 値封闭集・【決定済 2026-09-01】） |
 | 呼び出し関係 | 呼出元：BookingSiteController（§3.3）が `System.enqueueJob(new BookingCommandQueueable(...))`（コマンド生成トランザクション内・BD-03 §7.4）。呼出先：Booking 統合端点（Named Credential）。結果書き戻し時は投影入口（§3.1）を再利用（F-26・専用直書込経路を作らない） |
 | 例外処理 | Callout 例外（`CalloutFailureException` 流用・ShowcaseContactSyncService 実測）・タイムアウトを捕捉し、終状態判定（RULE-14：明示 200/409 のみ）に従って状態・監査フィールドを更新。Queueable 内で捕捉するため例外は上流へ伝播しない。再 throw する場合は `AsyncApexJobs` に失敗記録が残る点に留意（設計値） |
 | 使用 SQL | SOQL/DML 要点（設計値）：コマンド取得 `SELECT Id, CommandId__c, Status__c, AttemptCount__c, ... FROM Booking_Command__c WHERE Id = :id`／更新 `update cmd`（Status__c・AttemptCount__c・HttpStatus__c・NextAttemptAt__c・ResultCode__c・ResultVersion__c・LastError__c・CorrelationId__c） |
@@ -147,7 +147,7 @@ BD-03 §2 と同一口径で、既存モジュールは次表の一覧とコー�
 | No. | 未決事項 | 決定期限 |
 |---|---|---|
 | 1 | 【決定済 2026-09-01】integration_commands（第 14 モデル・暫定名・正式名は P0-3 確定フロー・IDR-01 登録済み）に確定。RULE-08 同一トランザクション書込み・応答キャッシュ否決・P0-2 凍結ウィンドウへ前倒し（migration は CHK-01 B-3）。詳細は DD-01 §2.15。**正式名確定（2026-09-02・CHK-02 C-6）＝`IntegrationCommand`／`integration_commands` 維持** | 決定済み（2026-09-01／正式名 2026-09-02） |
-| 2 | 【決定済 2026-09-02】クラス名＝`IntegrationGuard`・トークン＝HS256 JWT（kid/aud=`booking-api`/scope/iat）・時刻偏差 ±300 秒・secret＝kid 対照 env 複数鍵＋3 步無停止ローテーション。SF 側 secret 保管場所は S-2/S-4 で確定（CHK-02 C-2） | 決定済み（2026-09-02） |
+| 2 | 【決定済 2026-09-02】クラス名＝`IntegrationGuard`・トークン＝HS256 JWT（kid/aud=`booking-api`/scope/iat）・時刻偏差 ±300 秒・secret＝kid 対照 env 複数鍵＋3 步無停止ローテーション。SF 側 secret 保管場所は S-2/S-4 で確定（CHK-02 C-2） → **C-2 修订（2026-09-03・用户拍板）**：トークン＝**静的 Bearer Token**（EC 認証パラメータ `guardSecret`（EC 側は新規追加なし・既存パラメータを再利用・2026-09-02 S-2 時存入値をそのまま使用）＋カスタムヘッダー `Authorization: Bearer {!$Credential.guardSecret}` 注入・NC は数式許可 ON/Generate Header OFF・Apex 非接触）・Integration Guard＝env `INTEGRATION_TOKEN` との**定数時間比較**。HS256・JWT・kid・aud=`booking-api`・scope・iat・±300 秒・3 步ローテーションは廃止し、輪换＝**新旧 2 値并存重疊**に簡化（CHK-02 C-2 修订・真実性原則で原決定記録は保持） | 決定済み（2026-09-02／C-2 修订 2026-09-03） |
 | 3 | 【決定済 2026-09-02】Prisma モデル＝`StaticOperatorMapping`（`static_operator_mappings`・第 15 モデル・migration は B-5）。TERM-26 対応（CHK-02 C-3） | 決定済み（2026-09-02） |
 | 4 | 【決定済 2026-09-02】クラス名＝`ProjectionSenderService`・同期呼出（正本トランザクション確定後・タイムアウト 3000ms・失敗は正本応答に影響せず syncStatus=ERROR）（CHK-02 C-4） | 決定済み（2026-09-02） |
 | 5 | LWC バンドル名・ポーリング間隔・取消可否表示条件 | P0-4 着手時（BD-03 §6.9・§7.9） |

@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | BD-01 |
-| 版数 | V2.0（ドラフト・日本語化・雛形準拠） |
+| 版数 | V2.1（ドラフト・日本語化・雛形準拠・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（基本設計フェーズ・システム構成） |
 
@@ -64,7 +64,7 @@ flowchart LR
     LWC -->|"with sharing + CRUD/FLS"| APEX
     SITE --> LWC
     AU -.->|"🔵 入口遷移（F-21）+ 外部ユーザー独立ログイン ✅（MV-03 検証済み・ログイン部分）"| SITE
-    SQ["🔵 Queueable"] -.->|"🔵 Named Credential + Bearer secret<br/>POST /v1/integrations/salesforce/booking-commands"| MOD
+    SQ["🔵 Queueable"] -.->|"🔵 Named Credential + 静的 Bearer Token<br/>（カスタムヘッダー注入・NC 数式許可 ON）<br/>POST /v1/integrations/salesforce/booking-commands"| MOD
     APEX --- SQ
     SQ --- NC
 ```
@@ -121,7 +121,7 @@ flowchart LR
 | 方向 | 接続先・内容 | 方式・プロトコル | 認証 | 状態 |
 |---|---|---|---|---|
 | Booking → Salesforce | 予約投影（正本変更の冪等 Upsert・TERM-09）。Apex REST `POST /services/apexrest/integrations/bookings/projection` | HTTPS（Apex REST） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | 🔵 P0-3 計画 |
-| Salesforce → Booking | 取消コマンド実行（CANCEL_BOOKING のみ・TERM-11）。`POST /v1/integrations/salesforce/booking-commands` | HTTPS（REST） | Named Credential（Bearer secret）＋ Integration Guard（A3） | 🔵 P0-3 計画 |
+| Salesforce → Booking | 取消コマンド実行（CANCEL_BOOKING のみ・TERM-11）。`POST /v1/integrations/salesforce/booking-commands` | HTTPS（REST） | Named Credential（静的 Bearer Token・カスタムヘッダー注入〔EC 認証パラメータ `guardSecret`（既存・新規追加なし）・NC 数式許可 ON〕）＋ Integration Guard（定数時間比較・A3） | 🔵 P0-3 計画 |
 | 管理者ブラウザ → Salesforce | 入口ボタンからの Site ログインページ遷移＋外部ユーザー独立ログイン（遷移＝SSO ではない） | HTTPS（ブラウザ） | Salesforce 外部ユーザー認証情報（A4） | 遷移 🔵 P0-4 計画／ログイン ✅ MV-03 検証済み（ログイン部分） |
 
 責任分界：予約状態の最終値は常に Booking のトランザクションが決定する。Salesforce は投影の表示とコマンドの受理のみを担い、正本を直接書き換えない（RD-07 §5 と一致）。
@@ -147,7 +147,7 @@ flowchart LR
 |---|---|---|---|---|
 | A1 | 顧客／管理者 → Booking API | 電話番号＋6 桁認証コード（TERM-31）でログイン → `access_token`/`refresh_token`/`csrf_token` を HttpOnly Cookie で発行。JWT グローバルガードがリクエストごとに検証し、Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）を確認。ロールはデータベースの値を毎回参照（jwt-auth.guard 実測） | ✅ | ロール変更は `PUT /v1/users/:id`（既存セッションを取り消さない＝P1 強化課題・RULE-17）。状態変更 `PUT /v1/users/:id/status` はセッションを取り消す |
 | A2 | Booking サービス → Salesforce | OAuth 2.0 JWT Bearer：専用外部クライアントアプリケーション（ECA・2026-09-02 Connected App より移行）＋integration user＋`api`＋`refresh_token` scope。証明書秘密鍵は Booking 側 secret 管理（TERM-20） | 🔵 P0-3 | 技術選定の根拠は tech-decisions（Flow／標準 REST 代替は評価のうえ否決） |
-| A3 | Salesforce Queueable → Booking API | Named Credential（External Credential の Bearer principal・TERM-21）＋ Booking 側 Integration Guard（secret の鍵バージョン・audience・scope=`booking.integration.command`・時刻偏差を検証・TERM-23） | 🔵 P0-3 | JWT ガードを迂回した匿名エンドポイントにはしない |
+| A3 | Salesforce Queueable → Booking API | Named Credential（`Booking_Integration_API`・TERM-21）の**カスタムヘッダー** `Authorization: Bearer {!$Credential.guardSecret}` による静的 Bearer Token 注入（EC `Booking_Integration_Guard` の既存 auth パラメータ `guardSecret`（新規追加なし・2026-09-02 S-2 時存入値をそのまま使用）・NC は数式許可 ON／**Generate Authorization Header は OFF のまま**・**Apex は認証に接触しない**）＋ Booking 側 Integration Guard（受信 token と env `INTEGRATION_TOKEN` の**定数時間比較**・401/403 区分維持・TERM-23・C-2 修订 2026-09-03） | 🔵 P0-3 | JWT ガードを迂回した匿名エンドポイントにはしない（HS256/JWT/kid/aud/scope/iat は C-2 修订で廃止） |
 | A4 | 管理者 → Experience Site | Booking ログイン後、入口ボタンから Site ログインページへ遷移し、Salesforce 外部ユーザー認証情報で**独立ログイン**。Booking のパスワード／JWT／Cookie は Booking の外に出ない（RULE-18） | 遷移 🔵（P0-4）／ログイン ✅（MV-03 検証済み・ログイン部分） | 遷移＝SSO ではない。両者のログアウトは相互に独立 |
 
 サービス間認証（A2/A3）は「どのシステムが API を呼べるか」を決め、ユーザー認証（A1/A4）は「誰がコマンドを提出できるか」を決める。両者は分離する（REQ-029）。
@@ -176,7 +176,7 @@ flowchart LR
 | 外部ユーザー＋Profile/Permission Set＋Sharing Set | 管理者の身元と行級範囲（External OWD=Private・Account 隔離・TERM-32） | ✅ 外部ユーザー 1 名作成済み（P0-1）／権限マトリクス 🔵 P0-2 で凍結（F-32） |
 | `Booking__c` / `Booking_Command__c`＋External ID＋version フィールド | 投影オブジェクト（TERM-09）とコマンドオブジェクト（TERM-11） | 🔵 P0-2 契約凍結 |
 | `BookingProjectionRest` / `BookingSiteController` / `BookingCommandQueueable` | 投影受入口（TERM-24）／Site 用コントローラ（TERM-25）／バックグラウンド呼出（TERM-22） | 🔵 P0-3（Flow／標準 REST による代替は評価のうえ否決済み） |
-| 外部クライアントアプリケーション ECA（JWT Bearer）＋integration user＋Named Credential | 双方向のサービス間認証（A2/A3） | 🔵 P0-3 |
+| 外部クライアントアプリケーション ECA（JWT Bearer・A2）＋integration user＋Named Credential（静的 Bearer Token・A3） | 双方向のサービス間認証（A2/A3・C-2 修订 2026-09-03：A3 のみ静的 Bearer Token 化） | 🔵 P0-3 |
 | 独自 LWC（予約リスト・取消ボタン・コマンド状態ポーリング・TERM-33） | Site 制限ページ | 🔵 P0-4（現サイトはサンプルテンプレート） |
 | Outbox/Worker・動的 provisioning（提権・降権） | 信頼性配信と外部ユーザーのライフサイクル管理 | ⚪ P1（REQ-037・REQ-038 保留） |
 

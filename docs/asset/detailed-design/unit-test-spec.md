@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | DD-04 |
-| 版数 | V1.0（ドラフト） |
+| 版数 | V1.1（ドラフト・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（詳細設計フェーズ・単体テスト） |
 
@@ -64,7 +64,7 @@
 | TC-08 | BookingCommandQueueable.execute | 異常（409 業務競合） | HttpCalloutMock が 409＋currentVersion＋correlationId を返す前提（業務競合シミュレーション：旧 expectedVersion 等） | `Status__c=CONFLICT`（終状態）・リトライしない・副作用なし。HttpStatus__c・LastError__c・CorrelationId__c 記録 | 未実施（P0-3 計画） | F-25（MV-09・RULE-02/09/14） |
 | TC-09 | BookingCommandQueueable.execute | 異常（503 一時障害・成功回復） | HttpCalloutMock が前 2 回 503・第 3 回 200 を返す前提（Callout Mock・MV-10） | AttemptCount__c が 2 回目まで +1 され、3 回目成功で SUCCEEDED。NextAttemptAt__c・LastError__c 記録 | 未実施（P0-3 計画） | F-25（MV-10・RULE-09） |
 | TC-10 | BookingCommandQueueable.execute | 異常（継続失敗→FAILED） | HttpCalloutMock が上限回数まで 503 を返し続ける前提 | 上限到達で `Status__c=FAILED`（AttemptCount__c・NextAttemptAt__c・LastError__c 記録）。手動 Retry（原 commandId）前提（RULE-10） | 未実施（P0-3 計画） | F-25（MV-10・RULE-10・REQ-028） |
-| TC-11 | BookingCommandQueueable.execute | 異常（認証 NG 401/403） | HttpCalloutMock が 401/403（誤 audience/scope/旧 key）を返す前提 | 業務状態遷移・コマンド終状態（SUCCEEDED/CONFLICT/FAILED）を書込まず、エラー記録のみ（RULE-14 注記・REQ-029） | 未実施（P0-3 計画） | F-25（MV-11・RULE-09 注記・REQ-029） |
+| TC-11 | BookingCommandQueueable.execute | 異常（認証 NG 401/403） | HttpCalloutMock が 401/403（誤 token／欠落 token・C-2 修订 2026-09-03）を返す前提 | 業務状態遷移・コマンド終状態（SUCCEEDED/CONFLICT/FAILED）を書込まず、エラー記録のみ（RULE-14 注記・REQ-029） | 未実施（P0-3 計画） | F-25（MV-11・RULE-09 注記・REQ-029） |
 | TC-12 | BookingSiteController.getProjections | 異常（行級限定・越権拒否） | 外部ユーザー A が他 Account の Booking__c ID を直指定で照会（External OWD=Private＋Sharing Set 前提） | 行級範囲により取得不能（空／権限不足挙動）。他 Account の投影は表示されない | 未実施（P0-3 計画） | F-23（MV-07・RULE-13・REQ-030） |
 | TC-13 | BookingSiteController.submitCancel | 境界（取消不可状態の事前抑制） | CANCELLED／COMPLETED の投影に対して取消送信を試行 | 送信前に抑制（ボタン無効・MSG-04 相当）。Booking_Command__c は生成されない（最終判定は Booking 側 409・F-25） | 未実施（P0-3 計画） | F-24（BD-03 §7.5・RULE-07） |
 | TC-14 | BookingCommandQueueable.execute | 境界（受入端点の入力境界） | リクエスト境界：expectedVersion 同値（正本一致）・`expectedVersion` null・`bookingExternalId` 空・`commandType` 不正値・`requestedBySalesforceUserId` null を各 1 件 | 同値は受理 200。null／空／不正は **400（ValidationException・判定制確定 2026-09-02・CHK-02 C-11：必須 6 項目＋commandType 完全一致＋expectedVersion 型検証のみ）** で返し、正本・コマンド状態を変えない（P0 では Mock 応答の境界として検証） | 未実施（P0-3 計画） | F-25（BD-09 §4.3・RULE-02/12/13） |
@@ -77,8 +77,8 @@
 
 | テストケース ID | 対象モジュール・メソッド | 観点 | 入力・前提条件 | 期待結果 | 実施結果 | 備考（対応機能 ID・出典） |
 |---|---|---|---|---|---|---|
-| TC-17 | Integration Guard.canActivate | 正常（A3 検証通過） | 正しい secret 鍵バージョン・audience・scope=`booking.integration.command`・時刻偏差内の Bearer token | `true` を返しリクエストが通過する | 未実施（P0-3 計画） | F-25（REQ-029・NFR-04・MV-11） |
-| TC-18 | Integration Guard.canActivate | 異常（認証 NG） | 誤 audience／誤 scope／旧 key／時刻偏差超過の各 token | 401/403 を返し、予約・コマンド状態が一切変化しない（業務状態不変） | 未実施（P0-3 計画） | F-25（REQ-029・MV-11） |
+| TC-17 | Integration Guard.canActivate | 正常（A3 検証通過） | env `INTEGRATION_TOKEN` と一致する正しい Bearer token（`Authorization: Bearer <token>`・C-2 修订 2026-09-03） | `true` を返しリクエストが通過する | 未実施（P0-3 計画） | F-25（REQ-029・NFR-04・MV-11） |
+| TC-18 | Integration Guard.canActivate | 異常（認証 NG） | 誤 token（env `INTEGRATION_TOKEN` と不一致）／欠落 token（ヘッダなし・Bearer 形式不正）の各 token（C-2 修订 2026-09-03） | 401/403 を返し、予約・コマンド状態が一切変化しない（業務状態不変） | 未実施（P0-3 計画） | F-25（REQ-029・MV-11） |
 | TC-19 | BookingCommandsController.receiveCommand | 境界（DTO 検証） | `commandType` が CANCEL_BOOKING 以外／必須 6 項目の null・空文字・欠落 | 400（ValidationException）を返し、業務処理を実行しない | 未実施（P0-3 計画） | F-25（BD-09 §4.3・RULE-13） |
 | TC-20 | BookingsIntegrationService.executeCancelCommand | 冪等（commandId 再送） | 同一 commandId の既処理結果が保存済みの状態で同一 commandId を再送 | 初回保存済み結果（HTTP 状態・canonicalVersion・resultCode）をそのまま返し、取消・通知の副作用を再実行しない（RULE-03・タイムアウト後重複含む） | 未実施（P0-3 計画） | F-25（MV-08・RULE-03・REQ-023） |
 | TC-21 | BookingsIntegrationService.executeCancelCommand | 異常（静的マッピング NG） | `requestedBySalesforceUserId` に対応するマッピング不存在／inactive、または Booking ユーザーが非 ADMIN／非 ACTIVE | 403（AuthorizationException）を返し、正本を更新しない（RULE-12） | 未実施（P0-3 計画） | F-25（RULE-12・REQ-026） |

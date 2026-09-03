@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | BD-09 |
-| 版数 | V1.0（ドラフト・雛形準拠） |
+| 版数 | V1.1（ドラフト・雛形準拠・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（基本設計フェーズ・I/F 設計） |
 
@@ -19,7 +19,7 @@
 | I/F ID | I/F 名 | 方向 | 連携先 | 認証 | 対応機能 | 状態 |
 |---|---|---|---|---|---|---|
 | IF-01 | 予約投影 | 送信（Booking → Salesforce） | chogeer DE org・Apex REST `BookingProjectionRest`（TERM-24） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | F-20 | 🔵 P0-3 計画・部分実施（SF 側受入口済〔6b9d970〕・Booking 側送信未実装） |
-| IF-02 | 予約キャンセルコマンド | 送信（Salesforce → Booking） | Booking 統合端点 `POST /v1/integrations/salesforce/booking-commands` | Named Credential（Bearer secret）＋ Integration Guard（A3） | F-25 | 🔵 P0-3 計画・未着手（Booking 側受入エンドポイント未実装） |
+| IF-02 | 予約キャンセルコマンド | 送信（Salesforce → Booking） | Booking 統合端点 `POST /v1/integrations/salesforce/booking-commands` | Named Credential（静的 Bearer Token・カスタムヘッダー注入〔EC 認証パラメータ `guardSecret`（既存・新規追加なし）・NC 数式許可 ON〕）＋ Integration Guard（定数時間比較・A3） | F-25 | 🔵 P0-3 計画・未着手（Booking 側受入エンドポイント未実装） |
 
 対象外の連携（RD-07 §5 と同一口径）：改期・予約作成・添付・全項目同期・イベント駆動のリアルタイム配信は実施しない。コマンド種別は CANCEL_BOOKING のみ（RULE-13）。
 
@@ -146,7 +146,7 @@ flowchart TB
 | 項目 | 設計値 |
 |---|---|
 | 方式 | HTTPS REST：`POST /v1/integrations/salesforce/booking-commands`。Queueable（`BookingCommandQueueable`・計画クラス名）から呼出 |
-| 認証 | Named Credential（External Credential の Bearer principal・`Booking_Integration_API` 計画名・TERM-21）＋ Booking 側 Integration Guard（secret の鍵バージョン・audience・scope=`booking.integration.command`・時刻偏差を検証・A3・TERM-23） |
+| 認証 | Named Credential（`Booking_Integration_API` 計画名・TERM-21）の**カスタムヘッダー** `Authorization: Bearer {!$Credential.guardSecret}` による**静的 Bearer Token 注入**（EC `Booking_Integration_Guard` の既存 auth パラメータ `guardSecret` を解決・EC 側は新規追加なし・2026-09-02 S-2 時存入値をそのまま使用・NC は「HTTP ヘッダーの数式を許可」ON／**Generate Authorization Header は OFF のまま**・**Apex は認証に接触しない**）＋ Booking 側 Integration Guard（受信 token と env `INTEGRATION_TOKEN` の**定数時間比較**・401/403 区分維持・A3・TERM-23・C-2 修订 2026-09-03）。**消失概念**：HS256/JWT/kid/audience/scope=`booking.integration.command`/iat/±300 秒は廃止 |
 | タイムアウト | 設計値（未実装）：HttpRequest タイムアウト（既存パターン `ShowcaseContactSyncService.cls` では 10 秒設定）を踏襲し、タイムアウト時は RULE-09 の一時的障害区分へ分岐する |
 | 現状 | Booking 側受入エンドポイントは**未実装**（Integration Guard 未実装・ルーティング未定義）。本節はすべて設計値（未実装） |
 
@@ -201,7 +201,7 @@ flowchart TB
 |---|---|---|---|---|
 | 業務競合 | 旧 `expectedVersion`・`COMPLETED` 宛取消・`CANCELLED` 宛新 commandId | **409＝リトライしない**。コマンドを CONFLICT に確定し、人間が原因を判断（BIZ-15） | HttpStatus・LastError・CorrelationId | RULE-02/05/07/09・MV-09 |
 | 一時的障害 | 503／429／timeout | `attemptCount+1` のうえ同一 commandId で限定回数の自動リトライ。上限到達で FAILED | AttemptCount・NextAttemptAt・LastError | RULE-09/10・MV-10 |
-| 認証系エラー | 誤 audience／scope／旧 key | 401/403 を返し、**業務状態遷移・コマンド状態を変えず**エラー記録のみ | HttpStatus・LastError | REQ-029・RULE-14 注記 |
+| 認証系エラー | 誤 token／欠落 token（env `INTEGRATION_TOKEN` と不一致・C-2 修订 2026-09-03） | 401/403 を返し、**業務状態遷移・コマンド状態を変えず**エラー記録のみ | HttpStatus・LastError | REQ-029・RULE-14 注記 |
 | 手動 Retry | FAILED／ERROR 確定後 | 原 commandId を用いて再実行（新規 commandId を発行しない）。Retry UI は P1 保留のため P0 は手順ベース | 再試行の AttemptCount 更新 | RULE-10・REQ-028 |
 | 削除済み予約宛 | 正本クリーンアップ後の遅延コマンド | 404/409 で判定可能な応答を返し、曖昧な成功としない | HttpStatus・LastError | REQ-033（G7）・RULE-15 |
 
