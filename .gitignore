@@ -90,3 +90,4 @@ force-app/main/default/sites/
 .video_agent/
 .tmp-*/
 .v2c/
+.zcode/
