@@ -27,11 +27,11 @@
 
 ### 3.1 認証分離（NFR-04）
 
-4 種類の認証境界 A1〜A4 の混用禁止と、A3（Integration Guard：受信 Bearer token を env `INTEGRATION_TOKEN` と**定数時間比較**で検証・静的 Bearer Token は EC 認証パラメータ `guardSecret`（既存・新規追加なし・2026-09-02 S-2 時存入値）＋カスタムヘッダー注入・NC 数式許可 ON・C-2 修订 2026-09-03）の設計は BD-01 §4 に譲る（本書では重複記載しない）。A1 の Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）とロールの DB 毎回参照は既存実装（`src/common/guards/jwt-auth.guard.ts` 実測・✅）。A2/A3 は 🔵 P0-3 計画。検証は MV-11（誤 token／欠落 token で 401/403）。
+4 種類の認証境界 A1〜A4 の混用禁止と、A3（Integration Guard：受信 Bearer token を env `INTEGRATION_TOKEN` と**定数時間比較**で検証・静的 Bearer Token は EC 認証パラメータ `guardSecret`（既存・新規追加なし・2026-09-02 S-2 時存入値）＋カスタムヘッダー注入・NC 数式許可 ON・C-2 修订 2026-09-03）の設計は BD-01 §4 に譲る（本書では重複記載しない）。A1 の Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）とロールの DB 毎回参照は既存実装（`src/common/guards/jwt-auth.guard.ts` 実測・✅）。A2/A3 は ✅ 実装済（A2=3d88923・A3=6ab01c9/8581f50・2026-09-03/09-04）。検証は MV-11（誤 token／欠落 token で 401/403）。
 
 ### 3.2 サービス認証とユーザー認証の分離原則（NFR-04・REQ-029）
 
-「どのシステムが API を呼べるか」（A2/A3）と「誰がコマンドを提出できるか」（A1/A4）を分離する。Booking 側受入エンドポイントは JWT ガードを迂回した匿名端点とせず、Integration Guard で独立に保護する（🔵 P0-3）。
+「どのシステムが API を呼べるか」（A2/A3）と「誰がコマンドを提出できるか」（A1/A4）を分離する。Booking 側受入エンドポイントは JWT ガードを迂回した匿名端点とせず、Integration Guard で独立に保護する（✅ 実装済・6ab01c9/8581f50・2026-09-03）。
 
 ### 3.3 認可・最終裁定（NFR-05）
 
@@ -43,13 +43,13 @@
 
 ### 3.5 操作者のサーバ側確定（NFR-06 関連・RULE-12）
 
-コマンド要求者は静的マッピング（`salesforceUserId ↔ bookingUserId`・active 1 件）でサーバ側確定し、ブラウザ申告 ID は採用しない。マッピング不存在／inactive・非 ADMIN/ACTIVE は拒否（🔵 P0-3 計画）。
+コマンド要求者は静的マッピング（`salesforceUserId ↔ bookingUserId`・active 1 件）でサーバ側確定し、ブラウザ申告 ID は採用しない。マッピング不存在／inactive・非 ADMIN/ACTIVE は拒否（✅ 実装済・8581f50・2026-09-03）。
 
 ### 3.6 監査ログ（NFR-07・REQ-031）
 
 | 種別 | 記録先・項目 | 状態 |
 |---|---|---|
-| 連携監査 | `Booking__c`（CorrelationId__c・LastError__c）・`Booking_Command__c`（CorrelationId__c・AttemptCount__c・HttpStatus__c・NextAttemptAt__c・LastError__c） | 🔵 P0-2（項目）／P0-3（書込） |
+| 連携監査 | `Booking__c`（CorrelationId__c・LastError__c）・`Booking_Command__c`（CorrelationId__c・AttemptCount__c・HttpStatus__c・NextAttemptAt__c・LastError__c） | ✅ 実装済（2026-09-02/09-03） |
 | Site ログイン監査 | Salesforce LoginHistory（外部ユーザー種別の自動記録・MV-03 で実績） | ✅ |
 | アプリ監査 | `ActivityLog`（利用者操作）／`SystemLog`（システム動作）の既存モデル | ✅ モデル実装済（BD-07 §2.1） |
 
@@ -59,14 +59,14 @@
 
 - 全通信を HTTPS とする（Salesforce 側は強制・Booking 側はローカル開発では HTTP のまま、外部公開時は TLS 終端を要する＝**デモ構成の限界を正直に記載**）。
 - JWT は HttpOnly Cookie で輸送（✅・A1）。
-- PII 5 項目（氏名・電話・メール・WeChat・備考・TERM-29）は投影ペイロード・`Booking__c` のいずれにも出現させない。ホワイトリスト（RULE-11・契約凍結）による構造的除外であり、運用注意ではなく設計で担保する（🔵 P0-3）。検証：投影レコード項目の目視照合＋Apex テストのアサーション（MV-04 併せて）。
+- PII 5 項目（氏名・電話・メール・WeChat・備考・TERM-29）は投影ペイロード・`Booking__c` のいずれにも出現させない。ホワイトリスト（RULE-11・契約凍結）による構造的除外であり、運用注意ではなく設計で担保する（🔵 P0-3）→✅ 実装済（§8 参照・3d88923）。検証：投影レコード項目の目視照合＋Apex テストのアサーション（MV-04 併せて）。
 - 個人情報の目的外提供禁止（NFR-14）：投影ホワイトリスト運用で担保し、Salesforce 標準セキュリティ機能（OWD・Sharing Set・CRUD/FLS）の範囲内で実装する。
 
 ### 3.8 脆弱性対策・品質（NFR-09）
 
-- Apex テストカバレッジ 75% 以上（Salesforce 本番展開要件）を維持する（🔵 P0-3 完了時点・`sf apex run tests`）。
+- Apex テストカバレッジ 75% 以上（Salesforce 本番展開要件）を維持する（🔵 P0-3 完了時点・`sf apex run tests`）→達成（booking-scope PASS・拍板 a 2026-09-04・§8 参照）。
 - P0 定義テスト（初回／重複／並行投影、旧バージョン、合法取消、409、503 Mock、権限拒否）の全件成功を P0-3 の完了条件とする（検証観点は MV アンカー：MV-04・MV-05・MV-06・MV-08・MV-09・MV-10・MV-11）。
-- 既存 Apex 資産のパターン流用（`ShowcaseIntegrationRest.cls` の標準 envelope・`with sharing` 宣言実測）により入力検証・権限宣言の統一を図る（🔵 P0-3 計画）。
+- 既存 Apex 資産のパターン流用（`ShowcaseIntegrationRest.cls` の標準 envelope・`with sharing` 宣言実測）により入力検証・権限宣言の統一を図る（🔵 P0-3 計画）→実装済（§8 参照）。
 
 ## 4. 可用性設計（対応：NFR-10）
 
@@ -113,12 +113,12 @@
 | NFR-01 | 性能 | §2 | 本書 §2（新規・正式引受） | ✅ 目標／🔵 検証はデモ実測 |
 | NFR-02 | 性能 | §2 | 本書 §2 | ✅ 同上 |
 | NFR-03 | 性能 | §2 | 本書 §2＋BD-03 §7（F-24） | 🔵 P0-3/P0-4 |
-| NFR-04 | セキュリティ（認証） | §3.1・§3.2 | 本書 §3＋BD-01 §4（A1〜A4） | A1 ✅／A3 🔵 P0-3 |
+| NFR-04 | セキュリティ（認証） | §3.1・§3.2 | 本書 §3＋BD-01 §4（A1〜A4） | A1 ✅／A2/A3 ✅ 実装済 |
 | NFR-05 | セキュリティ（認可） | §3.3 | 本書 §3＋BD-04 §3.3 | ✅ |
 | NFR-06 | セキュリティ（認可・行級） | §3.4・§3.5 | 本書 §3＋BD-01 §6・F-32 | 🔵 P0-2/P0-3/P0-4 |
-| NFR-07 | セキュリティ（監査ログ） | §3.6 | 本書 §3＋BD-07 §3（監査フィールド） | 🔵 P0-2/P0-3（LoginHistory 部分は ✅） |
-| NFR-08 | セキュリティ（暗号化・最小化） | §3.7 | 本書 §3＋BD-09 §3.3（ホワイトリスト） | ✅（A1 輸送）／🔵 P0-3（投影経路） |
-| NFR-09 | セキュリティ（脆弱性） | §3.8 | 本書 §3＋BD-02 §4（F-20〜F-26） | 🔵 P0-3 完了時点 |
+| NFR-07 | セキュリティ（監査ログ） | §3.6 | 本書 §3＋BD-07 §3（監査フィールド） | ✅ 実装済（連携監査 2026-09-02/09-03・LoginHistory 部分は ✅） |
+| NFR-08 | セキュリティ（暗号化・最小化） | §3.7 | 本書 §3＋BD-09 §3.3（ホワイトリスト） | ✅ 達成（A1 輸送・投影経路 3d88923） |
+| NFR-09 | セキュリティ（脆弱性） | §3.8 | 本書 §3＋BD-02 §4（F-20〜F-26） | ✅ 達成（booking-scope PASS・testRunId 707g500000jUesY・拍板 a 2026-09-04） |
 | NFR-10 | 可用性 | §4 | 本書 §4＋BD-01 §3.7 | ✅（目標なしの方針） |
 | NFR-11 | 運用 | §5・§6 | 本書 §5（retention 実測値を記載・既存の BD-01 §5 参照を具体化） | ✅ |
 | NFR-12 | 移行 | §8（本表）→ **BD-12『データ移行方針』** が引受 | BD-12（移行なし声明・新規） | ✅（対象外確認） |

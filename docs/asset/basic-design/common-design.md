@@ -20,9 +20,9 @@
 |---|---|---|---|---|
 | CF-01 | 認証・認可 | フレームワーク機能（NestJS Guard・APP_GUARD グローバル登録） | NFR-04・NFR-05 | ✅（連携側拡張は 🔵） |
 | CF-02 | トークン無効化 | ミドルウェア層の KVS（Redis ブラックリスト） | NFR-04 | ✅ |
-| CF-03 | エラーレスポンス | フレームワーク機能（NestJS ExceptionFilter）＋SF 側標準 envelope パターン流用 | NFR-05・NFR-09 | ✅（Booking）／🔵 P0-3（連携新規） |
+| CF-03 | エラーレスポンス | フレームワーク機能（NestJS ExceptionFilter）＋SF 側標準 envelope パターン流用 | NFR-05・NFR-09 | ✅（Booking）／✅（連携・実装済 2026-09-02/09-03） |
 | CF-04 | ログ出力 | フレームワーク機能（NestJS Logger）＋DB モデル（`ActivityLog`／`SystemLog`） | NFR-07 | ✅ |
-| CF-05 | 採番（eventId・correlationId・commandId） | 共通生成ユーティリティ（連携モジュール内） | NFR-07 | 🔵 P0-2/P0-3 計画 |
+| CF-05 | 採番（eventId・correlationId・commandId） | 共通生成ユーティリティ（連携モジュール内） | NFR-07 | ✅ 実装済（UUID v4・2026-09-02 確定〔CHK-02 C-8〕・IF-01/IF-02 実装に反映） |
 | CF-06 | 日付・タイムゾーン処理 | フロント JST ユーティリティ（実装済）＋バックエンド UTC 規約 | NFR-07（間接・監査時刻整合） | ✅ 実態どおり（規約化は 🔵） |
 | CF-07 | 保持・削除 | 共通モジュール（retention：CronJob＋Prisma deleteMany） | NFR-11・NFR-14 | ✅ |
 
@@ -42,9 +42,9 @@
 - 制約・禁止事項：ロール変更時に既存セッションを取消さない現行仕様の無自覚な変更を禁止（P1 強化課題として別途管理・RULE-17）。ブラックリストの直接操作（正規 API 以外からの無効化）を禁止。
 - 対応 NFR：NFR-04。
 
-### 3.3 CF-03：エラーレスポンス（✅ Booking／🔵 連携）
+### 3.3 CF-03：エラーレスポンス（✅ Booking／✅ 連携・実装済）
 
-- 提供方式：Booking 側は NestJS ExceptionFilter による統一 envelope（`ApiResponseDto`：code／message／data／requestId／timestamp・`api-contract.md` 実測）。SF 側は P0-3 で既存パターン `ShowcaseIntegrationRest.cls` の標準 envelope（success／statusCode／message／data／errors／requestId／timestamp・実測）を流用する計画。
+- 提供方式：Booking 側は NestJS ExceptionFilter による統一 envelope（`ApiResponseDto`：code／message／data／requestId／timestamp・`api-contract.md` 実測）。SF 側は既存パターン `ShowcaseIntegrationRest.cls` の標準 envelope（success／statusCode／message／data／errors／requestId／timestamp・実測）を流用済み（BookingProjectionRest／BookingCommandQueueable・2026-09-02/09-03）。
 - 呼び出し規約：Booking 側はコントローラから例外を throw し filter で統一変換する。連携の HTTP 状態区分（409＝業務競合・503/429/timeout＝一時的障害・401/403＝認証系）は BD-09 IF-02 §4.8 の区分に従い、Queueable／呼出側が同じ区分を共有する。
 - 制約・禁止事項：エラー応答に PII・スタックトレース・secret を含めることを禁止。区分（409/503/401/403）を応答ごとに場当たり的に変えることを禁止（IF 契約との整合）。
 - 対応 NFR：NFR-05（権限拒否 403 の統一挙動）・NFR-09（区分化によるテスト可能性）。
@@ -56,12 +56,12 @@
 - 制約・禁止事項：**PII（氏名・電話・メール・WeChat・備考）をログへ平文出力することを禁止**（既知の既存盲点＝`bookings.service.ts:243` の電話番号出力は 2026-09-01 に是正済み（P0-2 契約内・マスキング適用）・BD-07 §5／BD-10 §3.6 に既録）。ログの無差別大量出力を禁止。
 - 対応 NFR：NFR-07。
 
-### 3.5 CF-05：採番（eventId・correlationId・commandId）（🔵 P0-2/P0-3 計画・未実装）
+### 3.5 CF-05：採番（eventId・correlationId・commandId）（✅ 実装済・UUID v4）
 
-- 提供方式：連携モジュール内の共通生成ユーティリティ（設計値・未実装）。既存の先例パターンとして SF 側 `generateRequestId()`（`'REQ-' + 時刻 + 乱数`・`ShowcaseIntegrationRest.cls` 実測）がある。
+- 提供方式：連携モジュール内の共通生成ユーティリティ（実装済・UUID v4・2026-09-02 確定〔CHK-02 C-8・§4 未決 1〕）。既存の先例パターンとして SF 側 `generateRequestId()`（`'REQ-' + 時刻 + 乱数`・`ShowcaseIntegrationRest.cls` 実測）がある。
 - 呼び出し規約（設計値）：`eventId`／`correlationId` は Booking 側で UUID を生成し投影ペイロードへ設定（BD-09 §3.3）。`commandId` は Salesforce 側（Apex）で生成し `Booking_Command__c.CommandId__c` へ設定（TERM-12）。採番は両系統とも一意性のみ保証し、順序性を持たせない（順序制御は version ゲートの担当）。
 - 制約・禁止事項：commandId の再発行（手動 Retry は原 commandId を使う＝RULE-10）・eventId の使い回し（別 version の変更に同一 eventId を使わない）を禁止。採番形式の変更は I/F 契約変更（BD-09 §5）を伴う。
-- 対応 NFR：NFR-07（CorrelationId による監査トレース）。具体形式は P0-3 実装時に確定。
+- 対応 NFR：NFR-07（CorrelationId による監査トレース）。具体形式は UUID v4 に確定済み（2026-09-02・CHK-02 C-8・§4 未決 1）。
 
 ### 3.6 CF-06：日付・タイムゾーン処理（✅ 実態どおり・規約化は 🔵）
 

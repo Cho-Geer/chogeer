@@ -322,14 +322,14 @@ schema.prisma に明示指定のある `onDelete: Cascade` は次表の 4 本の
 
 上記以外の FK（Appointment.user／timeSlot／service、AppointmentHistory.user、BlockedTimeSlot.timeSlot／user、ActivityLog.user、SystemLog.user、Service.category）は onDelete 指定なし＝DB 既定挙動。実 DB における削除時の実際の挙動は 2026-09-01 pg_constraint の読取専用照会で実測済みであり、migration SQL（20250921050720_init 11 本・20250930144512_test_migration 2 本）と schema.prisma の両方と一致することを確認した：指定なし → SET NULL 8 本（appointments.user_id・appointments.service_id・appointment_history.changed_by・blocked_time_slots.time_slot_id／blocked_time_slots.blocked_by・activity_logs.user_id・system_logs.user_id・services.category_id＝任意参照 8 本）＋指定なし → RESTRICT 1 本（appointments.time_slot_id＝必須参照）＋明示 Cascade 4 本（上表）。残課題 2 点：① time-slots 削除時の P2003 を 409 業務エラーへ変換（P0-3 改善候補）、② users 削除時の監査リンク切れ（SET NULL）へのガード（P1 検討）。詳細は §5 未決 3 クローズ記録参照。
 
-### 2.15 integration_commands（コマンド冪等結果・🔵 設計値・P0-2 契約・未実装）
+### 2.15 integration_commands（コマンド冪等結果・✅ 実装済（migration 20260901180742・71c88c8・2026-09-02／運用書込は 8581f50・2026-09-03））
 
-- 論理名：コマンド冪等結果｜説明：統合コマンドの初回受理結果（200 のみ）を保存する冪等キーテーブル。**現行 schema.prisma には存在しない第 14 モデル（計画）**。決定経緯：DD-02 §5 未決 1【決定済 2026-09-01】・応答キャッシュ（Redis）案は否決
+- 論理名：コマンド冪等結果｜説明：統合コマンドの初回受理結果（200 のみ）を保存する冪等キーテーブル。**schema.prisma 実装済（migration 20260901180742・71c88c8・2026-09-02／運用書込は 8581f50・2026-09-03）**。決定経緯：DD-02 §5 未決 1【決定済 2026-09-01】・応答キャッシュ（Redis）案は否決
 
 | No. | カラム物理名 | 論理名 | 型・桁数（PostgreSQL） | NULL 許否 | デフォルト | PK | UK | FK | 制約・備考 |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | id | 冪等記録ID | UUID | NOT NULL | gen_random_uuid() | ○ | | | @default(uuid()) |
-| 2 | command_id | コマンドID | VARCHAR | NOT NULL | — | | ○ | | 冪等キー・TERM-12 |
+| 2 | command_id | コマンドID | VARCHAR(64) | NOT NULL | — | | ○ | | 冪等キー・TERM-12 |
 | 3 | command_type | コマンド種別 | VARCHAR(32) | NOT NULL | — | | | | CANCEL_BOOKING のみ・RULE-13 |
 | 4 | appointment_id | 予約ID | UUID | NULL 可 | — | | | → appointments.id | onDelete 指定なし（SET NULL 予定・Prisma 既定）・**任意参照：予約削除後も冪等記録を存続させるため**（handoff §3.2 契約動作に整合） |
 | 5 | http_status | HTTP状態 | INTEGER | NOT NULL | — | | | | 保存値は 200 のみ |
@@ -345,6 +345,26 @@ schema.prisma に明示指定のある `onDelete: Cascade` は次表の 4 本の
 - ②書込みは RULE-08 正本更新と**同一トランザクション**（BD-03 §8.6・crash 窗口で冪等性を保証）
 - ③cleanup は P0 不要（デモ規模）、P1 で retention ジョブへの接続を検討（DD-03 関連）
 - ④型・制約の最終値は migration 時に確定（CHK-01 B-3・IDR-01 登録済み）。**正式モデル名確定（2026-09-02・CHK-02 C-6）＝`IntegrationCommand`／`integration_commands` 維持**（schema.prisma :374-388・migration 71c88c8 実測と一致・追加 migration 不要）
+
+### 2.16 static_operator_mappings（操作者静的マッピング・✅ 実装済・2026-09-03・8581f50）
+
+- 論理名：操作者静的マッピング｜説明：Salesforce ユーザー（`requestedBySalesforceUserId`）と Booking ユーザーの対応を静的に事前登録するマッピングテーブル。RULE-12 の操作者検証（存在・ADMIN・ACTIVE）の入力となる。P0 では 1 件を事前登録（B-5・2026-09-04）。第 15 モデル・DDD-02 §2.3（Prisma モデル `StaticOperatorMapping`・旧仮称 salesforceUserLink から改称済み・DD-02 §5 未決 3【決定済 2026-09-02・CHK-02 C-3】）
+
+| No. | カラム物理名 | 論理名 | 型・桁数（PostgreSQL） | NULL 許否 | デフォルト | PK | UK | FK | 制約・備考 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | id | マッピングID | UUID | NOT NULL | gen_random_uuid() | ○ | | | @default(uuid()) |
+| 2 | salesforce_user_id | SalesforceユーザーID | VARCHAR(64) | NOT NULL | — | | ○ | | RULE-12 検証入力（TERM-26 対応） |
+| 3 | booking_user_id | BookingユーザーID | UUID | NOT NULL | — | | | → users.id | 操作者の Booking 側実体 |
+| 4 | active | 有効フラグ | BOOLEAN | NOT NULL | true | | | | RULE-12 の ACTIVE 判定 |
+| 5 | created_at | 作成日時 | TIMESTAMP(3) | NOT NULL | now() | | | | |
+| 6 | updated_at | 更新日時 | TIMESTAMP(3) | NOT NULL | @updatedAt | | | | |
+
+インデックス：UK（salesforce_user_id）＋`@@index([booking_user_id])`。出典：schema.prisma:397-409・migration 20260903120000・8581f50（2026-09-03）。
+
+注記：
+- ①用途：RULE-12 の操作者静的マッピング検証（存在・ADMIN/ACTIVE 判定・§4.2 項目 5/6 と連動）。ブラウザ申告 ID は採用しない（IF-02 §4.3 項目 5・RULE-12）
+- ②P0 事前登録 1 件（B-5・2026-09-04・seed 相当の登録込み）
+- ③同テーブルへの検索は `staticOperatorMapping.findFirst({ where: { salesforceUserId, active: true } })`（DD-02 §2.3 使用 SQL 実測）
 
 ## 3. パーティション方針
 

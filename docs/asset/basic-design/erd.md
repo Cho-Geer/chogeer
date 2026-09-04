@@ -32,6 +32,8 @@
 | システムログ | `SystemLog`（system_logs） | システム動作の記録 | `id`（uuid） |
 | 予約統計 | `AppointmentStatistic`（appointment_statistics） | 日次統計（F-10 の統計サマリとは別の集計テーブル） | `id`（uuid） |
 | システム設定 | `SystemSetting`（system_settings） | 設定キー・バリューの保存。`SystemModule` 未インポートのため端点からは不可用 | `id`（uuid） |
+| コマンド冪等結果（第 14 モデル・✅ 実装済） | `IntegrationCommand`（integration_commands） | 統合コマンドの初回受理結果（200 のみ）を保存する冪等キーテーブル（DD-01 §2.15・migration 20260901180742・2026-09-02） | `id`（uuid） |
+| 操作者静的マッピング（第 15 モデル・✅ 実装済） | `StaticOperatorMapping`（static_operator_mappings） | Salesforce ユーザーと Booking ユーザーの静的対応。RULE-12 の操作者検証入力（DD-01 §2.16・migration 20260903120000・2026-09-03） | `id`（uuid） |
 
 ### 2.2 ER 図
 
@@ -50,6 +52,8 @@ erDiagram
     APPOINTMENT ||--o{ NOTIFICATION : "対象（任意参照）"
     TIME_SLOT ||--o{ BLOCKED_TIME_SLOT : "停止（任意参照）"
     SERVICE_CATEGORY |o--o{ SERVICE : "分類（任意参照）"
+    APPOINTMENT ||--o{ INTEGRATION_COMMANDS : "冪等記録（任意参照）"
+    USER ||--o{ STATIC_OPERATOR_MAPPINGS : "操作者（必須参照）"
 
     USER {
         string id PK "uuid"
@@ -121,9 +125,30 @@ erDiagram
         string id PK
         string settingKey UK
     }
+    INTEGRATION_COMMANDS {
+        string id PK "uuid"
+        string commandId UK "冪等キー（TERM-12）"
+        string commandType "CANCEL_BOOKING のみ"
+        string appointmentId FK "予約（任意参照）"
+        int httpStatus "保存値は 200 のみ"
+        string resultCode "CD-12（SUCCESS）"
+        int canonicalVersion
+        string correlationId "TERM-17"
+        datetime createdAt
+    }
+    STATIC_OPERATOR_MAPPINGS {
+        string id PK "uuid"
+        string salesforceUserId UK "VARCHAR(64)"
+        string bookingUserId FK "users.id"
+        boolean active "RULE-12 の ACTIVE 判定"
+        datetime createdAt
+        datetime updatedAt
+    }
 ```
 
 **現状要点（実測）**：全 13 モデルに version／楽観ロック用フィールドは存在しない。salesforce／experience に関するフィールドも存在しない。`Appointment.customerPhone` のスキーマコメントは暗号化保存を示唆するが、既存の読取調査（2026-08-31）では平文保存・応答層のみマスクと報告されている。🔒 の 5 項目（TERM-29・氏名・電話・メール・WeChat・備考）はいずれも投影ホワイトリスト外。ユーザーのロール（userType）変更は既存セッションを維持し、status 変更は取消す（ブラックリスト方式・RULE-17）。
+
+**追記（第 14＝71c88c8・2026-09-02〔migration 20260901180742〕／第 15＝8581f50・2026-09-03〔migration 20260903120000〕）**：第 14 モデル `IntegrationCommand`（integration_commands・migration 20260901180742・71c88c8・2026-09-02）と第 15 モデル `StaticOperatorMapping`（static_operator_mappings・migration 20260903120000・8581f50・2026-09-03）が追加され、Booking 側スキーマは 15 モデルとなった（詳細は DD-01 §2.15・§2.16）。
 
 ## 3. Salesforce 側オブジェクト（🔵 P0-2 契約凍結・項目は計画値）
 
@@ -188,7 +213,7 @@ schema.prisma で**明示指定されている連鎖削除（onDelete: Cascade�
 ### 4.2 履歴管理（実装済みの事実と限界）
 
 - `AppointmentHistory` は履歴管理用モデルとして**実装済み**である（action／previousStatus／newStatus／changedBy／changeReason／metadata を保持）。
-- ただし既知の事実として、**実装上の書込み経路が存在しない**（RD-01 REQ-031 の備考と一致）。したがって連携監査には本テーブルを用いず、`Booking_Command__c` 側の監査フィールド（CorrelationId・AttemptCount・HttpStatus・NextAttemptAt・LastError）で担保する（🔵 P0-2/P0-3 計画）。
+- ただし既知の事実として、**実装上の書込み経路が存在しない**（RD-01 REQ-031 の備考と一致）。したがって連携監査には本テーブルを用いず、`Booking_Command__c` 側の監査フィールド（CorrelationId・AttemptCount・HttpStatus・NextAttemptAt・LastError）で担保する（✅ 実装済・Booking_Command__c 書込は Queueable〔44d215d〕・Booking__c 書込は投影入口〔6b9d970〕・2026-09-02/09-03）。
 - 世代管理（有効期間・世代番号方式）は採用していない。バージョン管理が必要な連携領域は `version` フィールド（🔵 P0-2 計画増分・TERM-10）が担う。
 
 ### 4.3 30 日保持・ハードデリート（BIZ-16・RULE-15・REQ-032 対応 ✅）
@@ -207,7 +232,7 @@ schema.prisma で**明示指定されている連鎖削除（onDelete: Cascade�
 ## 5. 既存の一致性・失敗設計との接続
 
 - 楽観的排他：Booking 側は現状データベーストランザクションの行ロックに依存（予約作成フローに P2034 の直列化リトライあり）。システム間連携では明示的な `version` フィールド（🔵 P0-2 migration）が必要であり、これは ERD レベルで唯一のスキーマ増分である（`syncStatus` と合わせて 2 項目・NFR-13）。
-- 監査：`AppointmentHistory` テーブルは存在するが書込み経路なし（§4.2）。連携監査は `Booking_Command__c`（attempt／error／correlation）に依存する（🔵 P0-2/P0-3）。
+- 監査：`AppointmentHistory` テーブルは存在するが書込み経路なし（§4.2）。連携監査は `Booking_Command__c`（attempt／error／correlation）に依存する（✅ 実装済・2026-09-02/09-03）。
 - retention の 30 日ハードデリート（CANCELLED/COMPLETED）：投影レコードは削除対象外・遅延コマンドは 404/409 でフォールバック（G7・P0-2 決定記録項目・REQ-033）。
 - PII ガバナンスの盲点（現状記録・投影ホワイトリストの問題ではない）：`bookings.service.ts:243` で顧客電話番号をアプリケーションログへ平文出力している（既存読取調査 2026-08-31）。**2026-09-01 P0-2 契約内でマスキング適用・是正済み**（ガバナンス一覧へ組み入れ済み）。
 

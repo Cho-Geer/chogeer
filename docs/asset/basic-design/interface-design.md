@@ -12,14 +12,14 @@
 - 本書は基本設計八文書の一つ（BD-09）。外部システム（Booking System ⇔ Salesforce）間の I/F を 2 本だけ定義する：**IF-01 予約投影（Booking → Salesforce）** と **IF-02 予約キャンセルコマンド（Salesforce → Booking）**。
 - 雛形（交付物雛形集 4.10 インターフェース設計書）の 10 項目＝各 I/F 章の節構成：I/F ID・連携先／方向／方式／項目一覧／頻度・タイミング／データ量／コード変換／異常時処理／担当・責任分界／連絡体制。
 - I/F の事実源は `docs/asset/requirement-definition-draft/interview-portfolio-business-sequence.md`（§2 主時序・§3 異常時序）および `docs/asset/requirement-definition-draft/interview-portfolio-business-flow.md`（F3/F4/F5）である。構成は BD-01（system-architecture.md §3.5・§4 認証境界 A2/A3）、データモデルは BD-07（erd.md §3）に準拠する。
-- **状態の真実性**：IF-01 は SF 側受入口のみ 2026-09-02 に実施済（6b9d970・Booking 側送信は P0-3 計画・部分実施）、IF-02 は「**P0-3 計画・未着手**」である。IF-02 の Booking 側受入エンドポイント（`POST /v1/integrations/salesforce/booking-commands`）は現状**未実装**であり、Booking の `package.json` に HTTP クライアント／OAuth 依存も存在しない（BD-01 §1 実測と一致）。本書の項目値は設計値（未実装）であり、P0-2 契約凍結で最終確定する。
+- **状態の真実性**：IF-01 は SF 側受入口のみ 2026-09-02 に実施済（6b9d970）・Booking 側送信は 2026-09-04 に実装済（3d88923）、IF-02 は 2026-09-03 に実装済（受入 6ab01c9・Guard/静的マッピング 8581f50）である。※追記（2026-09-04 文档批次）：旧記載「IF-02 は P0-3 計画・未着手」「受入エンドポイント未実装」「Booking の package.json に HTTP クライアント／OAuth 依存が存在しない」は実装前の史実であり、現状は受入エンドポイント実装済・HTTP クライアント（@nestjs/axios 3.1.3）導入済（3d88923・2026-09-04）である。本書の項目値は設計値であり、実装との相違は追記で補正する。
 
 ## 2. I/F 一覧
 
 | I/F ID | I/F 名 | 方向 | 連携先 | 認証 | 対応機能 | 状態 |
 |---|---|---|---|---|---|---|
-| IF-01 | 予約投影 | 送信（Booking → Salesforce） | chogeer DE org・Apex REST `BookingProjectionRest`（TERM-24） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | F-20 | 🔵 P0-3 計画・部分実施（SF 側受入口済〔6b9d970〕・Booking 側送信未実装） |
-| IF-02 | 予約キャンセルコマンド | 送信（Salesforce → Booking） | Booking 統合端点 `POST /v1/integrations/salesforce/booking-commands` | Named Credential（静的 Bearer Token・カスタムヘッダー注入〔EC 認証パラメータ `guardSecret`（既存・新規追加なし）・NC 数式許可 ON〕）＋ Integration Guard（定数時間比較・A3） | F-25 | 🔵 P0-3 計画・未着手（Booking 側受入エンドポイント未実装） |
+| IF-01 | 予約投影 | 送信（Booking → Salesforce） | chogeer DE org・Apex REST `BookingProjectionRest`（TERM-24） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | F-20 | ✅ 実装済（SF 側受入口 6b9d970・Booking 側送信 3d88923・2026-09-04） |
+| IF-02 | 予約キャンセルコマンド | 送信（Salesforce → Booking） | Booking 統合端点 `POST /v1/integrations/salesforce/booking-commands` | Named Credential（静的 Bearer Token・カスタムヘッダー注入〔EC 認証パラメータ `guardSecret`（既存・新規追加なし）・NC 数式許可 ON〕）＋ Integration Guard（定数時間比較・A3） | F-25 | ✅ 実装済（受入 6ab01c9・Guard/静的マッピング 8581f50・2026-09-03） |
 
 対象外の連携（RD-07 §5 と同一口径）：改期・予約作成・添付・全項目同期・イベント駆動のリアルタイム配信は実施しない。コマンド種別は CANCEL_BOOKING のみ（RULE-13）。
 
@@ -64,7 +64,7 @@
 |---|---|
 | 頻度 | 正本変更時の即時送信（作成・変更・キャンセルの全て）。周期バッチ・イベント駆動配信は行わない（REQ-037：Outbox/Worker は P1 保留） |
 | 順序保証 | 送信側での順序保証は行わない。旧バージョンの遅延到達は Salesforce 側バージョンゲート（RULE-01）で排除する |
-| 失敗時の自動再送 | 行わない（P0）。`syncStatus=ERROR` を記録し、手動 Retry（同一 eventId で再送）に依存する |
+| 失敗時の自動再送 | 行わない（P0）。`syncStatus=ERROR` を記録し、手動 Retry（同一 eventId で再送）に依存する ※投影の原 eventId 再送は実装偏差により不可（eventId 非永続）・代替＝正本再保存で新 eventId（出典＝Booking 側手順書第4章・拍板 2026-09-04①） |
 
 ### 3.5 データ量（デモ規模）
 
@@ -102,7 +102,7 @@ flowchart TB
     OLDVER["拒否応答：旧バージョンは再送しない<br/>（単調増加のため以後も拒否される）"]
     AUTHERR["syncStatus=ERROR 記録<br/>（401/403：認証系）"]
     TmpERR["syncStatus=ERROR 記録<br/>（503・timeout：一時的障害）"]
-    MANUAL["手動 Retry：同一 eventId で再送<br/>（BIZ-15 手順・Retry UI は P1 保留）"]
+    MANUAL["手動 Retry：同一 eventId で再送<br/>（BIZ-15 手順・Retry UI は P1 保留）<br/>※投影の原 eventId 再送は実装偏差により不可（eventId 非永続）<br/>・代替＝正本再保存で新 eventId（手順書第4章・拍板 2026-09-04①）"]
 
     CALL --> AUTH
     AUTH -->|"受理"| VER
@@ -117,7 +117,7 @@ flowchart TB
 | 分類 | 条件 | 処理方針 | 根拠 |
 |---|---|---|---|
 | バージョンゲート拒否 | `incomingVersion <= CurrentVersion__c`（旧バージョン・同バージョン別イベント） | **自動再送しない**。正本は既に新しい version へ進んでいるため、再送は恒久的に拒否される。Booking 側は `syncStatus=ERROR` として記録し、原因分析の対象とする | RULE-01・REQ-024 |
-| 認証系エラー | 401／403（証明書失効・scope 誤り・integration user 無効等） | 業務状態遷移は行わず `syncStatus=ERROR` を記録し、手動 Retry（認証設定修復後に同一 eventId で再送）。連携トークン類の再取得は P0-3 実装時に確定 | REQ-029・RULE-09 注記 |
+| 認証系エラー | 401／403（証明書失効・scope 誤り・integration user 無効等） | 業務状態遷移は行わず `syncStatus=ERROR` を記録し、手動 Retry（認証設定修復後に同一 eventId で再送 ※投影の原 eventId 再送は実装偏差により不可〔eventId 非永続〕・代替＝正本再保存で新 eventId〔手順書第4章・拍板 2026-09-04①〕）。連携トークン類の再取得は P0-3 実装時に確定 | REQ-029・RULE-09 注記 |
 | 一時的障害 | 503・timeout 等 | P0 は自動リトライせず `syncStatus=ERROR` 記録＋手動 Retry（P0 は直接呼出＋有限リトライの最小構成であり、投影側の自動リトライ導入は行わない） | REQ-037（Outbox/Worker は P1） |
 | 冪等性 | 同一 `eventId` 再送 | 初回受理結果をそのまま返す。重複レコード・重複更新は発生しない | RULE-04 |
 | 補償処理 | 投影未反映・不整合の疑い | 再投影（同一 eventId または新しい eventId で現行 version を再送信）による整合回復。Salesforce 側レコードの直接手修正は行わない | 投影＝読取専用複製（TERM-09）の原則 |
@@ -146,9 +146,9 @@ flowchart TB
 | 項目 | 設計値 |
 |---|---|
 | 方式 | HTTPS REST：`POST /v1/integrations/salesforce/booking-commands`。Queueable（`BookingCommandQueueable`・計画クラス名）から呼出 |
-| 認証 | Named Credential（`Booking_Integration_API` 計画名・TERM-21）の**カスタムヘッダー** `Authorization: Bearer {!$Credential.guardSecret}` による**静的 Bearer Token 注入**（EC `Booking_Integration_Guard` の既存 auth パラメータ `guardSecret` を解決・EC 側は新規追加なし・2026-09-02 S-2 時存入値をそのまま使用・NC は「HTTP ヘッダーの数式を許可」ON／**Generate Authorization Header は OFF のまま**・**Apex は認証に接触しない**）＋ Booking 側 Integration Guard（受信 token と env `INTEGRATION_TOKEN` の**定数時間比較**・401/403 区分維持・A3・TERM-23・C-2 修订 2026-09-03）。**消失概念**：HS256/JWT/kid/audience/scope=`booking.integration.command`/iat/±300 秒は廃止 |
+| 認証 | Named Credential（`Booking_Integration_API` 計画名・TERM-21）の**カスタムヘッダー** `Authorization: Bearer {!$Credential.Booking_Integration_Guard.guardSecret}`（**実効形式・容器限定**・org 実測 2026-09-04。※追記：文書旧記載の简单形式 `Bearer {!$Credential.guardSecret}` は史実）による**静的 Bearer Token 注入**（EC `Booking_Integration_Guard` の既存 auth パラメータ `guardSecret` を解決・EC 側は新規追加なし・2026-09-02 S-2 時存入値をそのまま使用・NC は「HTTP ヘッダーの数式を許可」ON／**Generate Authorization Header は OFF のまま**・**Apex は認証に接触しない**）＋ Booking 側 Integration Guard（受信 token と env `INTEGRATION_TOKEN` の**定数時間比較**・401/403 区分維持・A3・TERM-23・C-2 修订 2026-09-03）。**消失概念**：HS256/JWT/kid/audience/scope=`booking.integration.command`/iat/±300 秒は廃止 |
 | タイムアウト | 設計値（未実装）：HttpRequest タイムアウト（既存パターン `ShowcaseContactSyncService.cls` では 10 秒設定）を踏襲し、タイムアウト時は RULE-09 の一時的障害区分へ分岐する |
-| 現状 | Booking 側受入エンドポイントは**未実装**（Integration Guard 未実装・ルーティング未定義）。本節はすべて設計値（未実装） |
+| 現状 | Booking 側受入エンドポイントは**実装済**（Integration Guard 実装済・ルーティング定義済・6ab01c9/8581f50・2026-09-03）。※追記：旧記載「未実装（Integration Guard 未実装・ルーティング未定義）」は実装前の史実 |
 
 ### 4.3 項目一覧（リクエスト／応答）
 

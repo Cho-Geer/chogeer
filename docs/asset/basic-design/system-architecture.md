@@ -46,9 +46,9 @@ flowchart LR
         direction TB
         SITE["Experience Cloud Site ✅<br/>my call center /02（Live）"]
         LWC["独自 LWC 🔵（P0-4）<br/>予約リスト＋取消＋状態ポーリング"]
-        APEX["Apex 🔵（P0-3）<br/>BookingProjectionRest / BookingSiteController<br/>BookingCommandQueueable"]
-        OBJ[("Booking__c / Booking_Command__c 🔵（P0-2）")]
-        NC["Named Credential +<br/>外部クライアントアプリケーション ECA 🔵（P0-3）"]
+        APEX["Apex ✅（実装済・2026-09-02/09-03）<br/>BookingProjectionRest / BookingSiteController<br/>BookingCommandQueueable"]
+        OBJ[("Booking__c / Booking_Command__c ✅（作成済・2026-09-02）")]
+        NC["Named Credential +<br/>外部クライアントアプリケーション ECA ✅（実装済・2026-09-02/09-03）"]
     end
 
     CU -->|"HTTPS"| LP
@@ -146,8 +146,8 @@ flowchart LR
 | # | 主体 → 対象 | 仕組み | 状態 | 備考 |
 |---|---|---|---|---|
 | A1 | 顧客／管理者 → Booking API | 電話番号＋6 桁認証コード（TERM-31）でログイン → `access_token`/`refresh_token`/`csrf_token` を HttpOnly Cookie で発行。JWT グローバルガードがリクエストごとに検証し、Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）を確認。ロールはデータベースの値を毎回参照（jwt-auth.guard 実測） | ✅ | ロール変更は `PUT /v1/users/:id`（既存セッションを取り消さない＝P1 強化課題・RULE-17）。状態変更 `PUT /v1/users/:id/status` はセッションを取り消す |
-| A2 | Booking サービス → Salesforce | OAuth 2.0 JWT Bearer：専用外部クライアントアプリケーション（ECA・2026-09-02 Connected App より移行）＋integration user＋`api`＋`refresh_token` scope。証明書秘密鍵は Booking 側 secret 管理（TERM-20） | 🔵 P0-3 | 技術選定の根拠は tech-decisions（Flow／標準 REST 代替は評価のうえ否決） |
-| A3 | Salesforce Queueable → Booking API | Named Credential（`Booking_Integration_API`・TERM-21）の**カスタムヘッダー** `Authorization: Bearer {!$Credential.guardSecret}` による静的 Bearer Token 注入（EC `Booking_Integration_Guard` の既存 auth パラメータ `guardSecret`（新規追加なし・2026-09-02 S-2 時存入値をそのまま使用）・NC は数式許可 ON／**Generate Authorization Header は OFF のまま**・**Apex は認証に接触しない**）＋ Booking 側 Integration Guard（受信 token と env `INTEGRATION_TOKEN` の**定数時間比較**・401/403 区分維持・TERM-23・C-2 修订 2026-09-03） | 🔵 P0-3 | JWT ガードを迂回した匿名エンドポイントにはしない（HS256/JWT/kid/aud/scope/iat は C-2 修订で廃止） |
+| A2 | Booking サービス → Salesforce | OAuth 2.0 JWT Bearer：専用外部クライアントアプリケーション（ECA・2026-09-02 Connected App より移行）＋integration user＋`api`＋`refresh_token` scope。証明書秘密鍵は Booking 側 secret 管理（TERM-20） | ✅ 実装済（3d88923・2026-09-04） | 技術選定の根拠は tech-decisions（Flow／標準 REST 代替は評価のうえ否決） |
+| A3 | Salesforce Queueable → Booking API | Named Credential（`Booking_Integration_API`・TERM-21）の**カスタムヘッダー** `Authorization: Bearer {!$Credential.Booking_Integration_Guard.guardSecret}`（実効形式・容器限定・org 実測 2026-09-04・旧記載の简单形式 `{!$Credential.guardSecret}` は史実）による静的 Bearer Token 注入（EC `Booking_Integration_Guard` の既存 auth パラメータ `guardSecret`（新規追加なし・2026-09-02 S-2 時存入値をそのまま使用）・NC は数式許可 ON／**Generate Authorization Header は OFF のまま**・**Apex は認証に接触しない**）＋ Booking 側 Integration Guard（受信 token と env `INTEGRATION_TOKEN` の**定数時間比較**・401/403 区分維持・TERM-23・C-2 修订 2026-09-03） | ✅ 実装済（6ab01c9/8581f50・2026-09-03） | JWT ガードを迂回した匿名エンドポイントにはしない（HS256/JWT/kid/aud/scope/iat は C-2 修订で廃止） |
 | A4 | 管理者 → Experience Site | Booking ログイン後、入口ボタンから Site ログインページへ遷移し、Salesforce 外部ユーザー認証情報で**独立ログイン**。Booking のパスワード／JWT／Cookie は Booking の外に出ない（RULE-18） | 遷移 🔵（P0-4）／ログイン ✅（MV-03 検証済み・ログイン部分） | 遷移＝SSO ではない。両者のログアウトは相互に独立 |
 
 サービス間認証（A2/A3）は「どのシステムが API を呼べるか」を決め、ユーザー認証（A1/A4）は「誰がコマンドを提出できるか」を決める。両者は分離する（REQ-029）。
