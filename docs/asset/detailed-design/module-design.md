@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | DD-02 |
-| 版数 | V1.1（ドラフト・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
+| 版数 | V1.2（2026-09-04・D-2 回写：🔵→✅＋旧計画名一括改称＋§3.1 签名行実装反映＋S-4 登記③①②折込。前版 V1.1＝ドラフト・2026-09-03 C-2 修订） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（詳細設計フェーズ・モジュール設計） |
 
@@ -11,11 +11,11 @@
 
 - 本書は詳細設計四文書の一つ（DD-02）。基本設計 BD-03『機能設計書』（F-20〜F-26）と BD-01『システム構成図』（モジュール構成・認証境界 A1〜A4）を受け、**P0 で新規追加するモジュールを実装級（クラス・メソッド・呼び出し関係）に展開**する。既存モジュール（✅）は機能設計との重複を避けるため一覧＋コード正本の引用に留め、本文では展開しない（BD-03 §2 と同一口径）。
 - 雛形（交付物雛形集 5.2 モジュール設計書）の 7 項目＋命名・職責＝各モジュール節の構成：モジュール/クラス名・命名と職責／メソッド名・引数・戻り値／処理概要／呼び出し関係／例外処理／使用 SQL（Prisma クエリ要点または SOQL）／対応機能 ID。
-- 状態表記：✅＝既存実装（コード実測）｜🔵＝P0 計画（未実装・設計値）。**本書の P0 新規モジュールはすべて 🔵 設計値（未実装）** であり、実装は P0-3／P0-4 を予定する。
+- 状態表記：✅＝既存実装・実装済（コード実測）｜🔵＝P0 計画（未実装・設計値）。**本書の P0 新規モジュールは 2026-09-02〜09-04 に実装済み**（Booking 側：`IntegrationGuard`〔B-1・6ab01c9〕・`IntegrationCommandsController`／`IntegrationCommandsService`〔B-2/B-3・8581f50〕・`ProjectionSenderService`〔B-4・3d88923〕・SF 側：`BookingProjectionRest`〔S-3・6b9d970〕・`BookingCommandQueueable`〔S-4・44d215d〕・`BookingSiteController`〔S-5〕）。🔵 残＝Site LWC（§3.4・P0-4）のみ。
 - クラス名の規約：BD-03・BD-01・RD-06（TERM）等の既存文書に既出の名前のみを正式名として使用する。既出でない名前は「計画名（設計値・本書限りの管理名）」と明記し、正式確定は P0-3 とする。Integration Guard のクラス名は TERM-23 のとおり「P0-3 で確定」。
 - 対応機能 ID：BD-02 の F-20〜F-26・F-32 を引用する（新規の機能 ID は製造しない）。
 
-## 2. Booking 側 P0 新規モジュール（🔵 設計値・未実装）
+## 2. Booking 側 P0 新規モジュール（✅ 実装済・2026-09-03/09-04）
 
 ### 2.1 Integration Guard（A3 サービス認証）
 
@@ -25,35 +25,35 @@
 | 命名と職責 | サービス間認証（A3）の検証。受信 `Authorization: Bearer <token>` を env `INTEGRATION_TOKEN` と**定数時間比較**で検証し、統合端点への呼出が「正しいシステムからの呼出」であることを担保する（REQ-029・BD-01 §4 A3・C-2 修订 2026-09-03） |
 | メソッド名・引数・戻り値 | `canActivate(context: ExecutionContext): Promise<boolean>`（NestJS CanActivate 規約）。内部ヘルパー：`constantTimeEquals(received: string, expected: string): boolean`（定数時間比較・設計値） |
 | 処理概要 | 1) `Authorization` ヘッダの Bearer token を取得（欠落・形式不正は 401）。2) env `INTEGRATION_TOKEN` と**定数時間比較**で一致判定（一致で true・不一致で 401/403・401/403 区分維持・C-2 修订 2026-09-03）。**消失概念（旧 5 步検証チェーン）**：HS256・JWT・kid・audience（`booking-api`）・scope（`booking.integration.command`）・iat・±300 秒時刻偏差・鍵バージョン照合はすべて廃止。輪换は「新旧 2 値并存重疊」に簡化 |
-| 呼び出し関係 | 呼出元：統合端点（BookingCommandsController §2.2）のルートにガードとして登録。呼出先：なし（設定値のみ参照）。既存の `JwtAuthGuard`（APP_GUARD）とは独立したガードであり、**JWT ガードを迂回した匿名端点としてではなく独立ガードで保護する**（CF-01 の制約・BD-10 §3.2） |
+| 呼び出し関係 | 呼出元：統合端点（IntegrationCommandsController §2.2）のルートにガードとして登録。呼出先：なし（設定値のみ参照）。既存の `JwtAuthGuard`（APP_GUARD）とは独立したガードであり、**JWT ガードを迂回した匿名端点としてではなく独立ガードで保護する**（CF-01 の制約・BD-10 §3.2） |
 | 例外処理 | 検証 NG 時に `AuthenticationException`（401）／`AuthorizationException`（403）を throw（実在クラス・`src/common/exceptions/business.exceptions.ts`）。業務状態遷移・コマンド状態は一切変更しない（RULE-14 注記・MV-11）。CSRF ミドルウェアとの干渉は BD-11 未決事項 3 として確認対象 → 【解決 2026-09-02】干渉なし（CSRF middleware の Bearer 豁免が適用・CHK-02 C-9） |
 | 使用 SQL | なし（SQL・Prisma クエリを使用しない） |
 | 対応機能 ID | F-25（IF-02 の A3 認証・NFR-04） |
 
-### 2.2 BookingCommandsController（統合端点受付）
+### 2.2 IntegrationCommandsController（統合端点受付）
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | **`IntegrationCommandsController`（2026-09-02 確定・CHK-02 C-4。旧計画名 BookingCommandsController は本書内に残存・D-2 で一括改称）**。ルーティング `POST /v1/integrations/salesforce/booking-commands`（BD-09 §4.2・変更なし） |
-| 命名と職責 | 統合端点の HTTP 受付層。Integration Guard 通過後、リクエストボディの入力検証（DTO 検証）を行い、業務処理を BookingsIntegrationService（§2.3）へ委譲する。HTTP 層の関心事（ステータス・envelope）のみを担う |
+| モジュール/クラス名 | **`IntegrationCommandsController`（2026-09-02 確定・CHK-02 C-4。旧計画名 BookingCommandsController から改称実施済み・2026-09-04 D-2）**。ルーティング `POST /v1/integrations/salesforce/booking-commands`（BD-09 §4.2・変更なし） |
+| 命名と職責 | 統合端点の HTTP 受付層。Integration Guard 通過後、リクエストボディの入力検証（DTO 検証）を行い、業務処理を IntegrationCommandsService（§2.3）へ委譲する。HTTP 層の関心事（ステータス・envelope）のみを担う |
 | メソッド名・引数・戻り値 | `receiveCommand(@Body() dto: BookingCommandRequestDto): Promise<ApiResponseDto<BookingCommandResultDto>>`（設計値）。DTO 項目は IF-02 §4.3 の 6 項目：`commandType`（CANCEL_BOOKING 固定）・`commandId`・`bookingExternalId`・`expectedVersion`・`requestedBySalesforceUserId`・`correlationId` |
-| 処理概要 | 1) Integration Guard で A3 検証（§2.1）。2) DTO 検証（commandType=CANCEL_BOOKING 以外は ValidationException・RULE-13）。3) BookingsIntegrationService.executeCancelCommand() を呼出。4) 応答を `ApiResponseDto` envelope（code/message/data/requestId/timestamp・api-contract.md 実測）で返す。200 時は `canonicalVersion`＋`resultCode`、409 時は `currentVersion`＋`correlationId` |
-| 呼び出し関係 | 呼出元：BookingCommandQueueable（SF 側・Named Credential）。呼出先：BookingsIntegrationService。ガード：Integration Guard |
+| 処理概要 | 1) Integration Guard で A3 検証（§2.1）。2) DTO 検証（commandType=CANCEL_BOOKING 以外は ValidationException・RULE-13）。3) IntegrationCommandsService.executeCancelCommand() を呼出。4) 応答を `ApiResponseDto` envelope（code/message/data/requestId/timestamp・api-contract.md 実測）で返す。200 時は `canonicalVersion`＋`resultCode`、409 時は `currentVersion`＋`correlationId` |
+| 呼び出し関係 | 呼出元：BookingCommandQueueable（SF 側・Named Credential）。呼出先：IntegrationCommandsService。ガード：Integration Guard |
 | 例外処理 | throw は Service 層の例外を伝播。400＝`ValidationException`・404＝`ResourceNotFoundException`（削除済み予約宛・REQ-033）・409＝`ResourceConflictException`／`BusinessRuleException`・401/403＝ガード層。`ApiResponseDto` 変換は既存のグローバル ExceptionFilter（`src/common/filters/global-exception.filter.ts` 実測）に委ね、HTTP 状態区分は BD-09 §4.8 の区分（409/503/401/403）と整合させる（CF-03） |
 | 使用 SQL | なし（Service 層へ委譲） |
 | 対応機能 ID | F-25 |
 
-### 2.3 BookingsIntegrationService（コマンド業務判定・正本更新）
+### 2.3 IntegrationCommandsService（コマンド業務判定・正本更新）
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | **`IntegrationCommandsService`（2026-09-02 確定・CHK-02 C-4。旧計画名 BookingsIntegrationService は本書内に残存・D-2 で一括改称）**。配置は `src/modules/integrations/`（新規モジュール・P0-3 で AppModule へインポート） |
+| モジュール/クラス名 | **`IntegrationCommandsService`（2026-09-02 確定・CHK-02 C-4。旧計画名 BookingsIntegrationService から改称実施済み・2026-09-04 D-2）**。配置は `src/modules/integrations/`（新規モジュール・P0-3 で AppModule へインポート） |
 | 命名と職責 | 統合コマンドの業務判定と正本更新の中核。BD-03 §8.4 の検証順序（2〜7）を実装し、同一トランザクションで正本を CANCELLED に更新する（REQ-022・RULE-02/03/05/07/12） |
 | メソッド名・引数・戻り値 | `executeCancelCommand(dto: BookingCommandRequestDto): Promise<BookingCommandResult>`（設計値）。戻り値：`BookingCommandResult`＝`{ httpStatus, canonicalVersion?, resultCode?, currentVersion? }`（IF-02 §4.3 応答に対応） |
 | 処理概要 | 1) **commandId 冪等判定**：同一 commandId の既処理があれば初回保存済み結果をそのまま返す（RULE-03・業務判定より先行）。冪等結果の保存先＝**integration_commands テーブル（第 14 モデル・DD-01 §2.15）【決定済 2026-09-01】**。RULE-08 正本更新と同一トランザクションで create（応答キャッシュ案は否決）。2) 静的マッピング検証：`requestedBySalesforceUserId` → Booking ユーザーが存在し、現在 ADMIN かつ ACTIVE（RULE-12）。3) 予約定位：`bookingExternalId` で正本を特定。不存在は 404。4) 状態遷移検証：PENDING/CONFIRMED のみ受理（RULE-05/07）。5) バージョンゲート：`expectedVersion != 正本現在 version` は 409＋currentVersion（RULE-02）。6) 全検証合格時、**同一トランザクションで**正本 status=CANCELLED・`version+1`・`syncStatus=PENDING`・`cancelledAt=now()` を更新（RULE-08）。7) 200＋canonicalVersion＋resultCode を返す |
-| 呼び出し関係 | 呼出元：BookingCommandsController。呼出先：PrismaService（`src/common/prisma/prisma.service.ts` 実測）。呼出しを受けた正本変更は投影送信サービス（§2.4・IF-01）の契機となる（RULE-08・トランザクション後の分離呼出） |
+| 呼び出し関係 | 呼出元：IntegrationCommandsController。呼出先：PrismaService（`src/common/prisma/prisma.service.ts` 実測）。呼出しを受けた正本変更は投影送信サービス（§2.4・IF-01）の契機となる（RULE-08・トランザクション後の分離呼出） |
 | 例外処理 | 検証 NG を throw：404＝`ResourceNotFoundException`・409＝`ResourceConflictException`（バージョン不整合）／`BusinessRuleException`（状態遷移 NG）・403＝`AuthorizationException`（マッピング不存在/inactive・非 ADMIN/ACTIVE・RULE-12）。**エラー区分の 409/503 分類は RULE-09 のとおり**：409＝リトライせず CONFLICT、503/429/timeout＝一時的障害（SF 側でリトライ）。DB 例外はロールバック（検証〜正本更新の同一トランザクション・途中失敗は全てロールバック・BD-03 §8.6） |
-| 使用 SQL | Prisma クエリ要点（設計値）：正本取得 `appointment.findUnique({ where: { id } })`（External ID は uuid `id` に決定済・2026-09-01 拍板。定位は `findUnique({ where: { id } })` で確定・BD-09 §5 未決 1 は同日クローズ）／静的マッピング取得 `salesforceUserLink.findFirst({ where: { salesforceUserId, active: true } })`（P1 の SalesforceUserLink＝動的 provisioning とは別物。P0 では静的マッピング設定テーブルを想定 →【決定済 2026-09-02・CHK-02 C-3】Prisma モデル `StaticOperatorMapping`（`static_operator_mappings`）・旧仮称 salesforceUserLink の新名への改称は D-2/B-3 で実施）／正本更新 `appointment.update({ where: { id }, data: { status: 'CANCELLED', version: { increment: 1 }, syncStatus: 'PENDING', cancelledAt: new Date() } })`。**排他の考え方**：コマンド経路では P2034 直列化リトライを導入せず、version ゲート（RULE-02）が楽観的排他を担う（BD-03 §8.6 の「層の異なる補完」に整合。P2034 は既存の予約作成フロー＝在庫競合対策として残る）／冪等判定・記録：`integrationCommand.findUnique({ where: { commandId } })`／同一トランザクション内 `integrationCommand.create({ commandId, httpStatus: 200, resultCode, canonicalVersion, ... })`（DD-01 §2.15・【決定済 2026-09-01】） |
+| 使用 SQL | Prisma クエリ要点（設計値）：正本取得 `appointment.findUnique({ where: { id } })`（External ID は uuid `id` に決定済・2026-09-01 拍板。定位は `findUnique({ where: { id } })` で確定・BD-09 §5 未決 1 は同日クローズ）／静的マッピング取得 `staticOperatorMapping.findFirst({ where: { salesforceUserId, active: true } })`（Prisma モデル `StaticOperatorMapping`（`static_operator_mappings`・【決定済 2026-09-02・CHK-02 C-3】）・旧仮称 salesforceUserLink から改称実施済み・2026-09-04 D-2／B-5 で 1 件登録済）／正本更新 `appointment.update({ where: { id }, data: { status: 'CANCELLED', version: { increment: 1 }, syncStatus: 'PENDING', cancelledAt: new Date() } })`。**排他の考え方**：コマンド経路では P2034 直列化リトライを導入せず、version ゲート（RULE-02）が楽観的排他を担う（BD-03 §8.6 の「層の異なる補完」に整合。P2034 は既存の予約作成フロー＝在庫競合対策として残る）／冪等判定・記録：`integrationCommand.findUnique({ where: { commandId } })`／同一トランザクション内 `integrationCommand.create({ commandId, httpStatus: 200, resultCode, canonicalVersion, ... })`（DD-01 §2.15・【決定済 2026-09-01】） |
 | 対応機能 ID | F-25（REQ-022/023/024/026/027・RULE-02/03/05/07/12） |
 
 ### 2.4 投影送信サービス（IF-01 呼出）
@@ -64,12 +64,12 @@
 | 命名と職責 | 予約正本の変更（作成・変更・キャンセル全て＝顧客自身の標準取消を含む）を、IF-01 で Salesforce 側 `Booking__c` へ冪等投影する（F-20・REQ-018）。ペイロード生成は投影ホワイトリスト（RULE-11・契約凍結）のみに限定し、PII 5 項目を構造的に含めない（REQ-019・BD-03 §3.5） |
 | メソッド名・引数・戻り値 | `projectBooking(appointmentId: string): Promise<ProjectionResult>`（設計値）。内部ヘルパー：`buildPayload(appointment): ProjectionPayload`（ホワイトリスト 9 項目・BD-09 §3.3）・`sendProjection(payload): Promise<HttpResponse>`（OAuth JWT Bearer 呼出・A2）・`updateSyncStatus(appointmentId, status)`。戻り値：`ProjectionResult`＝`{ eventId, acceptedVersion?, syncStatus }` |
 | 処理概要 | 1) 正本変更トランザクション確定後に呼出（トランザクション内で version+1・syncStatus=PENDING 済・RULE-08）。2) eventId・correlationId を採番（CF-05・UUID・設計値）。3) ホワイトリストのみからペイロード生成。4) OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2・TERM-20）で `POST /services/apexrest/integrations/bookings/projection` を呼出。5) 応答判定：受理（初回・より新しい version）→ `syncStatus=SYNCED` 更新。拒否・認証系・一時的障害 → `syncStatus=ERROR` 記録（BD-09 §3.8）。6) 手動 Retry（同一 eventId）は BIZ-15 手順に依拠（Retry UI は P1 保留） |
-| 呼び出し関係 | 呼出元：既存の正本変更処理（bookings モジュールの作成/変更/取消・F-06〜F-08）と BookingsIntegrationService（§2.3・コマンド取消）のトランザクション確定後。呼出先：Apex REST（BookingProjectionRest・§3.1）。OAuth クライアント依存は P0-3 で新規導入（現状 package.json に HTTP クライアント・OAuth 依存なし＝実測） |
+| 呼び出し関係 | 呼出元：既存の正本変更処理（bookings モジュールの作成/変更/取消・F-06〜F-08）と IntegrationCommandsService（§2.3・コマンド取消）のトランザクション確定後。呼出先：Apex REST（BookingProjectionRest・§3.1）。OAuth クライアント依存は P0-3 で新規導入（現状 package.json に HTTP クライアント・OAuth 依存なし＝実測） |
 | 例外処理 | 呼出失敗（ネットワーク・503・timeout・401/403）を throw せず `syncStatus=ERROR` として記録し、正本の整合は損なわない（IF-01 呼出はトランザクション外・BD-03 §3.6）。旧バージョン拒否は恒久的（単調増加のため再送不可）なため ERROR 記録＋原因分析の対象（BD-09 §3.8）。PII 混入はペイロード生成関数のホワイトリスト制限により構造的に防止（設計値） |
 | 使用 SQL | Prisma クエリ要点（設計値）：投影対象読取 `appointment.findUnique({ where: { id }, include: { timeSlot: true, service: true } })`／syncStatus 更新 `appointment.update({ data: { syncStatus: 'SYNCED' | 'ERROR' } })` |
 | 対応機能 ID | F-20（REQ-018/019/024/029/033・IF-01） |
 
-## 3. Salesforce 側 P0 新規モジュール（🔵 設計値・未実装）
+## 3. Salesforce 側 P0 新規モジュール（✅ 実装済・2026-09-02/09-03）
 
 ### 3.1 BookingProjectionRest（投影受入口・TERM-24）
 
@@ -77,7 +77,7 @@
 |---|---|
 | モジュール/クラス名 | `BookingProjectionRest`（既出・TERM-24・BD-01 §6）。`@RestResource(urlMapping='/integrations/bookings/projection')`・`global with sharing class`（設計値）。URL：`POST /services/apexrest/integrations/bookings/projection` |
 | 命名と職責 | Booking からの投影を受ける Apex REST 入口。External ID 定位の Upsert・バージョンゲート（RULE-01）・eventId 冪等（RULE-04）を適用し、`Booking__c` canonical 項目を更新する。**Booking__c の唯一の書込入口**（BD-07 §3 境界制約） |
-| メソッド名・引数・戻り値 | `@HttpPost global static String receiveProjection(ProjectionRequest request)`（設計値）。`ProjectionRequest`＝IF-01 §3.3 の 9 項目（BookingExternalId・AppointmentNumber・AppointmentDate・TimeSlot・ServiceName・Status・version・eventId・correlationId）。戻り値は標準 envelope（success/statusCode/message/data/errors/requestId/timestamp・ShowcaseIntegrationRest.cls の `ApiResponse` 実測を流用） |
+| メソッド名・引数・戻り値 | `@HttpPost global static String receiveProjection()`（**実装済・2026-09-02 S-3・無引数＋`RestContext.request.requestBody` を `JSON.deserialize`（寛容・未知キー無視＝契約外過剰検証なし）・typed 重載 `receiveProjection(ProjectionRequest request)` は単体テスト用に保持**＝S-3 ⑥ の実装反映）。`ProjectionRequest`＝IF-01 §3.3 の 9 項目（BookingExternalId・AppointmentNumber・AppointmentDate・TimeSlot・ServiceName・Status・version・eventId・correlationId）。戻り値は標準 envelope（success/statusCode/message/data/errors/requestId/timestamp・ShowcaseIntegrationRest.cls の `ApiResponse` 実測を流用） |
 | 処理概要 | 1) 入力検証（必須 9 項目・`validateRequest` パターン流用）。2) 外部ID で `Booking__c` を `FOR UPDATE` ロック取得（並行初回投影・MV-06）。3) **eventId 冪等判定（RULE-04）を version ゲート（RULE-01）に先行して実施する**：`LastEventId__c` と同一の eventId 再送（同 version・同一 eventId を含む）は初回受理結果をそのまま返し、レコードを更新しない（TC-02 と整合）。4) バージョンゲート：`incomingVersion <= CurrentVersion__c` は拒否応答（RULE-01・等号含む・初回 insert は比較対象外）。5) 全項目をホワイトリスト対応項目のみから Upsert（insert/update）。6) `eventId`・受理後 `CurrentVersion__c` を応答 |
 | 呼び出し関係 | 呼出元：Booking 投影送信サービス（§2.4・A2 OAuth JWT Bearer）。呼出先：`Booking__c`（SOQL/DML）。レスポンス header 設定・入力検証・例外ハンドリングは `ShowcaseIntegrationRest.cls` の実測パターンを流用 |
 | 例外処理 | `ValidationException`（400）／`ConcurrencyException` 相当（旧 version 拒否・409 系の競合応答）／`DataAccessException`（500）／予期せぬ例外（500）を、ShowcaseIntegrationRest の `handleXxxException` パターンで標準 envelope へ変換（設計値）。**PII は応答に含めない** |
@@ -91,10 +91,10 @@
 | モジュール/クラス名 | `BookingCommandQueueable`（既出・TERM-22・BD-01 §6）。`global class BookingCommandQueueable implements Queueable`（設計値） |
 | 命名と職責 | コマンドのバックグラウンド実行。Named Credential（`Booking_Integration_API`・TERM-21 計画名）で Booking 統合端点を呼出し、応答に応じて `Booking_Command__c` の状態・監査フィールドを更新する。**Queueable は正本 canonical 状態を直接書かない**（BD-07 §3 境界制約） |
 | メソッド名・引数・戻り値 | `global void execute(QueueableContext context)`（Queueable 規約）。コンストラクタで `Booking_Command__c.Id`・`commandId`・`bookingExternalId`・`expectedVersion`・`requestedBySalesforceUserId`・`correlationId` を受け取る（設計値）。内部ヘルパー：`sendCommand(): HttpResponse`・`handleResponse(HttpResponse)`・`recordAttempt(...)` |
-| 処理概要 | 1) コマンド実行開始：`Status__c=RUNNING` 更新。2) Named Credential で `POST /v1/integrations/salesforce/booking-commands` を呼出（IF-02・6 項目ペイロード）。**認証ヘッダ＝静的 Bearer Token（EC 認証パラメータ `guardSecret`（EC 側は新規追加なし・既存パラメータを再利用・2026-09-02 S-2 時存入値をそのまま使用）＋カスタムヘッダー `Authorization: Bearer {!$Credential.guardSecret}`・NC は「HTTP ヘッダーの数式を許可」ON／Generate Authorization Header は OFF のまま）により平台注入され、Apex は認証に接触しない**（C-2 修订 2026-09-03・旧設計の JWT 自前署名は廃止）。**HttpRequest タイムアウト 10 秒**（`ShowcaseContactSyncService.cls` の `setTimeout(10000)` 実測を踏襲・BD-09 §4.2）。3) 応答区分（RULE-09/14）：200→`SUCCEEDED`＋結果書き戻し（§3.1 経由・F-26）／409→`CONFLICT`（リトライせず）／401/403→終状態を書込まずエラー記録のみ／503/429/timeout→`AttemptCount__c+1`・`NextAttemptAt__c`・`LastError__c` 記録し、上限内で同一 commandId 再実行（上限到達で `FAILED`）。4) `HttpStatus__c`・`ResultCode__c`・`ResultVersion__c` を記録（REQ-031）・ResultCode__c 値域＝CD-12（7 値封闭集・【決定済 2026-09-01】） |
+| 処理概要 | 1) コマンド実行開始：`Status__c=RUNNING` 更新（**S-4 実装追記 2026-09-04**：単一 TX Queueable では QUEUED→終状態直遷のため RUNNING 観測位置はプラットフォーム強制・クラス注記済〔S-4 登記③①を D-2 で折込〕）。2) Named Credential で `POST /v1/integrations/salesforce/booking-commands` を呼出（IF-02・6 項目ペイロード）。**認証ヘッダ＝静的 Bearer Token（EC 認証パラメータ `guardSecret`（EC 側は新規追加なし・既存パラメータを再利用・2026-09-02 S-2 時存入値をそのまま使用）＋カスタムヘッダー `Authorization: Bearer {!$Credential.guardSecret}`・NC は「HTTP ヘッダーの数式を許可」ON／Generate Authorization Header は OFF のまま）により平台注入され、Apex は認証に接触しない**（C-2 修订 2026-09-03・旧設計の JWT 自前署名は廃止）。**HttpRequest タイムアウト 10 秒**（`ShowcaseContactSyncService.cls` の `setTimeout(10000)` 実測を踏襲・BD-09 §4.2）。3) 応答区分（RULE-09/14）：200→`SUCCEEDED`＋結果書き戻し（§3.1 経由・F-26）／409→`CONFLICT`（リトライせず）／401/403→終状態を書込まずエラー記録のみ／503/429/timeout→`AttemptCount__c+1`・`NextAttemptAt__c`・`LastError__c` 記録し、上限内で同一 commandId 再実行（上限到達で `FAILED`）。4) `HttpStatus__c`・`ResultCode__c`・`ResultVersion__c` を記録（REQ-031）・ResultCode__c 値域＝CD-12（7 値封闭集・【決定済 2026-09-01】） |
 | 呼び出し関係 | 呼出元：BookingSiteController（§3.3）が `System.enqueueJob(new BookingCommandQueueable(...))`（コマンド生成トランザクション内・BD-03 §7.4）。呼出先：Booking 統合端点（Named Credential）。結果書き戻し時は投影入口（§3.1）を再利用（F-26・専用直書込経路を作らない） |
 | 例外処理 | Callout 例外（`CalloutFailureException` 流用・ShowcaseContactSyncService 実測）・タイムアウトを捕捉し、終状態判定（RULE-14：明示 200/409 のみ）に従って状態・監査フィールドを更新。Queueable 内で捕捉するため例外は上流へ伝播しない。再 throw する場合は `AsyncApexJobs` に失敗記録が残る点に留意（設計値） |
-| 使用 SQL | SOQL/DML 要点（設計値）：コマンド取得 `SELECT Id, CommandId__c, Status__c, AttemptCount__c, ... FROM Booking_Command__c WHERE Id = :id`／更新 `update cmd`（Status__c・AttemptCount__c・HttpStatus__c・NextAttemptAt__c・ResultCode__c・ResultVersion__c・LastError__c・CorrelationId__c） |
+| 使用 SQL | SOQL/DML 要点（設計値）：コマンド取得 `SELECT Id, CommandId__c, Status__c, AttemptCount__c, ... FROM Booking_Command__c WHERE Id = :id`／更新 `update cmd`（Status__c・AttemptCount__c・HttpStatus__c・NextAttemptAt__c・ResultCode__c・ResultVersion__c・LastError__c・CorrelationId__c）／**追記（2026-09-04・S-4 登記③②を D-2 で折込）**：`CurrentVersion__c` は 409 応答時にのみ書き戻される実装（F-32 表 2 #13 備考どおり・`BookingCommandQueueable.cls` 409 分支で `cmd.CurrentVersion__c = parsed.currentVersion` を実写）につき、常時更新フィールド一覧には加えず本注記で対応（DD 一覧と F-32 #13 の不整合はこれにより解消） |
 | 対応機能 ID | F-25（REQ-022/023/027/028/029/031・IF-02） |
 
 ### 3.3 BookingSiteController（Site 用コントローラ・TERM-25）
