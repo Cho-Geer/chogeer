@@ -404,7 +404,65 @@ private class BookingSiteControllerTest {
         BookingSiteController.getCommandStatus('00000000-0000-4000-8000-000000000000');
         Assert.fail('期待: AuraHandledException（不明コマンド）');
       } catch (AuraHandledException expected) {
-        // 期待どおり
+        // AuraHandledException.getMessage() は Apex では 'Script-thrown exception' を返すため、
+        // 文言は @TestVisible 定数で検証する（P1-1・BD-05 §3.1 MSG-03 と逐字一致）
+        Assert.areEqual(
+          'この操作は許可されていません',
+          BookingSiteController.MSG_NOT_FOUND_OR_NO_PERMISSION,
+          'MSG_NOT_FOUND_OR_NO_PERMISSION は MSG-03 文言のはず'
+        );
+      }
+    }
+  }
+
+  // ========== pollCommandStatus（P0-4・拍板 2b・非 cacheable ポーリング変体） ==========
+
+  /**
+   * @description pollCommandStatus 正常：submitCancel（QUEUED 生成・( d ) mock 必須）→
+   * 同一ユーザーから pollCommandStatus で QUEUED が読める（getCommandStatus と同挙動・共有ヘルパー）
+   */
+  @isTest
+  static void pollCommandStatusReturnsStatus() {
+    Ctx ctx = setup();
+    SuccessCalloutMock mock = new SuccessCalloutMock();
+    mock.canonicalVersion = 2; // expectedVersion(1) + 1
+    Test.setMock(HttpCalloutMock.class, mock);
+
+    String commandId;
+    Test.startTest();
+    System.runAs(ctx.userA) {
+      BookingSiteController.CommandResponse resp = BookingSiteController.submitCancel(EXTERNAL_A1, 1);
+      commandId = resp.commandId;
+      Assert.isNotNull(commandId, 'commandId が返るべき');
+      Assert.areEqual(
+        'QUEUED',
+        BookingSiteController.pollCommandStatus(commandId).status,
+        'pollCommandStatus は QUEUED を返すはず'
+      );
+    }
+    Test.stopTest();
+  }
+
+  /**
+   * @description pollCommandStatus 異常：不明な commandId → AuraHandledException
+   * （getCommandStatus と同じ拒否挙動・共有ヘルパー経由）
+   */
+  @isTest
+  static void pollCommandStatusUnknownRejected() {
+    Ctx ctx = setup();
+
+    System.runAs(ctx.userA) {
+      try {
+        BookingSiteController.pollCommandStatus('00000000-0000-4000-8000-000000000000');
+        Assert.fail('期待: AuraHandledException（不明コマンド）');
+      } catch (AuraHandledException expected) {
+        // AuraHandledException.getMessage() は Apex では 'Script-thrown exception' を返すため、
+        // 文言は @TestVisible 定数で検証する（P1-1・BD-05 §3.1 MSG-03 と逐字一致）
+        Assert.areEqual(
+          'この操作は許可されていません',
+          BookingSiteController.MSG_NOT_FOUND_OR_NO_PERMISSION,
+          'pollCommandStatus の拒否も MSG-03 文言のはず'
+        );
       }
     }
   }

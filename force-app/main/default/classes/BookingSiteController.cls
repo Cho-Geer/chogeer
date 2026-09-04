@@ -40,9 +40,13 @@ global with sharing class BookingSiteController {
   private static final String STATUS_CANCELLED = 'CANCELLED'; // CD-07 終状態
   private static final String STATUS_COMPLETED = 'COMPLETED'; // CD-07 終状態
 
-  // メッセージ（MSG-03/04 相当・最終文面は P0-4 で確定・BD-03 §5 未決 3）
-  private static final String MSG_NOT_FOUND_OR_NO_PERMISSION = '対象の予約が見つからないか、操作する権限がありません。';
-  private static final String MSG_NOT_CANCELLABLE = 'この予約は取り消しできない状態です。';
+  // メッセージ（BD-05 §3.1 MSG-03/04 文言・P1-1 確定・LWC MSG_03/MSG_04 と逐字一致）
+  // @TestVisible：AuraHandledException.getMessage() は Apex では 'Script-thrown exception' を返す
+  // （メッセージは Lightning クライアントへ直列化のみ）ため、文言は定数でテスト検証する（P1-1）
+  @TestVisible
+  private static final String MSG_NOT_FOUND_OR_NO_PERMISSION = 'この操作は許可されていません';
+  @TestVisible
+  private static final String MSG_NOT_CANCELLABLE = 'この予約はキャンセルできません';
 
   // ========== F-23 投影照会（DD-02 §3.3 メソッド 1・F-32 表 1 Read 集合 9 項目） ==========
 
@@ -146,6 +150,26 @@ global with sharing class BookingSiteController {
    */
   @AuraEnabled(cacheable = true)
   public static CommandStatus getCommandStatus(String commandId) {
+    return queryCommandStatus(commandId);
+  }
+
+  /**
+   * @description コマンド状態を返す（P0-4・非 cacheable ポーリング変体・拍板 2b）。
+   * getCommandStatus と同一の内部クエリ（queryCommandStatus 共有）・同一の AuraHandledException 挙動。
+   * cacheable=true の getCommandStatus は LWC wire の値がキャッシュされ 3 秒ポーリングには
+   * 不向きなため、LWC の imperative 呼び出し専用に非 cacheable で提供する（S-11-07）。
+   */
+  @AuraEnabled
+  public static CommandStatus pollCommandStatus(String commandId) {
+    return queryCommandStatus(commandId);
+  }
+
+  /**
+   * @description getCommandStatus／pollCommandStatus 共通の状態照会（private 共有ヘルパー）。
+   * with sharing＝自己生成コマンドのみ可視（OWD Private・F-32 表 2 注記）。不明・他ユーザー生成
+   * コマンドは 0 件→AuraHandledException（挙動は getCommandStatus と同一）
+   */
+  private static CommandStatus queryCommandStatus(String commandId) {
     if (String.isBlank(commandId)) {
       throw new AuraHandledException(MSG_NOT_FOUND_OR_NO_PERMISSION);
     }

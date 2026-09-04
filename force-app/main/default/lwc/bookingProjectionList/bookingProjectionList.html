@@ -1,0 +1,41 @@
+<template>
+  <lightning-card title="予約投影リスト">
+    <!-- メッセージ領域（MSG-01〜06・S-11 表示条件） -->
+    <template if:true={message}>
+      <div
+        data-message
+        class="slds-p-horizontal_medium slds-p-bottom_medium {messageClass}"
+      >
+        {message}
+      </div>
+    </template>
+
+    <!-- S-11-07 処理状態（ポーリング取得値・canonical 原样） -->
+    <template if:true={processingStatus}>
+      <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+        <span class="slds-text-body_small">処理状態：</span>
+        <span data-processing-status>{processingStatus}</span>
+      </div>
+    </template>
+
+    <!-- S-11-01〜06 予約投影一覧（SyncStatus__c は表示しない・S-11-09/10 は内部保持） -->
+    <template if:true={hasBookings}>
+      <lightning-datatable
+        key-field="Id"
+        data={bookings}
+        columns={columns}
+        hide-checkbox-column
+        onrowaction={handleCancel}
+      ></lightning-datatable>
+    </template>
+
+    <!-- S-11-08 再読み込み -->
+    <div class="slds-var-p-around_small slds-grid slds-grid_align-end">
+      <lightning-button
+        label="再読み込み"
+        data-reload-button
+        onclick={handleReload}
+      ></lightning-button>
+    </div>
+  </lightning-card>
+</template>
