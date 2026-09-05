@@ -52,7 +52,7 @@
 
 | 機能ID | 機能名・概要 | 対応要件ID | 対応業務ID | 担当ロール | 新規・改修・共通 | 優先度 | 備考 |
 |---|---|---|---|---|---|---|---|
-| F-20 | 予約投影：予約正本（TERM-08）の変更（作成・変更・キャンセル全て＝顧客自身の標準取消を含む）を Booking__c（TERM-09）へ冪等投影。External ID 定位＋version ゲート＋eventId 再送時は初回結果を返す。投影ホワイトリストに顧客 PII を含まない | REQ-018（主）・REQ-019/024/029/033 | BIZ-12 | システム（Booking API → Apex） | 新規（P0-3 進行中：SF 側受入口実装済〔6b9d970〕・Booking 側呼出残） | Must | 検証アンカー MV-04・MV-05・MV-06。ホワイトリストは RULE-11（契約凍結・PII 5 項目除外）。遅延コマンドへの 404/409 フォールバックは REQ-033（G7 決定） |
+| F-20 | 予約投影：予約正本（TERM-08）の変更（作成・変更・キャンセル全て＝顧客自身の標準取消を含む）を Booking__c（TERM-09）へ冪等投影。External ID 定位＋version ゲート＋eventId 再送時は初回結果を返す。投影ホワイトリストに顧客 PII を含まない | REQ-018（主）・REQ-019/024/029/033 | BIZ-12 | システム（Booking API → Apex） | 新規（P0-3 両側実装済〔SF 6b9d970・Booking 3d88923〕） | Must | 検証アンカー MV-04・MV-05・MV-06。ホワイトリストは RULE-11（契約凍結・PII 5 項目除外）。遅延コマンドへの 404/409 フォールバックは REQ-033（G7 決定） |
 | F-21 | 管理者入口遷移：Booking 管理コンソールに「Salesforce 管理ワークベンチ」ボタンを表示（ADMIN＋静的マッピング active のときのみ有効）し、Site ログインページへ遷移（遷移＝SSO ではない） | REQ-017（前提 REQ-026） | BIZ-10 | 管理者 | 新規（P0-4 実装済・2026-09-05） | Must | 検証アンカー MV-02 ✅ 実機検証済。表示条件は RULE-16。実装＝frontend `SalesforceWorkbenchEntry`（非 ADMIN 非表示/ADMIN＋inactive 無効表示・target=_blank・rel=noopener noreferrer） |
 | F-22 | Site 独立ログイン：外部ユーザーが `/02/login` から Experience Site に独立ログイン（Booking の PW/JWT/Cookie は送信しない・RULE-18） | REQ-016 | BIZ-11 | 管理者（外部ユーザーとして・TERM-07） | 既存（P0-1 構築済み・ログイン部分 ✅ 検証済み） | Must | 検証アンカー MV-03（ログイン部分）。判定基準の後半「権限付与済みページのみ閲覧可能」は MV-07 として P0-4 実機検証済み（2026-09-05・Guest 強制リダイレクト ec=302 も実測） |
 | F-23 | 投影リスト表示：Site 内 LWC で自 Account の予約投影を閲覧（行級限定・読取専用） | REQ-020（＋REQ-030） | BIZ-13 | 管理者（外部ユーザーとして） | 新規（P0-4 実装済・2026-09-05） | Must | 検証アンカー MV-07 ✅ 実機検証済（行級＋字段級）。行級範囲は RULE-13（OWD Private＋Sharing Set＋CRUD/FLS）。実装＝LWC `bookingProjectionList`（サンプルテンプレート置換済み） |
