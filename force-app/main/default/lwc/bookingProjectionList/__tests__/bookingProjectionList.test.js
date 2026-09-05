@@ -9,6 +9,8 @@
  * - CONFLICT/FAILED → MSG-05 分岐・60 秒上限（jest フェイクタイマー）
  * - wire/poll 通信エラー→MSG-02・submitCancel 異常→Apex message 優先／無ければ MSG-03
  * - 再読み込みボタン（S-11-08）：refreshApex＋ポーリング中は即時 1 回ポーリング
+ * - P1-2 UI 防護：double-submit クリックロック（cancelPending）・ポーリング in-flight ロック（pollInFlight）
+ *   ＋失敗時のロック解除→再試行
  */
 import { createElement } from "lwc";
 import { createApexTestWireAdapter } from "@salesforce/sfdx-lwc-jest";
@@ -360,8 +362,10 @@ describe("c-booking-projection-list", () => {
 
   it("prefers the Apex message over MSG-03 when submitCancel rejects", async () => {
     stubConfirm(true);
+    // mock 文案は submitCancel が実際に投げ得る Apex 定数値（BookingSiteController.MSG_NOT_CANCELLABLE＝MSG-04・
+    // MSG_03 と相異→「Apex message 優先」の判別力を回復・P1）
     mockSubmitCancel.mockRejectedValue({
-      body: { message: "対象の予約が見つからないか、操作する権限がありません。" }
+      body: { message: "この予約はキャンセルできません" }
     });
 
     const element = createComponent();
@@ -371,7 +375,7 @@ describe("c-booking-projection-list", () => {
     await flushPromises();
 
     expect(element.shadowRoot.textContent).toContain(
-      "対象の予約が見つからないか、操作する権限がありません。"
+      "この予約はキャンセルできません"
     );
   });
 
@@ -386,6 +390,95 @@ describe("c-booking-projection-list", () => {
     await flushPromises();
 
     expect(element.shadowRoot.textContent).toContain(MSG_03);
+  });
+
+  it("guards against double-submit while a cancel request is in flight (P1-2)", async () => {
+    jest.useFakeTimers();
+    const confirmSpy = stubConfirm(true);
+    let resolveSubmit;
+    mockSubmitCancel.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubmit = resolve;
+      })
+    );
+
+    const element = createComponent();
+    await emitProjections(element, mockBookings);
+
+    // 連続 2 回の rowaction：2 回目は cancelPending guard で return
+    clickCancelRow(element, 0);
+    clickCancelRow(element, 0);
+    await flushPromises();
+
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(mockSubmitCancel).toHaveBeenCalledTimes(1);
+
+    // 受理成功 → polling 開始（isPolling が引き続きガード）
+    resolveSubmit({ commandId: "uuid-1", status: "QUEUED" });
+    await flushPromises();
+    clickCancelRow(element, 0);
+    await flushPromises();
+    expect(mockSubmitCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("releases the click lock after a failed submit so the user can retry (P1-2)", async () => {
+    jest.useFakeTimers();
+    stubConfirm(true);
+    mockSubmitCancel
+      .mockRejectedValueOnce({ body: { message: "この操作は許可されていません" } })
+      .mockResolvedValueOnce({ commandId: "uuid-1", status: "QUEUED" });
+    mockPollCommandStatus.mockResolvedValue({ status: "RUNNING" });
+
+    const element = createComponent();
+    await emitProjections(element, mockBookings);
+
+    // 1 回目：submitCancel 失敗 → MSG-03 文言表示・ロック解除
+    clickCancelRow(element, 0);
+    await flushPromises();
+    expect(mockSubmitCancel).toHaveBeenCalledTimes(1);
+    expect(element.shadowRoot.textContent).toContain(
+      "この操作は許可されていません"
+    );
+
+    // 2 回目：再試行可能 → 受理成功（MSG-06）
+    clickCancelRow(element, 0);
+    await flushPromises();
+    expect(mockSubmitCancel).toHaveBeenCalledTimes(2);
+    expect(element.shadowRoot.textContent).toContain(
+      "キャンセルを受け付けました（受付番号：uuid-1）。状態が更新され次第表示されます"
+    );
+  });
+
+  it("skips overlapping polls while a poll call is in flight (P1-2)", async () => {
+    jest.useFakeTimers();
+    stubConfirm(true);
+    mockSubmitCancel.mockResolvedValue({ commandId: "uuid-1", status: "QUEUED" });
+    let resolvePoll;
+    mockPollCommandStatus.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePoll = resolve;
+      })
+    );
+
+    const element = createComponent();
+    await emitProjections(element, mockBookings);
+
+    clickCancelRow(element, 0);
+    await flushPromises();
+
+    // 1 回目 tick：pollOnce 開始（in-flight）
+    await jest.advanceTimersByTimeAsync(3000);
+    expect(mockPollCommandStatus).toHaveBeenCalledTimes(1);
+
+    // 2 回目 tick：in-flight 中なのでスキップ（重複呼び出しなし）
+    await jest.advanceTimersByTimeAsync(3000);
+    expect(mockPollCommandStatus).toHaveBeenCalledTimes(1);
+
+    // resolve 後：次の tick で新規ポーリングが走る
+    resolvePoll({ status: "RUNNING" });
+    await flushPromises();
+    await jest.advanceTimersByTimeAsync(3000);
+    expect(mockPollCommandStatus).toHaveBeenCalledTimes(2);
   });
 
   it("reload button refreshes the list and triggers one immediate poll while polling (S-11-08)", async () => {

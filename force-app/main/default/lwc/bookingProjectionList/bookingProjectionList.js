@@ -93,6 +93,8 @@ export default class BookingProjectionList extends LightningElement {
   wiredResult; // refreshApex 用 wire 結果
   pollTimer; // setInterval ハンドル
   pollElapsedMs = 0;
+  cancelPending = false; // クリック防護（double-submit 競合窓・guard 用・描画対象外）
+  pollInFlight = false; // ポーリング防重複（in-flight ロック・guard 用・描画対象外）
 
   @wire(getProjections)
   wiredProjections(result) {
@@ -152,18 +154,26 @@ export default class BookingProjectionList extends LightningElement {
   /** S-11-06 キャンセル押下（lightning-datatable の rowaction） */
   handleCancel(event) {
     const row = event.detail.row;
-    if (!row || row.cancelDisabled || this.isPolling) {
+    if (!row || row.cancelDisabled || this.isPolling || this.cancelPending) {
       return;
     }
+    // クリック防護：await 前に同期的にロック（double-submit 競合窓を封じる・P1-2）
+    this.cancelPending = true;
     // 拍板 5：確認ダイアログ（設計値の確認文言）・no-alert は仕様要件のため許容
     // eslint-disable-next-line no-alert
     if (!window.confirm(CONFIRM_CANCEL_MESSAGE)) {
+      this.cancelPending = false; // 確認キャンセル時はロック解除（再試行可能）
       return;
     }
-    this.submitCancellation(row).catch((error) => {
-      // submitCancel 異常：Apex message 優先・無ければ MSG-03
-      this.showMessage(this.extractErrorMessage(error) || MSG_03, "error");
-    });
+    this.submitCancellation(row)
+      .catch((error) => {
+        // submitCancel 異常：Apex message 優先・無ければ MSG-03
+        this.showMessage(this.extractErrorMessage(error) || MSG_03, "error");
+      })
+      .finally(() => {
+        // 失敗・成功問わずロック解除（成功時は isPolling が引き続きガード）
+        this.cancelPending = false;
+      });
   }
 
   /** コマンド受理（拍板 3：MSG-06 表示→3 秒ポーリング開始） */
@@ -201,16 +211,22 @@ export default class BookingProjectionList extends LightningElement {
 
   /** 1 回のポーリング（manual=true は再読み込みボタンによる即時実行・経過秒を消費しない） */
   async pollOnce(manual = false) {
-    if (!manual) {
-      this.pollElapsedMs += POLL_INTERVAL_MS;
-      if (this.pollElapsedMs >= POLL_MAX_MS) {
-        // 最長 60 秒で自動停止→MSG-02 提示＋再読み込みボタンで再取得可能
-        this.stopPolling();
-        this.showMessage(MSG_02, "error");
-        return;
-      }
+    // ポーリング防重複：in-flight 中は即リターン（manual・定期 tick とも同一制約・P1-2）。
+    // スキップされた tick は 60 秒予算を消費しない（manual が経過秒を消費しないのと同義）
+    if (this.pollInFlight) {
+      return;
     }
+    this.pollInFlight = true;
     try {
+      if (!manual) {
+        this.pollElapsedMs += POLL_INTERVAL_MS;
+        if (this.pollElapsedMs >= POLL_MAX_MS) {
+          // 最長 60 秒で自動停止→MSG-02 提示＋再読み込みボタンで再取得可能
+          this.stopPolling();
+          this.showMessage(MSG_02, "error");
+          return; // 60 秒上限の早期 return も finally でロック解放（ロック意味論を迂回しない）
+        }
+      }
       const result = await pollCommandStatus({ commandId: this.commandId });
       this.processingStatus = result.status; // S-11-07 canonical 原样
       if (result.status === STATUS_SUCCEEDED) {
@@ -228,10 +244,13 @@ export default class BookingProjectionList extends LightningElement {
       // poll 通信エラー→MSG-02
       this.stopPolling();
       this.showMessage(MSG_02, "error");
+    } finally {
+      this.pollInFlight = false; // ロック必ず解放
     }
   }
 
-  /** S-11-08 再読み込み：一覧を refreshApex＋ポーリング中は即時 1 回ポーリング */
+  /** S-11-08 再読み込み：一覧を refreshApex＋ポーリング中は即時 1 回ポーリング。
+   * in-flight 中の即時ポーリングは静かに譲る（在飛中の poll か次の tick で収束する・P1-2） */
   async handleReload() {
     if (this.isPolling) {
       await this.pollOnce(true);
