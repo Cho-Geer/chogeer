@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | BD-01 |
-| 版数 | V2.1（ドラフト・日本語化・雛形準拠・2026-09-03 C-2 修订：A3 静的 Bearer Token 化） |
+| 版数 | V2.2（2026-09-05・P0-4 Step 5 回写：§6 独自 LWC 実装済反映＋§7 未決 1 に NC β 偏差注記〔一次性隧道・公網化＝P0-5〕。前版 V2.1＝ドラフト・2026-09-03 C-2 修订） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（基本設計フェーズ・システム構成） |
 
@@ -45,7 +45,7 @@ flowchart LR
     subgraph SF["Salesforce 開発組織（chogeer DE org）"]
         direction TB
         SITE["Experience Cloud Site ✅<br/>my call center /02（Live）"]
-        LWC["独自 LWC 🔵（P0-4）<br/>予約リスト＋取消＋状態ポーリング"]
+        LWC["独自 LWC ✅（実装済・2026-09-05・`bookingProjectionList`）<br/>予約リスト＋取消＋状態ポーリング"]
         APEX["Apex ✅（実装済・2026-09-02/09-03）<br/>BookingProjectionRest / BookingSiteController<br/>BookingCommandQueueable"]
         OBJ[("Booking__c / Booking_Command__c ✅（作成済・2026-09-02）")]
         NC["Named Credential +<br/>外部クライアントアプリケーション ECA ✅（実装済・2026-09-02/09-03）"]
@@ -63,7 +63,7 @@ flowchart LR
     APEX --> OBJ
     LWC -->|"with sharing + CRUD/FLS"| APEX
     SITE --> LWC
-    AU -.->|"🔵 入口遷移（F-21）+ 外部ユーザー独立ログイン ✅（MV-03 検証済み・ログイン部分）"| SITE
+    AU -.->|"入口遷移（F-21）✅ 実装済（MV-02 実機検証済 2026-09-05）＋外部ユーザー独立ログイン ✅（MV-03＋MV-07 実機検証済）"| SITE
     SQ["🔵 Queueable"] -.->|"🔵 Named Credential + 静的 Bearer Token<br/>（カスタムヘッダー注入・NC 数式許可 ON）<br/>POST /v1/integrations/salesforce/booking-commands"| MOD
     APEX --- SQ
     SQ --- NC
@@ -122,7 +122,7 @@ flowchart LR
 |---|---|---|---|---|
 | Booking → Salesforce | 予約投影（正本変更の冪等 Upsert・TERM-09）。Apex REST `POST /services/apexrest/integrations/bookings/projection` | HTTPS（Apex REST） | OAuth 2.0 JWT Bearer（外部クライアントアプリケーション ECA・A2） | 🔵 P0-3 計画 |
 | Salesforce → Booking | 取消コマンド実行（CANCEL_BOOKING のみ・TERM-11）。`POST /v1/integrations/salesforce/booking-commands` | HTTPS（REST） | Named Credential（静的 Bearer Token・カスタムヘッダー注入〔EC 認証パラメータ `guardSecret`（既存・新規追加なし）・NC 数式許可 ON〕）＋ Integration Guard（定数時間比較・A3） | 🔵 P0-3 計画 |
-| 管理者ブラウザ → Salesforce | 入口ボタンからの Site ログインページ遷移＋外部ユーザー独立ログイン（遷移＝SSO ではない） | HTTPS（ブラウザ） | Salesforce 外部ユーザー認証情報（A4） | 遷移 🔵 P0-4 計画／ログイン ✅ MV-03 検証済み（ログイン部分） |
+| 管理者ブラウザ → Salesforce | 入口ボタンからの Site ログインページ遷移＋外部ユーザー独立ログイン（遷移＝SSO ではない） | HTTPS（ブラウザ） | Salesforce 外部ユーザー認証情報（A4） | 遷移 ✅ 実装済（F-21・MV-02 実機検証済 2026-09-05）／ログイン ✅ MV-03＋MV-07 実機検証済 |
 
 責任分界：予約状態の最終値は常に Booking のトランザクションが決定する。Salesforce は投影の表示とコマンドの受理のみを担い、正本を直接書き換えない（RD-07 §5 と一致）。
 
@@ -148,7 +148,7 @@ flowchart LR
 | A1 | 顧客／管理者 → Booking API | 電話番号＋6 桁認証コード（TERM-31）でログイン → `access_token`/`refresh_token`/`csrf_token` を HttpOnly Cookie で発行。JWT グローバルガードがリクエストごとに検証し、Redis ブラックリスト（ログアウト・無効化・リフレッシュ失効）を確認。ロールはデータベースの値を毎回参照（jwt-auth.guard 実測） | ✅ | ロール変更は `PUT /v1/users/:id`（既存セッションを取り消さない＝P1 強化課題・RULE-17）。状態変更 `PUT /v1/users/:id/status` はセッションを取り消す |
 | A2 | Booking サービス → Salesforce | OAuth 2.0 JWT Bearer：専用外部クライアントアプリケーション（ECA・2026-09-02 Connected App より移行）＋integration user＋`api`＋`refresh_token` scope。証明書秘密鍵は Booking 側 secret 管理（TERM-20） | ✅ 実装済（3d88923・2026-09-04） | 技術選定の根拠は tech-decisions（Flow／標準 REST 代替は評価のうえ否決） |
 | A3 | Salesforce Queueable → Booking API | Named Credential（`Booking_Integration_API`・TERM-21）の**カスタムヘッダー** `Authorization: Bearer {!$Credential.Booking_Integration_Guard.guardSecret}`（実効形式・容器限定・org 実測 2026-09-04・旧記載の简单形式 `{!$Credential.guardSecret}` は史実）による静的 Bearer Token 注入（EC `Booking_Integration_Guard` の既存 auth パラメータ `guardSecret`（新規追加なし・2026-09-02 S-2 時存入値をそのまま使用）・NC は数式許可 ON／**Generate Authorization Header は OFF のまま**・**Apex は認証に接触しない**）＋ Booking 側 Integration Guard（受信 token と env `INTEGRATION_TOKEN` の**定数時間比較**・401/403 区分維持・TERM-23・C-2 修订 2026-09-03） | ✅ 実装済（6ab01c9/8581f50・2026-09-03） | JWT ガードを迂回した匿名エンドポイントにはしない（HS256/JWT/kid/aud/scope/iat は C-2 修订で廃止） |
-| A4 | 管理者 → Experience Site | Booking ログイン後、入口ボタンから Site ログインページへ遷移し、Salesforce 外部ユーザー認証情報で**独立ログイン**。Booking のパスワード／JWT／Cookie は Booking の外に出ない（RULE-18） | 遷移 🔵（P0-4）／ログイン ✅（MV-03 検証済み・ログイン部分） | 遷移＝SSO ではない。両者のログアウトは相互に独立 |
+| A4 | 管理者 → Experience Site | Booking ログイン後、入口ボタンから Site ログインページへ遷移し、Salesforce 外部ユーザー認証情報で**独立ログイン**。Booking のパスワード／JWT／Cookie は Booking の外に出ない（RULE-18） | 遷移 ✅（F-21 実装済・MV-02 実機検証済 2026-09-05）／ログイン ✅（MV-03＋MV-07 実機検証済） | 遷移＝SSO ではない。両者のログアウトは相互に独立 |
 
 サービス間認証（A2/A3）は「どのシステムが API を呼べるか」を決め、ユーザー認証（A1/A4）は「誰がコマンドを提出できるか」を決める。両者は分離する（REQ-029）。
 
@@ -177,12 +177,12 @@ flowchart LR
 | `Booking__c` / `Booking_Command__c`＋External ID＋version フィールド | 投影オブジェクト（TERM-09）とコマンドオブジェクト（TERM-11） | 🔵 P0-2 契約凍結 |
 | `BookingProjectionRest` / `BookingSiteController` / `BookingCommandQueueable` | 投影受入口（TERM-24）／Site 用コントローラ（TERM-25）／バックグラウンド呼出（TERM-22） | 🔵 P0-3（Flow／標準 REST による代替は評価のうえ否決済み） |
 | 外部クライアントアプリケーション ECA（JWT Bearer・A2）＋integration user＋Named Credential（静的 Bearer Token・A3） | 双方向のサービス間認証（A2/A3・C-2 修订 2026-09-03：A3 のみ静的 Bearer Token 化） | 🔵 P0-3 |
-| 独自 LWC（予約リスト・取消ボタン・コマンド状態ポーリング・TERM-33） | Site 制限ページ | 🔵 P0-4（現サイトはサンプルテンプレート） |
+| 独自 LWC（予約リスト・取消ボタン・コマンド状態ポーリング・TERM-33＝`bookingProjectionList`） | Site 制限ページ | ✅ P0-4 実装済（2026-09-05・サンプルテンプレート置換済み・ログイン限定） |
 | Outbox/Worker・動的 provisioning（提権・降権） | 信頼性配信と外部ユーザーのライフサイクル管理 | ⚪ P1（REQ-037・REQ-038 保留） |
 
 ## 7. 未決事項
 
 | No. | 未決事項 | 決定期限 |
 |---|---|---|
-| 1 | 【決定済 2026-09-02】NC 最終指向＝booking-deploy デプロイ環境の公網 HTTPS URL（CHK-02 C-1・方案 1+3）。S-2 設定時は仮値（tunnel／プレースホルダ HTTPS・P0-3 内に実 callout なし）を許容し、P0-4 実リンク検証前に公網デプロイ完了・切替・接続確認を行う | 決定済み（2026-09-02） |
+| 1 | 【決定済 2026-09-02】NC 最終指向＝booking-deploy デプロイ環境の公網 HTTPS URL（CHK-02 C-1・方案 1+3）。S-2 設定時は仮値（tunnel／プレースホルダ HTTPS・P0-3 内に実 callout なし）を許容し、P0-4 実リンク検証前に公網デプロイ完了・切替・接続確認を行う **【追記 2026-09-05・拍板 β】**P0-4 実リンク検証は**一次性 cloudflared 隧道**で実施済み（当日 URL を Setup UI で NC `Booking_Integration_API` に設定・NC metadata は Url 値を含まないため版庫漂移なし）。**booking-deploy 公網 HTTPS への切替＝P0-5 へ繰り越し**（PPT-01 P0-5 行増項・BD-09 §5 未決 3・RD-01 §4 未決 3 同源） | 決定済み（2026-09-02／β 偏差追記 2026-09-05） |
 | 2 | 【決定済 2026-09-01】External ID＝uuid `id` に決定（TERM-14。BD-07 §6 未決 1 と同日クローズ。本書では扱わない方針は維持） | 決定済み（2026-09-01） |

@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | BD-02 |
-| 版数 | V2.2（2026-09-03・実施状態回写〔P0-3 SF 側〕＋F-08/F-12 実装実態修正＋C-2 修订：A3 静的 Bearer Token 化） |
+| 版数 | V2.3（2026-09-05・P0-4 Step 5 回写：F-21/F-23/F-24 実装済＋F-22/F-25/F-26 実機検証注記〔MV-01〜03/07/08・2026-09-05〕。前版 V2.2＝2026-09-03 実施状態回写〔P0-3 SF 側〕＋F-08/F-12 実装実態修正＋C-2 修订） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（基本設計フェーズ・機能一覧） |
 
@@ -48,17 +48,17 @@
 
 注：`api-contract.md` 記載の `/v1/system/*` 端点群（設定・レポート）は `SystemModule` 未インポートのため現状不可用であり、本表に列挙しない（契約文書から誤って復元しないこと）。`GET /v1/health`、`GET /v1/upload/stats` は運用補助端点のため単独立項しない。
 
-## 4. Salesforce 連携機能（🔵 P0 計画・F-22 のログイン部分のみ検証済み）
+## 4. Salesforce 連携機能（✅ F-20〜F-26 全て実装済・P0-4 実機検証済〔MV-01〜03/07/08・2026-09-05・CHK-03 参照〕）
 
 | 機能ID | 機能名・概要 | 対応要件ID | 対応業務ID | 担当ロール | 新規・改修・共通 | 優先度 | 備考 |
 |---|---|---|---|---|---|---|---|
 | F-20 | 予約投影：予約正本（TERM-08）の変更（作成・変更・キャンセル全て＝顧客自身の標準取消を含む）を Booking__c（TERM-09）へ冪等投影。External ID 定位＋version ゲート＋eventId 再送時は初回結果を返す。投影ホワイトリストに顧客 PII を含まない | REQ-018（主）・REQ-019/024/029/033 | BIZ-12 | システム（Booking API → Apex） | 新規（P0-3 進行中：SF 側受入口実装済〔6b9d970〕・Booking 側呼出残） | Must | 検証アンカー MV-04・MV-05・MV-06。ホワイトリストは RULE-11（契約凍結・PII 5 項目除外）。遅延コマンドへの 404/409 フォールバックは REQ-033（G7 決定） |
-| F-21 | 管理者入口遷移：Booking 管理コンソールに「Salesforce 管理ワークベンチ」ボタンを表示（ADMIN＋静的マッピング active のときのみ有効）し、Site ログインページへ遷移（遷移＝SSO ではない） | REQ-017（前提 REQ-026） | BIZ-10 | 管理者 | 新規（P0-4 計画） | Must | 検証アンカー MV-02。表示条件は RULE-16。現状はボタンなし |
-| F-22 | Site 独立ログイン：外部ユーザーが `/02/login` から Experience Site に独立ログイン（Booking の PW/JWT/Cookie は送信しない・RULE-18） | REQ-016 | BIZ-11 | 管理者（外部ユーザーとして・TERM-07） | 既存（P0-1 構築済み・ログイン部分 ✅ 検証済み） | Must | 検証アンカー MV-03（ログイン部分）。判定基準の後半「権限付与済みページのみ閲覧可能」は MV-07（準備＝P0-2・実行＝P0-4〔F-23 完了時〕・PPT-01 †4 窓表現）で実施 |
-| F-23 | 投影リスト表示：Site 内 LWC で自 Account の予約投影を閲覧（行級限定・読取専用） | REQ-020（＋REQ-030） | BIZ-13 | 管理者（外部ユーザーとして） | 新規（P0-4 計画） | Must | 検証アンカー MV-07。行級範囲は RULE-13（OWD Private＋Sharing Set＋CRUD/FLS）。現サイトはサンプルテンプレート |
-| F-24 | キャンセルコマンド受理：Site から CANCEL_BOOKING を送信し、Booking_Command__c（TERM-11）を生成して commandId／QUEUED を即時返却。状態はポーリングで取得 | REQ-021（＋REQ-030） | BIZ-14 | 管理者（送信）＋システム（受付） | 新規（P0-3/P0-4 計画） | Must | 検証アンカー MV-07/08。唯一の逆方向コマンド種別 |
-| F-25 | コマンドバックグラウンド実行：Queueable が Named Credential で Booking 統合端点を呼出。Booking 側は Integration Guard・静的マッピング・ADMIN/ACTIVE・状態・expectedVersion を検証し、同一トランザクションで正本を CANCELLED に更新。409＝業務競合（リトライしない）・429/503/timeout＝一時的障害（限定回数リトライ）。FAILED／ERROR は同一 commandId で手動 Retry 可能 | REQ-022（主）・REQ-023・REQ-024・REQ-026・REQ-027・REQ-028・REQ-029・REQ-031 | BIZ-14・BIZ-15 | システム | 新規（P0-3 計画→実装済・2026-09-03〔6ab01c9/8581f50〕） | Must | 検証アンカー MV-08/09/10/11。エラー区分は RULE-09・手動 Retry は RULE-10（原 commandId・Retry UI は P1 保留）。監査フィールド（CorrelationId・AttemptCount・HttpStatus・NextAttemptAt・LastError）は REQ-031。**A3 認証＝静的 Bearer Token（EC 認証パラメータ `guardSecret`（既存・新規追加なし・2026-09-02 S-2 時存入値をそのまま使用）＋カスタムヘッダー `Authorization: Bearer {!$Credential.Booking_Integration_Guard.guardSecret}`（実効形式・容器限定・org 実測 2026-09-04・旧記載の简单形式 `{!$Credential.guardSecret}` は史実）注入・NC 数式許可 ON）＋Integration Guard 定数時間比較（C-2 修订 2026-09-03）** |
-| F-26 | 結果書き戻し：コマンド成功後、バージョンゲート付きで canonical result を Booking__c に書き戻す（incomingVersion が現行より高い場合のみ更新） | REQ-025（＋REQ-024） | BIZ-14 | システム | 新規（P0-3 計画） | Must | 検証アンカー MV-08。終状態の書込みは明示 200/409 のみ（RULE-14） |
+| F-21 | 管理者入口遷移：Booking 管理コンソールに「Salesforce 管理ワークベンチ」ボタンを表示（ADMIN＋静的マッピング active のときのみ有効）し、Site ログインページへ遷移（遷移＝SSO ではない） | REQ-017（前提 REQ-026） | BIZ-10 | 管理者 | 新規（P0-4 実装済・2026-09-05） | Must | 検証アンカー MV-02 ✅ 実機検証済。表示条件は RULE-16。実装＝frontend `SalesforceWorkbenchEntry`（非 ADMIN 非表示/ADMIN＋inactive 無効表示・target=_blank・rel=noopener noreferrer） |
+| F-22 | Site 独立ログイン：外部ユーザーが `/02/login` から Experience Site に独立ログイン（Booking の PW/JWT/Cookie は送信しない・RULE-18） | REQ-016 | BIZ-11 | 管理者（外部ユーザーとして・TERM-07） | 既存（P0-1 構築済み・ログイン部分 ✅ 検証済み） | Must | 検証アンカー MV-03（ログイン部分）。判定基準の後半「権限付与済みページのみ閲覧可能」は MV-07 として P0-4 実機検証済み（2026-09-05・Guest 強制リダイレクト ec=302 も実測） |
+| F-23 | 投影リスト表示：Site 内 LWC で自 Account の予約投影を閲覧（行級限定・読取専用） | REQ-020（＋REQ-030） | BIZ-13 | 管理者（外部ユーザーとして） | 新規（P0-4 実装済・2026-09-05） | Must | 検証アンカー MV-07 ✅ 実機検証済（行級＋字段級）。行級範囲は RULE-13（OWD Private＋Sharing Set＋CRUD/FLS）。実装＝LWC `bookingProjectionList`（サンプルテンプレート置換済み） |
+| F-24 | キャンセルコマンド受理：Site から CANCEL_BOOKING を送信し、Booking_Command__c（TERM-11）を生成して commandId／QUEUED を即時返却。状態はポーリングで取得 | REQ-021（＋REQ-030） | BIZ-14 | 管理者（送信）＋システム（受付） | 新規（P0-3/P0-4 実装済・2026-09-04/09-05） | Must | 検証アンカー MV-07/08 ✅ MV-08 実機検証済。唯一の逆方向コマンド種別 |
+| F-25 | コマンドバックグラウンド実行：Queueable が Named Credential で Booking 統合端点を呼出。Booking 側は Integration Guard・静的マッピング・ADMIN/ACTIVE・状態・expectedVersion を検証し、同一トランザクションで正本を CANCELLED に更新。409＝業務競合（リトライしない）・429/503/timeout＝一時的障害（限定回数リトライ）。FAILED／ERROR は同一 commandId で手動 Retry 可能 | REQ-022（主）・REQ-023・REQ-024・REQ-026・REQ-027・REQ-028・REQ-029・REQ-031 | BIZ-14・BIZ-15 | システム | 新規（P0-3 計画→実装済・2026-09-03〔6ab01c9/8581f50〕） | Must | 検証アンカー MV-08/09/10/11。エラー区分は RULE-09・手動 Retry は RULE-10（原 commandId・Retry UI は P1 保留）。監査フィールド（CorrelationId・AttemptCount・HttpStatus・NextAttemptAt・LastError）は REQ-031。**A3 認証＝静的 Bearer Token（EC 認証パラメータ `guardSecret`（既存・新規追加なし・2026-09-02 S-2 時存入値をそのまま使用）＋カスタムヘッダー `Authorization: Bearer {!$Credential.Booking_Integration_Guard.guardSecret}`（実効形式・容器限定・org 実測 2026-09-04・旧記載の简单形式 `{!$Credential.guardSecret}` は史実）注入・NC 数式許可 ON）＋Integration Guard 定数時間比較（C-2 修订 2026-09-03）**。MV-08 実機検証済み（2026-09-05・全链 QUEUED→SUCCEEDED） |
+| F-26 | 結果書き戻し：コマンド成功後、バージョンゲート付きで canonical result を Booking__c に書き戻す（incomingVersion が現行より高い場合のみ更新） | REQ-025（＋REQ-024） | BIZ-14 | システム | 新規（P0-3 計画→実装済・2026-09-03〔44d215d〕） | Must | 検証アンカー MV-08 ✅ 実機検証済（B-00000 CANCELLED/v1/SYNCED・2026-09-05）。終状態の書込みは明示 200/409 のみ（RULE-14） |
 
 Booking 側の新規追加キャリア（P0-3 計画）：統合端点 `POST /v1/integrations/salesforce/booking-commands`、HTTP クライアントと OAuth 依存の新規導入（現状 `package.json` に HTTP クライアント依存なし＝実測）※追記 2026-09-04：3d88923 で @nestjs/axios 3.1.3 導入済み、静的操作者マッピング（TERM-26・`salesforceUserId ↔ bookingUserId` の事前登録 active 1 件）、同期状態フィールド（`version`／`syncStatus` の migration 実施済〔2026-09-02・booking-backend 71c88c8・第 14 モデル IntegrationCommand 同時作成・CHK-01 B-1〜B-3・runtime 接続は P0-3 残〕）。
 

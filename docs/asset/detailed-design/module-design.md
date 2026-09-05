@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | DD-02 |
-| 版数 | V1.2（2026-09-04・D-2 回写：🔵→✅＋旧計画名一括改称＋§3.1 签名行実装反映＋S-4 登記③①②折込。前版 V1.1＝ドラフト・2026-09-03 C-2 修订） |
+| 版数 | V1.3（2026-09-05・P0-4 Step 5 回写：§5 未決 5 销账〔LWC バンドル名/ポーリング間隔/取消可否表示条件・拍板 1/3/4〕＋§3.4 バンドル名確定。前版 V1.2＝2026-09-04 D-2 回写） |
 | 作成日 | 2026-08-31 |
 | 対象 | Booking × Salesforce Experience Cloud 連携（詳細設計フェーズ・モジュール設計） |
 
@@ -11,7 +11,7 @@
 
 - 本書は詳細設計四文書の一つ（DD-02）。基本設計 BD-03『機能設計書』（F-20〜F-26）と BD-01『システム構成図』（モジュール構成・認証境界 A1〜A4）を受け、**P0 で新規追加するモジュールを実装級（クラス・メソッド・呼び出し関係）に展開**する。既存モジュール（✅）は機能設計との重複を避けるため一覧＋コード正本の引用に留め、本文では展開しない（BD-03 §2 と同一口径）。
 - 雛形（交付物雛形集 5.2 モジュール設計書）の 7 項目＋命名・職責＝各モジュール節の構成：モジュール/クラス名・命名と職責／メソッド名・引数・戻り値／処理概要／呼び出し関係／例外処理／使用 SQL（Prisma クエリ要点または SOQL）／対応機能 ID。
-- 状態表記：✅＝既存実装・実装済（コード実測）｜🔵＝P0 計画（未実装・設計値）。**本書の P0 新規モジュールは 2026-09-02〜09-04 に実装済み**（Booking 側：`IntegrationGuard`〔B-1・6ab01c9〕・`IntegrationCommandsController`／`IntegrationCommandsService`〔B-2/B-3・8581f50〕・`ProjectionSenderService`〔B-4・3d88923〕・SF 側：`BookingProjectionRest`〔S-3・6b9d970〕・`BookingCommandQueueable`〔S-4・44d215d〕・`BookingSiteController`〔S-5〕）。🔵 残＝Site LWC（§3.4・P0-4）のみ。
+- 状態表記：✅＝既存実装・実装済（コード実測）｜🔵＝P0 計画（未実装・設計値）。**本書の P0 新規モジュールは 2026-09-02〜09-05 に実装済み**（Booking 側：`IntegrationGuard`〔B-1・6ab01c9〕・`IntegrationCommandsController`／`IntegrationCommandsService`〔B-2/B-3・8581f50〕・`ProjectionSenderService`〔B-4・3d88923〕・SF 側：`BookingProjectionRest`〔S-3・6b9d970〕・`BookingCommandQueueable`〔S-4・44d215d〕・`BookingSiteController`〔S-5〕・Site LWC〔§3.4・`bookingProjectionList`・P0-4 2026-09-05〕）。**🔵 残なし**。
 - クラス名の規約：BD-03・BD-01・RD-06（TERM）等の既存文書に既出の名前のみを正式名として使用する。既出でない名前は「計画名（設計値・本書限りの管理名）」と明記し、正式確定は P0-3 とする。Integration Guard のクラス名は TERM-23 のとおり「P0-3 で確定」。
 - 対応機能 ID：BD-02 の F-20〜F-26・F-32 を引用する（新規の機能 ID は製造しない）。
 
@@ -106,7 +106,7 @@
 | メソッド名・引数・戻り値 | `@AuraEnabled(cacheable=true) public static List<Booking__c> getProjections()`（自 Account の投影一覧・設計値）／`@AuraEnabled public static CommandResponse submitCancel(String bookingExternalId, Integer expectedVersion)`（コマンド生成・commandId/QUEUED 即時返却・設計値）／`@AuraEnabled(cacheable=true) public static CommandStatus getCommandStatus(String commandId)`（ポーリング・設計値） |
 | 処理概要 | 1) `getProjections`：外部ユーザーの `AccountId`（User から取得）で `Booking__c` を絞り込み（行級範囲は OWD Private＋Sharing Set・NFR-06）。2) `submitCancel`：CANCELLED/COMPLETED の投影は事前抑制（ボタン無効・最終判定は Booking 側 409）のうえ、`Booking_Command__c` を insert（CommandId__c 採番・ExpectedVersion__c＝送信時 CurrentVersion__c・Status__c=QUEUED・要求者）し、同一トランザクションで Queueable をエンキュー。commandId／QUEUED を返す（NFR-03・2 秒以内）。3) `getCommandStatus`：`Booking_Command__c.Status__c` を返す |
 | 呼び出し関係 | 呼出元：Site LWC（§3.4）。呼出先：`Booking_Command__c`（insert/update）・BookingCommandQueueable（エンキュー）・`Booking__c`（照会）。要求者の特定はブラウザ申告 ID ではなく静的マッピング検証に委ねる（実行時検証は F-25・RULE-12） |
-| 例外処理 | 権限・行級判定の拒否：コマンド生成前に終了（レコード残さず・MSG-03 相当）。取得 0 件：空一覧（MSG-01 相当）。データ取得エラー：`AuraHandledException` 等で LWC へエラー表示（MSG-02 相当・設計値）。メッセージ文面の最終値は P0-4（BD-03 未決事項 3） |
+| 例外処理 | 権限・行級判定の拒否：コマンド生成前に終了（レコード残さず・MSG-03 相当）。取得 0 件：空一覧（MSG-01 相当）。データ取得エラー：`AuraHandledException` 等で LWC へエラー表示（MSG-02 相当・設計値）。メッセージ文面は BD-05 §3.1 設計値で確定・実装済み（拍板 6・2026-09-05） |
 | 使用 SQL | SOQL 要点（設計値）：`SELECT Id, BookingExternalId__c, AppointmentNumber__c, AppointmentDate__c, TimeSlot__c, ServiceName__c, Status__c, CurrentVersion__c, SyncStatus__c FROM Booking__c WHERE Account__c = :accountId WITH SECURITY_ENFORCED`／`SELECT Id, Status__c FROM Booking_Command__c WHERE CommandId__c = :commandId` |
 | 対応機能 ID | F-23（照会）・F-24（コマンド受付） |
 
@@ -114,11 +114,11 @@
 
 | 項目 | 内容 |
 |---|---|
-| モジュール/クラス名 | LWC バンドル（**バンドル名は P0-4 着手時に確定**・BD-03 §6.9 未決事項 1）。構成：予約リスト表示コンポーネント＋取消ボタン＋コマンド状態ポーリング（設計値） |
+| モジュール/クラス名 | LWC バンドル（**バンドル名＝`bookingProjectionList`〔確定 2026-09-03・拍板 1・TERM-33・2026-09-05 実装済〕**・BD-03 §6.9 未決事項 1 は決定済）。構成：予約リスト表示コンポーネント＋取消ボタン＋コマンド状態ポーリング（設計値） |
 | 命名と職責 | 外部ユーザー向けの読取専用予約投影一覧と、取消コマンド送信・結果確認の UI。JS controller（`.js`）は BookingSiteController（§3.3）の AuraEnabled メソッドを `@wire`／`import` で呼出し、直接の DML を行わない |
-| メソッド名・引数・戻り値 | JS controller 要点（設計値）：`getProjections()`（`@wire` で投影一覧取得）／`handleCancel(event)`（対象の BookingExternalId__c・CurrentVersion__c を渡し submitCancel 呼出）／`pollStatus(commandId)`（getCommandStatus をポーリング。間隔・最大継続時間は P0-4 で確定・BD-03 §7.9） |
-| 処理概要 | 1) ロード時に自 Account の投影一覧を表示（読取専用）。2) 取消可能状態（PENDING/CONFIRMED）のみ取消ボタンを有効化（CANCELLED/COMPLETED は無効・BD-03 §6.9 未決事項 2）。3) 押下で commandId を受領し、状態ポーリングで QUEUED→RUNNING→SUCCEEDED/CONFLICT/FAILED を表示。4) ポーリング終了後、最新の投影を再取得（結果書き戻しの反映・F-26） |
-| 呼び出し関係 | 呼出元：Site 制限ページ（S-11・現サンプルテンプレートを P0-4 で置換）。呼出先：BookingSiteController（§3.3） |
+| メソッド名・引数・戻り値 | JS controller 要点（設計値＝実装対齐済）：`getProjections()`（`@wire` で投影一覧取得）／`handleCancel(event)`（対象の BookingExternalId__c・CurrentVersion__c を渡し submitCancel 呼出）／`pollStatus(commandId)`（**非 cacheable `pollCommandStatus`** をポーリング。間隔＝3 秒・最大 60 秒＝20 tick〔拍板 3・確定済・BD-03 §7.9〕） |
+| 処理概要 | 1) ロード時に自 Account の投影一覧を表示（読取専用）。2) 取消可能状態（PENDING/CONFIRMED）のみ取消ボタンを有効化（CANCELLED/COMPLETED は無効＋MSG-04 tooltip＝拍板 4 確定済）。3) 押下で commandId を受領し、状態ポーリングで QUEUED→RUNNING→SUCCEEDED/CONFLICT/FAILED を表示。4) ポーリング終了後、最新の投影を再取得（結果書き戻しの反映・F-26） |
+| 呼び出し関係 | 呼出元：Site 制限ページ（S-11・サンプルテンプレートは P0-4 で置換済み＝2026-09-05）。呼出先：BookingSiteController（§3.3） |
 | 例外処理 | 権限不足・取得エラーはコントローラの例外を標準エラー表示へ（MSG-01〜03 相当・設計値）。取消失敗（409 等）はポーリング結果の状態表示（MSG-05 相当・BD-03 §8.5） |
 | 使用 SQL | なし（JS 層は SOQL を直接実行しない） |
 | 対応機能 ID | F-23・F-24 |
@@ -150,5 +150,5 @@ BD-03 §2 と同一口径で、既存モジュールは次表の一覧とコー�
 | 2 | 【決定済 2026-09-02】クラス名＝`IntegrationGuard`・トークン＝HS256 JWT（kid/aud=`booking-api`/scope/iat）・時刻偏差 ±300 秒・secret＝kid 対照 env 複数鍵＋3 步無停止ローテーション。SF 側 secret 保管場所は S-2/S-4 で確定（CHK-02 C-2） → **C-2 修订（2026-09-03・用户拍板）**：トークン＝**静的 Bearer Token**（EC 認証パラメータ `guardSecret`（EC 側は新規追加なし・既存パラメータを再利用・2026-09-02 S-2 時存入値をそのまま使用）＋カスタムヘッダー `Authorization: Bearer {!$Credential.Booking_Integration_Guard.guardSecret}`（実効形式・容器限定・org 実測 2026-09-04・旧記載の简单形式 `{!$Credential.guardSecret}` は史実）注入・NC は数式許可 ON/Generate Header OFF・Apex 非接触）・Integration Guard＝env `INTEGRATION_TOKEN` との**定数時間比較**。HS256・JWT・kid・aud=`booking-api`・scope・iat・±300 秒・3 步ローテーションは廃止し、輪换＝**新旧 2 値并存重疊**に簡化（CHK-02 C-2 修订・真実性原則で原決定記録は保持） | 決定済み（2026-09-02／C-2 修订 2026-09-03） |
 | 3 | 【決定済 2026-09-02】Prisma モデル＝`StaticOperatorMapping`（`static_operator_mappings`・第 15 モデル・migration は B-5）。TERM-26 対応（CHK-02 C-3） | 決定済み（2026-09-02） |
 | 4 | 【決定済 2026-09-02】クラス名＝`ProjectionSenderService`・同期呼出（正本トランザクション確定後・タイムアウト 3000ms・失敗は正本応答に影響せず syncStatus=ERROR）（CHK-02 C-4） | 決定済み（2026-09-02） |
-| 5 | LWC バンドル名・ポーリング間隔・取消可否表示条件 | P0-4 着手時（BD-03 §6.9・§7.9） |
+| 5 | 【決定済】LWC バンドル名＝`bookingProjectionList`（**拍板 2026-09-03・実装 2026-09-05**・拍板 1・TERM-33）・ポーリング間隔＝3 秒（最長 60 秒＝20 tick＋手動「再読み込み」・**拍板 2026-09-03・実装 2026-09-05**・拍板 3・Apex 側は非 cacheable `pollCommandStatus`＝拍板 2b）・取消可否表示条件＝`Status__c` PENDING/CONFIRMED 活性・CANCELLED/COMPLETED 非活性＋MSG-04 tooltip 形態（**拍板 2026-09-03・実装 2026-09-05**・拍板 4） | 決定済み（拍板 2026-09-03／実装・実機検証 2026-09-05・BD-03 §6.9/§7.9 同源） |
 | 6 | 【決定済 2026-09-02】リトライ上限＝2 回（総 3 試行）・間隔＝即時（Queueable 連鎖）・NextAttemptAt＝再実行予定時刻記録・500 等＝一時的障害に準ずる。値は Queueable 内定数（CHK-02 C-5） | 決定済み（2026-09-02） |
