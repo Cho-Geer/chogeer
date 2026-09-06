@@ -253,6 +253,11 @@ private class BookingProjectionRestTest {
    */
   @isTest
   static void tc06NoPiiFieldsPopulated() {
+    // Account__c 自動付与（CMT 連動・初回投影）導入に伴い、本テストのペイロード・ホワイトリスト検証は
+    // fail-open 経路（simulateMissingCmt=true・CMT 欠落相当）で実施する。ペイロード由来の
+    // Account__c 書込がないこと（isNull）は元意どおり検証される。CMT 付与の正常系は
+    // insertProjectionAssignsAccountFromCmt で検証
+    BookingProjectionRest.simulateMissingCmt = true;
     String externalId = 'tc06-ext-0001';
     Test.startTest();
     call(buildRequest(externalId, 1, 'tc06-event-0001'));
@@ -523,5 +528,82 @@ private class BookingProjectionRestTest {
     Assert.areEqual('corr-tcup-event-new', records[0].CorrelationId__c);
     Assert.areEqual('SYNCED', records[0].SyncStatus__c);
     Assert.isNull(records[0].LastError__c);
+  }
+
+  // ========== 追加：Account__c 自動付与（初回投影・CMT 連動） ==========
+
+  /**
+   * @description 追加ケース（happy）：初回投影（insert）で新規 Booking__c の Account__c に
+   * CMT Booking_Manage_Account__mdt（DeveloperName=Booking_Demo_Account_Id）の
+   * Booking_Account_Id__c 設定値が自動付与されること。期待値はテスト内 SOQL で取得
+   * （ハードコードしない）
+   */
+  @isTest
+  static void insertProjectionAssignsAccountFromCmt() {
+    String expectedAccountId = [
+      SELECT Booking_Account_Id__c
+      FROM Booking_Manage_Account__mdt
+      WHERE DeveloperName = 'Booking_Demo_Account_Id'
+      LIMIT 1
+    ].Booking_Account_Id__c;
+    Assert.isTrue(String.isNotBlank(expectedAccountId), 'CMT Booking_Account_Id__c は空でないこと');
+
+    Test.startTest();
+    Map<String, Object> response = call(buildRequest('tcac-ext-0001', 1, 'tcac-event-0001'));
+    Test.stopTest();
+
+    Assert.areEqual(200, intOf(response.get('statusCode')));
+    Assert.isTrue((Boolean) response.get('success'));
+    List<Booking__c> records = queryBookings('tcac-ext-0001');
+    Assert.areEqual(1, records.size());
+    Assert.isNotNull(records[0].Account__c);
+    Assert.areEqual(expectedAccountId, records[0].Account__c);
+  }
+
+  /**
+   * @description 追加ケース（fail-open）：CMT 欠落相当（simulateMissingCmt=true）でも
+   * 初回投影は正常受理され（投影チェーン中断なし）、Account__c は null 維持されること
+   */
+  @isTest
+  static void missingCmtFailsOpenAndKeepsAccountNull() {
+    BookingProjectionRest.simulateMissingCmt = true;
+
+    Test.startTest();
+    Map<String, Object> response = call(buildRequest('tcac-ext-0002', 1, 'tcac-event-0002'));
+    Test.stopTest();
+
+    Assert.areEqual(200, intOf(response.get('statusCode')));
+    Assert.isTrue((Boolean) response.get('success'));
+    List<Booking__c> records = queryBookings('tcac-ext-0002');
+    Assert.areEqual(1, records.size());
+    Assert.areEqual('SYNCED', records[0].SyncStatus__c);
+    Assert.isNull(records[0].Account__c);
+  }
+
+  /**
+   * @description 追加ケース（更新分支不覆盖）：insert で CMT 値が付与済みの行へ
+   * より高い version の更新投影（update 経路）を送っても Account__c は上書きされず
+   *（付与は初回投影のみ）、他 canonical 列（Status/CurrentVersion/LastEventId）は更新されること。
+   * insert 側は version=1（ADR-2b insert 境界 >= 1）
+   */
+  @isTest
+  static void updateProjectionDoesNotOverwriteAssignedAccount() {
+    String externalId = 'tcac-ext-0003';
+
+    Test.startTest();
+    Map<String, Object> first = call(buildRequest(externalId, 1, 'tcac-event-0003'));
+    Booking__c afterInsert = queryBookings(externalId)[0];
+    Map<String, Object> second = call(buildRequest(externalId, 2, 'tcac-event-0004', 'CONFIRMED'));
+    Test.stopTest();
+
+    Assert.areEqual(200, intOf(first.get('statusCode')));
+    Assert.areEqual(200, intOf(second.get('statusCode')));
+
+    Booking__c record = queryBookings(externalId)[0];
+    Assert.isNotNull(afterInsert.Account__c);
+    Assert.areEqual(afterInsert.Account__c, record.Account__c);
+    Assert.areEqual(2, Integer.valueOf(record.CurrentVersion__c));
+    Assert.areEqual('CONFIRMED', record.Status__c);
+    Assert.areEqual('tcac-event-0004', record.LastEventId__c);
   }
 }

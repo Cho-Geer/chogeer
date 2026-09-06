@@ -264,6 +264,11 @@ global with sharing class BookingProjectionRest {
     //    レコードアクセス検証で必ず失敗するため（実測）、写回 DML のみ明示 system context で実行。
     //    REST 経路＝A2 統合ユーザーは全権限のため挙動不変（ヘルパー呼出元は本投影入口のみ・他用途禁止）
     Booking__c record = buildProjectionRecord(request);
+    if (existing == null) {
+      // 初回投影（insert）のみ：CMT Booking_Manage_Account__mdt の設定値で Account__c を自動付与。
+      // 欠落・空値は fail-open（null 維持・チェーン継続）。既存行（update 経路）への上書きは行わない
+      record.Account__c = resolveManageAccountId();
+    }
     List<Database.UpsertResult> results;
     try {
       results = new List<Database.UpsertResult>{
@@ -315,8 +320,8 @@ global with sharing class BookingProjectionRest {
 
   /**
    * @description 手順 4：投影レコード組立。書込対象＝ペイロード 9 項目対応列＋SyncStatus__c='SYNCED'＋
-   * LastError__c=null（BD-03 §3.7 更新対象エンティティ表）。Account__c は書かない
-   * （ペイロードに当該項目なし＝RULE-11 ホワイトリスト外・null 維持）
+   * LastError__c=null（BD-03 §3.7 更新対象エンティティ表）。Account__c はペイロードからは書かない
+   * （RULE-11 ホワイトリスト外）・初回投影（insert）時のみ processProjection 側で CMT 設定値を付与
    */
   private static Booking__c buildProjectionRecord(ProjectionRequest request) {
     Booking__c booking = new Booking__c();
@@ -346,6 +351,49 @@ global with sharing class BookingProjectionRest {
       }
     }
     return false;
+  }
+
+  // ========== 管理取引先自動付与（初回投影・CMT 連動） ==========
+
+  /**
+   * @description テスト注入スイッチ：true で CMT 照会を skip し fail-open 経路（CMT 欠落相当）を
+   * 強制する（単体テスト専用・実行時は常に false）
+   */
+  @TestVisible
+  private static Boolean simulateMissingCmt = false;
+
+  /**
+   * @description 初回投影の Account__c 付与値を CMT Booking_Manage_Account__mdt
+   *（DeveloperName=Booking_Demo_Account_Id・Booking_Account_Id__c）から解決する。
+   * CMT 欠落・空値・照会例外はいずれも fail-open：WARN ログを出し null を返す（投影チェーンは中断しない）
+   */
+  private static String resolveManageAccountId() {
+    if (simulateMissingCmt) {
+      return null;
+    }
+    try {
+      List<Booking_Manage_Account__mdt> configs = [
+        SELECT Booking_Account_Id__c
+        FROM Booking_Manage_Account__mdt
+        WHERE DeveloperName = 'Booking_Demo_Account_Id'
+        LIMIT 1
+      ];
+      if (!configs.isEmpty() && !String.isBlank(configs[0].Booking_Account_Id__c)) {
+        return configs[0].Booking_Account_Id__c;
+      }
+    } catch (Exception ex) {
+      System.debug(
+        LoggingLevel.WARN,
+        'BookingProjectionRest: CMT Booking_Manage_Account__mdt 照会に失敗したため Account__c=null 維持（fail-open）: '
+          + ex.getMessage()
+      );
+      return null;
+    }
+    System.debug(
+      LoggingLevel.WARN,
+      'BookingProjectionRest: CMT Booking_Manage_Account__mdt(Booking_Demo_Account_Id) が欠落または値空のため Account__c=null 維持（fail-open）'
+    );
+    return null;
   }
 
   // ========== 検証（IF-01 §3.3・ADR-2b） ==========
