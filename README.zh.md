@@ -1,212 +1,123 @@
-# Salesforce 平台与集成展示项目
+# Salesforce × 预约系统 外部系统集成
 
-本仓库是一个精心策划的 Salesforce DX 作品集项目,面向 `Senior Salesforce Platform / Integration Engineer` 岗位。
+以 **Salesforce 与外部系统集成**为主题的仓库：将预约系统（NestJS／Next.js）与 Salesforce **双向集成**，从需求定义 → 设计 → 实现 → 测试 → 实机验证一贯到底。
 
-项目刻意只展示平台、集成、UI 中少量具有代表性的实现,以便评审者无需翻阅大量实验性历史代码,即可快速理解其中蕴含的技术信号。
+## 1. 本仓库展示什么
 
-本仓库刻意做了精选,旨在展示具有代表性的 Salesforce 平台与集成模式,而非展示所有的实验性或练习性产物。
+- ✅ **双向集成** — 预约投影（booking → SF）与取消命令（SF → booking）
+- ✅ **实机验证** — 浏览器实机 5 项 ＋ 自动化验证 8 项 全部合格（**含故障诱发 → 手动恢复**）
+- ✅ **安全** — JWT Bearer 认证、幂等命令、行级共享（Sharing Set）、CRUD/FLS
+- ✅ **文档驱动** — 需求定义／基本设计／详细设计三阶段 24 份文档 ＋ 验证覆盖台账
 
-## 本仓库展示的内容
+## 2. 架构
 
-- 结合 `@RestResource`、`with sharing` 和 `Security.stripInaccessible` 的安全 Apex REST 设计
-- 基于 HTTP Callout 和 Named Credential 的出站集成端点设计
-- 由 Platform Event 驱动的处理逻辑,以及对应的 Apex Trigger 测试
-- 由 Apex Controller 支撑的 Lightning Web Components 列表与创建流程
-- 覆盖主要展示实现的 Apex 单元测试
-
-## 涉及的 Salesforce 技能
-
-- Apex Controller 与 Service 类
-- Apex 单元测试
-- Visualforce
-- Aura Components
-- Lightning Web Components
-- `@RestResource`
-- `with sharing`
-- `Security.stripInaccessible`
-- HTTP Callout
-- 基于 Named Credential 的集成配置
-- Platform Events
-- 基于 Trigger 的事件处理
-- 对评审友好的仓库策划与架构说明能力
-
-## 代表性实现
-
-### 1. 安全的 REST 端点
-
-代表性文件:
-
-- `force-app/main/default/classes/ShowcaseContactRestResource.cls`
-- `force-app/main/default/classes/ShowcaseContactRestResourceTest.cls`
-
-本示例展示了:
-
-- `@RestResource`
-- `with sharing`
-- `Security.stripInaccessible`
-- 请求校验与响应整形
-- 对评审友好的安全数据暴露模式
-
-### 2. 出站集成 / HTTP Callout
-
-代表性文件:
-
-- `force-app/main/default/classes/ShowcaseContactSyncService.cls`
-- `force-app/main/default/classes/ShowcaseContactSyncServiceTest.cls`
-
-本示例展示了:
-
-- 出站 HTTP Callout
-- 基于 Named Credential 的端点配置
-- 类型化的请求与响应包装类
-- 基于 Mock 的 Callout 测试
-- 面向集成的 Apex Service 设计
-
-### 3. Platform Event 与基于 Trigger 的处理
-
-代表性文件:
-
-- `force-app/main/default/triggers/OrderEventTrigger.trigger`
-- `force-app/main/default/classes/OrderEventTriggerTest.cls`
-- `force-app/main/default/objects/Order_Event__e/Order_Event__e.object-meta.xml`
-
-本示例展示了:
-
-- Platform Event 的定义
-- 基于 Trigger 的事件处理
-- 事件驱动的后续自动化
-- 使用 `EventBus.publish` 进行测试
-
-### 4. LWC + Apex 协作
-
-代表性文件:
-
-- `force-app/main/default/classes/ShowcaseContactController.cls`
-- `force-app/main/default/classes/ShowcaseContactControllerTest.cls`
-- `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
-- `force-app/main/default/lwc/showcaseContactCreate/showcaseContactCreate.js`
-
-本示例展示了:
-
-- 由 Apex 支撑的联系人列表查询
-- 由 Apex 支撑的联系人创建
-- LWC 与 Apex 的客户端/服务器协作
-- 在作品集评审和面试中易于讨论的简洁 UI 模式
-
-### 5. 作为辅助资料保留的其他平台示例
-
-代表性文件:
-
-- `force-app/main/default/classes/ApexSecurityRest.cls`
-- `force-app/main/default/classes/ApexSecurityRestTest.cls`
-- `force-app/main/default/classes/Account_batchable.cls`
-- `force-app/main/default/classes/Test_account_batchable.cls`
-- `force-app/main/default/flows/New_Contact.flow-meta.xml`
-- `force-app/main/default/flows/Cloud_new_process.flow-meta.xml`
-
-这些文件仍然是有用的辅助资料,但不是本仓库的主要评审路径。
-
-## 仓库结构
-
-主要评审对象:
-
-- `force-app/main/default/classes/`
-- `force-app/main/default/pages/`
-- `force-app/main/default/aura/`
-- `force-app/main/default/lwc/`
-- `force-app/main/default/triggers/`
-- `force-app/main/default/objects/`
-
-辅助项目文件:
-
-- `sfdx-project.json`
-- `package.json`
-- `jest.config.js`
-- `playwright.config.js`
-
-## 架构说明
-
-本仓库遵循一个简单的作品集原则:
-
-- 让评审面保持小巧
-- 让仓库主题保持清晰
-- 展示具有代表性的平台与集成模式
-- 避免把仓库变成所有历史样本的堆放地
-
-实际来看,本仓库的核心叙事是:
-
-1. 一组精选加入、覆盖平台/集成/UI 广度的示例
-2. 一套有意的评审顺序,让招聘方可以快速理解技术信号
-
-## 如何评审本仓库
-
-建议的评审顺序:
-
-1. `force-app/main/default/classes/ShowcaseContactRestResource.cls`
-2. `force-app/main/default/classes/ShowcaseContactSyncService.cls`
-3. `force-app/main/default/triggers/OrderEventTrigger.trigger`
-4. `force-app/main/default/classes/ShowcaseContactController.cls`
-5. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
-
-## 本地开发
-
-安装依赖:
-
-```bash
-npm install
+```mermaid
+flowchart LR
+  subgraph BS["booking-system（另一仓库）"]
+    FE["Next.js UI"] --> BE["NestJS API"] --> DB[("PostgreSQL")]
+  end
+  subgraph SF["Salesforce"]
+    SITE["Experience Site（LWC）"]
+    APEX["Apex REST ／ Queueable"]
+    OBJ[("Booking__c ／ Booking_Command__c")]
+  end
+  BE -- "① 预约投影（ECA、JWT Bearer）" --> APEX
+  APEX --> OBJ
+  SITE --> OBJ
+  SITE -- "② 取消命令（Named Credential）" --> BE
 ```
 
-登录 Salesforce Org:
+## 3. 三条演示场景
 
-```bash
-sf org login web --alias <your-org-alias>
-```
+| # | 场景 | 路径 | 验证结果 |
+|---|---|---|---|
+| ① | 预约投影 booking → SF | NestJS → ECA（JWT Bearer）→ Apex REST | 正本变更反映到 `Booking__c`、SYNCED |
+| ② | 取消命令 SF → booking | Site LWC → Queueable → NC → Guard 认证＋五重校验 → version+1 | SUCCEEDED、两侧 CANCELLED/v1/SYNCED |
+| ③ | 故障与恢复 | 隧道中断 → HTTP 530×3 → FAILED → RESET DML＋再入队（同一 commandId） | SUCCEEDED、幂等（副作用恰好 1 次）实证 |
 
-部署源码:
+## 4. 验证成果
 
-```bash
-sf project deploy start --target-org <your-org-alias>
-```
+| 区分 | 结果 |
+|---|---|
+| 自动化验证 | **8 项全部合格**（相当于 MV-04～06、08～11） |
+| 浏览器实机 | **5 项全部合格**（MV-01/02/03、07、08） |
+| 单元测试 | Apex 36/36（booking 系 4 类、聚合覆盖率 88.55%）、Backend Jest 273/273、Frontend Jest 94/94 |
+| 故障恢复 | 命令诱发 FAILED → 手动重试 → SUCCEEDED（幂等实证） |
 
-运行 Apex 测试:
+## 5. 主要资源
 
-```bash
-sf apex run test --target-org <your-org-alias> --test-level RunLocalTests
-```
+### 5.1 集成核心（主展示）
 
-运行 LWC 单元测试:
+| 类型 | 文件 | 职责 |
+|---|---|---|
+| Apex | [BookingProjectionRest.cls](force-app/main/default/classes/BookingProjectionRest.cls) | IF-01 接收端（幂等、版本门、upsert） |
+| Apex | [BookingProjectionDmlHelper.cls](force-app/main/default/classes/BookingProjectionDmlHelper.cls) | 投影 DML（明示 system context） |
+| Apex | [BookingCommandQueueable.cls](force-app/main/default/classes/BookingCommandQueueable.cls) | IF-02 命令执行＋结果写回 |
+| Apex | [BookingSiteController.cls](force-app/main/default/classes/BookingSiteController.cls) | Site LWC 后端（一览／取消／轮询） |
+| 测试 | [BookingProjectionRestTest](force-app/main/default/classes/BookingProjectionRestTest.cls)、[BookingSiteControllerTest](force-app/main/default/classes/BookingSiteControllerTest.cls)、[BookingCommandQueueableTest](force-app/main/default/classes/BookingCommandQueueableTest.cls) | 上述 4 类的单元测试 |
+| LWC | [bookingProjectionList](force-app/main/default/lwc/bookingProjectionList/) | 预约投影列表（3 秒轮询、终态显示） |
+| 对象 | [Booking__c](force-app/main/default/objects/Booking__c/) ／ [Booking_Command__c](force-app/main/default/objects/Booking_Command__c/) | 投影正本快照（含版本单调性 VR）／ 命令 |
+| 安全 | [Booking_Projection_Sharing.sharingSet](force-app/main/default/sharingSets/Booking_Projection_Sharing.sharingSet) ／ [PermissionSet ×3](force-app/main/default/permissionsets/) | 行级共享（按 Account）、Site／集成用户权限 |
+| 集成配置 | [Named Credential](force-app/main/default/namedCredentials/Booking_Integration_API.namedCredential-meta.xml)、[External Credential](force-app/main/default/externalCredentials/Booking_Integration_Guard.externalCredential-meta.xml)、[ECA](force-app/main/default/externalClientApps/Booking_Integration_API.eca-meta.xml) | IF-02 发送入口、静态 Bearer、IF-01 JWT Bearer（Api, RefreshToken） |
 
-```bash
-npm run test:unit
-```
+### 5.2 Contact Showcase（次要展示、两条组件链）
 
-运行 Playwright E2E 测试:
+| 链 | 资源 |
+|---|---|
+| LWC | [showcaseContactList](force-app/main/default/lwc/showcaseContactList/)、[showcaseContactCreate](force-app/main/default/lwc/showcaseContactCreate/)、[ShowcaseContactController.cls](force-app/main/default/classes/ShowcaseContactController.cls)（＋测试×2）、[ContactCreated 通道](force-app/main/default/messageChannels/ContactCreated.messageChannel-meta.xml)（LMS 同页刷新） |
+| Aura | [BulkCreateContactQuickAction](force-app/main/default/aura/BulkCreateContactQuickAction/BulkCreateContactQuickAction.cmp) → [BulkCreateComponent](force-app/main/default/aura/BulkCreateComponent/BulkCreateComponent.cmp) → [BulkCreateComponentChild](force-app/main/default/aura/BulkCreateComponentChild/BulkCreateComponentChild.cmp)、[ContactDataController.cls](force-app/main/default/classes/ContactDataController.cls)（＋测试、keyset 分页／服务端信任边界）、[EventService](force-app/main/default/aura/EventService/EventService.cmp)（Apex 统一出口＋表内事件总线）、[quickActions ×2](force-app/main/default/quickActions/) |
 
-```bash
-npm run test:e2e
-```
+### 5.3 连携仓库（GitHub 公开）
 
-Named Credential 相关说明:
+| 仓库 | 主要资源 |
+|---|---|
+| [Cho-Geer/booking-backend](https://github.com/Cho-Geer/booking-backend) | [integrations 模块](https://github.com/Cho-Geer/booking-backend/tree/develop/src/modules/integrations)（Guard、命令、投影发送）、[integration.guard.ts](https://github.com/Cho-Geer/booking-backend/blob/develop/src/common/guards/integration.guard.ts)、集成 [migration p02（契约）](https://github.com/Cho-Geer/booking-backend/tree/develop/prisma/migrations/20260901180742_p02_contract_version_syncstatus_and_integration_commands)、[p03（映射）](https://github.com/Cho-Geer/booking-backend/tree/develop/prisma/migrations/20260903120000_p03_static_operator_mappings) |
+| [Cho-Geer/booking-frontend](https://github.com/Cho-Geer/booking-frontend) | [SalesforceWorkbenchEntry.tsx](https://github.com/Cho-Geer/booking-frontend/blob/develop/src/components/molecules/SalesforceWorkbenchEntry.tsx)（3 状态门控）、[AdminPage.tsx](https://github.com/Cho-Geer/booking-frontend/blob/develop/src/components/pages/AdminPage.tsx) |
 
-- 出站 Callout 示例期望存在一个名为 `CustomerProfileService` 的 Named Credential。
+## 6. 设计文档（三阶段 24 份＋台账）
 
-## 备注
+<details open>
+<summary><b>需求定义（8 份）</b></summary>
 
-- 本仓库定位为"精选展示",而非 Salesforce 所有实验样本的完整归档。
-- 仓库中仍保留一些遗留的或练习性质的文件,但上述各节定义了期望的评审路径。
-- 在 Salesforce 之外,更广义的全栈能力的证据,可参考独立的预约系统仓库。
+- [01 需求一览](docs/asset/requirement-definition/01_要件一覧.md)（业务背景与范围）
+- [02 非功能需求一览](docs/asset/requirement-definition/02_非機能要件一覧.md)、[03 业务一览](docs/asset/requirement-definition/03_業務一覧.md)、[04 业务流程](docs/asset/requirement-definition/04_業務フロー.md)
+- [05 业务规则一览](docs/asset/requirement-definition/05_業務ルール一覧.md)、[06 用语集](docs/asset/requirement-definition/06_用語集.md)、[07 系统化范围](docs/asset/requirement-definition/07_システム化範囲.md)、[08 ToBe 业务模型与现状课题](docs/asset/requirement-definition/08_ToBe業務モデルと現状課題.md)
 
-## 作者
+</details>
 
-Zixi Tao
+<details>
+<summary><b>基本设计（12 份）</b></summary>
 
-## 目标岗位
+- [system-architecture](docs/asset/basic-design/system-architecture.md)（整体构成）、[interface-design](docs/asset/basic-design/interface-design.md)（**IF-01/02 契约**、认证、超时、载荷）
+- [function-design](docs/asset/basic-design/function-design.md)、[function-list](docs/asset/basic-design/function-list.md)、[screen-items](docs/asset/basic-design/screen-items.md)、[screens](docs/asset/basic-design/screens.md)
+- [erd](docs/asset/basic-design/erd.md)、[common-design](docs/asset/basic-design/common-design.md)（权限与 PII 方针）、[nonfunctional-design](docs/asset/basic-design/nonfunctional-design.md)、[code-list](docs/asset/basic-design/code-list.md)、[data-migration](docs/asset/basic-design/data-migration.md)、[reports](docs/asset/basic-design/reports.md)
 
-Senior Salesforce Platform / Integration Engineer
+</details>
+
+<details>
+<summary><b>详细设计（4 份）＋ 台账</b></summary>
+
+- [module-design](docs/asset/detailed-design/module-design.md)、[table-definitions](docs/asset/detailed-design/table-definitions.md)、[unit-test-spec](docs/asset/detailed-design/unit-test-spec.md)、[batch-design](docs/asset/detailed-design/batch-design.md)
+- 台账：[coverage-matrix-summary.xlsx](docs/asset/coverage-matrix-summary.xlsx)（**交付物 × 验证对照台账**、17 个工作表）
+
+</details>
+
+## 7. 推荐审阅顺序（约 10 分钟）
+
+1. [01 需求一览](docs/asset/requirement-definition/01_要件一覧.md) — 业务背景与范围
+2. [interface-design.md](docs/asset/basic-design/interface-design.md) — IF-01/02 契约（认证、超时、载荷）
+3. [BookingProjectionRest.cls](force-app/main/default/classes/BookingProjectionRest.cls) — 接收端实现（幂等、版本门）
+4. [integration-commands.service.ts](https://github.com/Cho-Geer/booking-backend/blob/develop/src/modules/integrations/integration-commands.service.ts) — 发送端 Guard 认证＋五重校验与重试
+5. [coverage-matrix-summary.xlsx](docs/asset/coverage-matrix-summary.xlsx) — 交付物 × 验证全貌
+
+## 8. 作者
+
+**Zixi Tao** — Salesforce／外部系统集成领域（设计、实现、测试、故障处理）
+本仓库部署：`sf project deploy start -o <org-alias>`
+关联仓库：[booking-backend](https://github.com/Cho-Geer/booking-backend)、[booking-frontend](https://github.com/Cho-Geer/booking-frontend)（启动步骤见各仓库 README）
 
 ---
 
-## 🇯🇵 日本語 | 🇬🇧 English
+## 🇯🇵 日本語 | 🇬🇧 English | 🇨🇳 中文
 
-- [日本語版](./README.md)
-- [English version](./README.en.md)
+- [日本語](./README.md) / [English](./README.en.md) / [中文](./README.zh.md)

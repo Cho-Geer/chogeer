@@ -1,212 +1,123 @@
-# Salesforce プラットフォーム & インテグレーション ショーケース
+# Salesforce × 予約システム 外部システム連携
 
-このリポジトリは、`Senior Salesforce Platform / Integration Engineer` 職位を想定して厳選した Salesforce DX のポートフォリオプロジェクトです。
+**Salesforce および外部システム連携**をテーマにしたリポジトリです。予約システム（NestJS ／ Next.js）と Salesforce を**双方向に連携**させ、要件定義 → 設計 → 実装 → テスト → 実機検証まで一貫して完遂した証跡を、厳選して示します。
 
-プラットフォーム、インテグレーション、UI について、代表的な実装を少数だけ厳選して提示することを目的としています。レビュー担当者が実験成果物の巨大なアーカイブを掘り起こすことなく、技術的なシグナルを迅速に理解できるように設計されています。
+## 1. このリポジトリで示すこと
 
-このリポジトリは、あらゆる実験的・学習的な成果物を見せるのではなく、代表的な Salesforce プラットフォームとインテグレーションのパターンを示すものとして、意図的に厳選されています。
+- ✅ **双方向連携** — 予約の投影（booking → SF）とキャンセル・コマンド（SF → booking）
+- ✅ **実機検証** — ブラウザ実機 5 項目 ＋ 自動化検証 8 項目 全件合格（**障害誘発 → 手動リカバリを含む**）
+- ✅ **セキュリティ** — JWT Bearer 認証・冪等コマンド・行レベル共有（Sharing Set）・CRUD/FLS
+- ✅ **ドキュメント駆動** — 要件定義／基本設計／詳細設計 3 段階 24 文書 ＋ 検証カバレッジ台帳
 
-## このリポジトリで示していること
+## 2. アーキテクチャ
 
-- `@RestResource`、`with sharing`、`Security.stripInaccessible` による安全な Apex REST 設計
-- HTTP Callout と Named Credential ベースのエンドポイント設計による外部連携
-- Platform Event 駆動の処理と Apex トリガのテスト
-- Apex コントローラーをバックエンドとする Lightning Web Components による一覧・作成フロー
-- 主なショーケース実装をカバーする Apex ユニットテスト
-
-## カバーしている Salesforce のスキル
-
-- Apex コントローラーとサービスクラス
-- Apex ユニットテスト
-- Visualforce
-- Aura Components
-- Lightning Web Components
-- `@RestResource`
-- `with sharing`
-- `Security.stripInaccessible`
-- HTTP Callout
-- Named Credential ベースのインテグレーション設定
-- Platform Events
-- トリガベースのイベント処理
-- レビュアーフレンドリーなリポジトリのキュレーションとアーキテクチャ説明
-
-## 代表的な実装
-
-### 1. 安全な REST エンドポイント
-
-代表的なファイル:
-
-- `force-app/main/default/classes/ShowcaseContactRestResource.cls`
-- `force-app/main/default/classes/ShowcaseContactRestResourceTest.cls`
-
-この例は次のことを示しています:
-
-- `@RestResource`
-- `with sharing`
-- `Security.stripInaccessible`
-- リクエストバリデーションとレスポンス整形
-- レビュアーフレンドリーな安全なデータ公開パターン
-
-### 2. 外部連携 / HTTP Callout
-
-代表的なファイル:
-
-- `force-app/main/default/classes/ShowcaseContactSyncService.cls`
-- `force-app/main/default/classes/ShowcaseContactSyncServiceTest.cls`
-
-この例は次のことを示しています:
-
-- 外部への HTTP Callout
-- Named Credential ベースのエンドポイント設定
-- 型付けされたリクエスト/レスポンスのラッパー
-- モックベースの Callout テスト
-- インテグレーション志向の Apex サービス設計
-
-### 3. Platform Event とトリガベースの処理
-
-代表的なファイル:
-
-- `force-app/main/default/triggers/OrderEventTrigger.trigger`
-- `force-app/main/default/classes/OrderEventTriggerTest.cls`
-- `force-app/main/default/objects/Order_Event__e/Order_Event__e.object-meta.xml`
-
-この例は次のことを示しています:
-
-- Platform Event の定義
-- トリガベースのイベント処理
-- イベント駆動の後続自動化
-- `EventBus.publish` によるテスト
-
-### 4. LWC + Apex の連携
-
-代表的なファイル:
-
-- `force-app/main/default/classes/ShowcaseContactController.cls`
-- `force-app/main/default/classes/ShowcaseContactControllerTest.cls`
-- `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
-- `force-app/main/default/lwc/showcaseContactCreate/showcaseContactCreate.js`
-
-この例は次のことを示しています:
-
-- Apex をバックエンドとする連絡先の一覧取得
-- Apex をバックエンドとする連絡先の作成
-- LWC と Apex のクライアント/サーバー連携
-- ポートフォリオレビューや面接で簡単に説明できるシンプルな UI パターン
-
-### 5. 補助資料として残している追加のプラットフォームサンプル
-
-代表的なファイル:
-
-- `force-app/main/default/classes/ApexSecurityRest.cls`
-- `force-app/main/default/classes/ApexSecurityRestTest.cls`
-- `force-app/main/default/classes/Account_batchable.cls`
-- `force-app/main/default/classes/Test_account_batchable.cls`
-- `force-app/main/default/flows/New_Contact.flow-meta.xml`
-- `force-app/main/default/flows/Cloud_new_process.flow-meta.xml`
-
-これらのファイルは補助資料として有用ですが、本リポジトリの主なレビューパスではありません。
-
-## リポジトリ構成
-
-主たるレビュー対象:
-
-- `force-app/main/default/classes/`
-- `force-app/main/default/pages/`
-- `force-app/main/default/aura/`
-- `force-app/main/default/lwc/`
-- `force-app/main/default/triggers/`
-- `force-app/main/default/objects/`
-
-補助的なプロジェクトファイル:
-
-- `sfdx-project.json`
-- `package.json`
-- `jest.config.js`
-- `playwright.config.js`
-
-## アーキテクチャノート
-
-このリポジトリは、シンプルなポートフォリオ原則に従っています:
-
-- レビュー対象を小さく保つ
-- リポジトリのテーマを明確にする
-- プラットフォームとインテグレーションの代表的なパターンを示す
-- 過去のあらゆるサンプルを寄せ集めた"捨て場"にしない
-
-実際のところ、本リポジトリの中核となるストーリーは次のとおりです:
-
-1. プラットフォーム、インテグレーション、UI を幅広くカバーするよう厳選して追加した一連のサンプル
-2. 採用チームがシグナルを迅速に理解できるように設計された、意図的なレビュー順
-
-## このリポジトリのレビュー方法
-
-推奨されるレビュー順:
-
-1. `force-app/main/default/classes/ShowcaseContactRestResource.cls`
-2. `force-app/main/default/classes/ShowcaseContactSyncService.cls`
-3. `force-app/main/default/triggers/OrderEventTrigger.trigger`
-4. `force-app/main/default/classes/ShowcaseContactController.cls`
-5. `force-app/main/default/lwc/showcaseContactList/showcaseContactList.js`
-
-## ローカル開発
-
-依存パッケージをインストールします:
-
-```bash
-npm install
+```mermaid
+flowchart LR
+  subgraph BS["booking-system（別リポジトリ）"]
+    FE["Next.js UI"] --> BE["NestJS API"] --> DB[("PostgreSQL")]
+  end
+  subgraph SF["Salesforce"]
+    SITE["Experience Site（LWC）"]
+    APEX["Apex REST ／ Queueable"]
+    OBJ[("Booking__c ／ Booking_Command__c")]
+  end
+  BE -- "① 予約投影（ECA・JWT Bearer）" --> APEX
+  APEX --> OBJ
+  SITE --> OBJ
+  SITE -- "② キャンセル・コマンド（Named Credential）" --> BE
 ```
 
-Salesforce Org への認証:
+## 3. 3 本のデモシナリオ
 
-```bash
-sf org login web --alias <your-org-alias>
-```
+| # | シナリオ | 経路 | 検証結果 |
+|---|---|---|---|
+| ① | 予約投影 booking → SF | NestJS → ECA（JWT Bearer）→ Apex REST | 正本変更が `Booking__c` に反映・SYNCED |
+| ② | キャンセル・コマンド SF → booking | Site LWC → Queueable → NC → Guard 認証＋5 重検証 → version+1 | SUCCEEDED・両側 CANCELLED/v1/SYNCED |
+| ③ | 障害と復旧 | トンネル切断 → HTTP 530×3 → FAILED → RESET DML ＋ 再 enqueue（同一 commandId） | SUCCEEDED・冪等（副作用 1 回）実証 |
 
-ソースのデプロイ:
+## 4. 検証実績
 
-```bash
-sf project deploy start --target-org <your-org-alias>
-```
+| 区分 | 結果 |
+|---|---|
+| 自動化検証 | **8 項目全件合格**（MV-04〜06・08〜11 相当） |
+| ブラウザ実機 | **5 項目全件合格**（MV-01/02/03・07・08） |
+| 単体テスト | Apex 36/36（booking 系 4 クラス・集計カバー率 88.55%）・Backend Jest 273/273・Frontend Jest 94/94 |
+| 障害リカバリ | コマンド FAILED 誘発 → 手動リトライ → SUCCEEDED（冪等実証） |
 
-Apex テストの実行:
+## 5. 主要リソース
 
-```bash
-sf apex run test --target-org <your-org-alias> --test-level RunLocalTests
-```
+### 5.1 連携コア（主展示）
 
-LWC ユニットテストの実行:
+| 種別 | ファイル | 役割 |
+|---|---|---|
+| Apex | [BookingProjectionRest.cls](force-app/main/default/classes/BookingProjectionRest.cls) | IF-01 受信（冪等・バージョンゲート・upsert） |
+| Apex | [BookingProjectionDmlHelper.cls](force-app/main/default/classes/BookingProjectionDmlHelper.cls) | 投影 DML（明示 system context） |
+| Apex | [BookingCommandQueueable.cls](force-app/main/default/classes/BookingCommandQueueable.cls) | IF-02 コマンド実行＋結果書戻 |
+| Apex | [BookingSiteController.cls](force-app/main/default/classes/BookingSiteController.cls) | Site LWC バックエンド（一覧／キャンセル／ポーリング） |
+| Test | [BookingProjectionRestTest](force-app/main/default/classes/BookingProjectionRestTest.cls)・[BookingSiteControllerTest](force-app/main/default/classes/BookingSiteControllerTest.cls)・[BookingCommandQueueableTest](force-app/main/default/classes/BookingCommandQueueableTest.cls) | 上記 4 クラスの単体テスト |
+| LWC | [bookingProjectionList](force-app/main/default/lwc/bookingProjectionList/) | 予約投影リスト（3 秒ポーリング・終態表示） |
+| オブジェクト | [Booking__c](force-app/main/default/objects/Booking__c/) ／ [Booking_Command__c](force-app/main/default/objects/Booking_Command__c/) | 投影正本スナップショット（バージョン単調性 VR 含む） ／ コマンド |
+| セキュリティ | [Booking_Projection_Sharing.sharingSet](force-app/main/default/sharingSets/Booking_Projection_Sharing.sharingSet) ／ [PermissionSet ×3](force-app/main/default/permissionsets/) | 行レベル共有（Account 単位）・Site/統合ユーザー権限 |
+| 連携設定 | [Named Credential](force-app/main/default/namedCredentials/Booking_Integration_API.namedCredential-meta.xml)・[External Credential](force-app/main/default/externalCredentials/Booking_Integration_Guard.externalCredential-meta.xml)・[ECA](force-app/main/default/externalClientApps/Booking_Integration_API.eca-meta.xml) | IF-02 送信入口・静的 Bearer・IF-01 JWT Bearer（Api, RefreshToken） |
 
-```bash
-npm run test:unit
-```
+### 5.2 Contact Showcase（第二展示・2 本のコンポーネントチェーン）
 
-Playwright E2E テストの実行:
+| チェーン | リソース |
+|---|---|
+| LWC | [showcaseContactList](force-app/main/default/lwc/showcaseContactList/)・[showcaseContactCreate](force-app/main/default/lwc/showcaseContactCreate/)・[ShowcaseContactController.cls](force-app/main/default/classes/ShowcaseContactController.cls)（＋Test×2）・[ContactCreated チャネル](force-app/main/default/messageChannels/ContactCreated.messageChannel-meta.xml)（LMS 同期更新） |
+| Aura | [BulkCreateContactQuickAction](force-app/main/default/aura/BulkCreateContactQuickAction/BulkCreateContactQuickAction.cmp) → [BulkCreateComponent](force-app/main/default/aura/BulkCreateComponent/BulkCreateComponent.cmp) → [BulkCreateComponentChild](force-app/main/default/aura/BulkCreateComponentChild/BulkCreateComponentChild.cmp)・[ContactDataController.cls](force-app/main/default/classes/ContactDataController.cls)（＋Test・keyset ページング／サーバー側信頼境界）・[EventService](force-app/main/default/aura/EventService/EventService.cmp)（Apex 統一出口＋表内イベントバス）・[quickActions ×2](force-app/main/default/quickActions/) |
 
-```bash
-npm run test:e2e
-```
+### 5.3 連携先リポジトリ（GitHub 公開）
 
-Named Credential に関する注意:
+| リポジトリ | 主要リソース |
+|---|---|
+| [Cho-Geer/booking-backend](https://github.com/Cho-Geer/booking-backend) | [integrations モジュール](https://github.com/Cho-Geer/booking-backend/tree/develop/src/modules/integrations)（Guard・コマンド・投影送信）・[integration.guard.ts](https://github.com/Cho-Geer/booking-backend/blob/develop/src/common/guards/integration.guard.ts)・連携 [migration p02（契約）](https://github.com/Cho-Geer/booking-backend/tree/develop/prisma/migrations/20260901180742_p02_contract_version_syncstatus_and_integration_commands)・[p03（マッピング）](https://github.com/Cho-Geer/booking-backend/tree/develop/prisma/migrations/20260903120000_p03_static_operator_mappings) |
+| [Cho-Geer/booking-frontend](https://github.com/Cho-Geer/booking-frontend) | [SalesforceWorkbenchEntry.tsx](https://github.com/Cho-Geer/booking-frontend/blob/develop/src/components/molecules/SalesforceWorkbenchEntry.tsx)（3 状態ゲート）・[AdminPage.tsx](https://github.com/Cho-Geer/booking-frontend/blob/develop/src/components/pages/AdminPage.tsx) |
 
-- 外部 Callout の例では、`CustomerProfileService` という Named Credential が必要です。
+## 6. 設計ドキュメント（3 段階 24 文書＋台帳）
 
-## 注記
+<details open>
+<summary><b>要件定義（8 件）</b></summary>
 
-- このリポジトリは、すべての Salesforce 実験を網羅したアーカイブではなく、厳選されたショーケースとして位置付けられています。
-- レガシーや練習目的の追加ファイルも一部リポジトリ内に残っていますが、上記のセクションが意図されたレビューパスを定義します。
-- Salesforce 以外の、より広範なフルスタックの証跡としては、別の予約システムのリポジトリ群がより有力な参照ポイントです。
+- [01_要件一覧](docs/asset/requirement-definition/01_要件一覧.md)（ビジネス背景・スコープ）
+- [02_非機能要件一覧](docs/asset/requirement-definition/02_非機能要件一覧.md)・[03_業務一覧](docs/asset/requirement-definition/03_業務一覧.md)・[04_業務フロー](docs/asset/requirement-definition/04_業務フロー.md)
+- [05_業務ルール一覧](docs/asset/requirement-definition/05_業務ルール一覧.md)・[06_用語集](docs/asset/requirement-definition/06_用語集.md)・[07_システム化範囲](docs/asset/requirement-definition/07_システム化範囲.md)・[08_ToBe業務モデルと現状課題](docs/asset/requirement-definition/08_ToBe業務モデルと現状課題.md)
 
-## 作者
+</details>
 
-Zixi Tao
+<details>
+<summary><b>基本設計（12 件）</b></summary>
 
-## 想定役割
+- [system-architecture](docs/asset/basic-design/system-architecture.md)（全体構成）・[interface-design](docs/asset/basic-design/interface-design.md)（**IF-01/02 契約**・タイムアウト・認証・ペイロード）
+- [function-design](docs/asset/basic-design/function-design.md)・[function-list](docs/asset/basic-design/function-list.md)・[screen-items](docs/asset/basic-design/screen-items.md)・[screens](docs/asset/basic-design/screens.md)
+- [erd](docs/asset/basic-design/erd.md)・[common-design](docs/asset/basic-design/common-design.md)（権限・PII 方針）・[nonfunctional-design](docs/asset/basic-design/nonfunctional-design.md)・[code-list](docs/asset/basic-design/code-list.md)・[data-migration](docs/asset/basic-design/data-migration.md)・[reports](docs/asset/basic-design/reports.md)
 
-Senior Salesforce Platform / Integration Engineer
+</details>
+
+<details>
+<summary><b>詳細設計（4 件）＋ 台帳</b></summary>
+
+- [module-design](docs/asset/detailed-design/module-design.md)・[table-definitions](docs/asset/detailed-design/table-definitions.md)・[unit-test-spec](docs/asset/detailed-design/unit-test-spec.md)・[batch-design](docs/asset/detailed-design/batch-design.md)
+- 台帳：[coverage-matrix-summary.xlsx](docs/asset/coverage-matrix-summary.xlsx)（**成果物 × 検証の対応台帳**・17 シート）
+
+</details>
+
+## 7. 推奨レビュー順（約 10 分）
+
+1. [01_要件一覧](docs/asset/requirement-definition/01_要件一覧.md) — ビジネス背景とスコープ
+2. [interface-design.md](docs/asset/basic-design/interface-design.md) — IF-01/02 契約（認証・タイムアウト・ペイロード）
+3. [BookingProjectionRest.cls](force-app/main/default/classes/BookingProjectionRest.cls) — 受信側実装（冪等・バージョンゲート）
+4. [integration-commands.service.ts](https://github.com/Cho-Geer/booking-backend/blob/develop/src/modules/integrations/integration-commands.service.ts) — 送信側 Guard 認証＋5 重検証とリトライ
+5. [coverage-matrix-summary.xlsx](docs/asset/coverage-matrix-summary.xlsx) — 成果物 × 検証の全容
+
+## 8. 作者
+
+**Zixi Tao** — Salesforce／外部システム連携領域（設計・実装・テスト・障害対応）
+本リポジトリのデプロイ: `sf project deploy start -o <org-alias>`
+関連リポジトリ：[booking-backend](https://github.com/Cho-Geer/booking-backend)・[booking-frontend](https://github.com/Cho-Geer/booking-frontend)（起動手順は各リポジトリ README 参照）
 
 ---
 
-## 🇬🇧 English | 🇨🇳 中文
+## 🇯🇵 日本語 | 🇬🇧 English | 🇨🇳 中文
 
-- [English version](./README.en.md)
-- [中文版本](./README.zh.md)
+- [日本語](./README.md) / [English](./README.en.md) / [中文](./README.zh.md)
