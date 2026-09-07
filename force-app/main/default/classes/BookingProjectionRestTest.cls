@@ -43,8 +43,8 @@ private class BookingProjectionRestTest {
    *（Apex は 1 テストメソッドにつき startTest 1 回のみのため・複数呼出は同一ペア内に包む）
    */
   private static Map<String, Object> call(BookingProjectionRest.ProjectionRequest request) {
-    String body = BookingProjectionRest.receiveProjection(request);
-    return (Map<String, Object>) JSON.deserializeUntyped(body);
+    Object body = BookingProjectionRest.receiveProjection(request);
+    return (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(body));
   }
 
   private static Integer intOf(Object value) {
@@ -459,12 +459,13 @@ private class BookingProjectionRestTest {
     };
     RestContext.request = new RestRequest();
     RestContext.request.requestBody = Blob.valueOf(JSON.serialize(payload));
+    RestContext.response = new RestResponse();
 
     Test.startTest();
-    String body = BookingProjectionRest.receiveProjection();
+    BookingProjectionRest.receiveProjection();
     Test.stopTest();
 
-    Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(body);
+    Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(RestContext.response.responseBody.toString());
     Assert.areEqual(200, intOf(response.get('statusCode')));
     Assert.isTrue((Boolean) response.get('success'));
     Map<String, Object> data = (Map<String, Object>) response.get('data');
@@ -486,12 +487,13 @@ private class BookingProjectionRestTest {
   static void adapterRejectsMalformedJson() {
     RestContext.request = new RestRequest();
     RestContext.request.requestBody = Blob.valueOf('{not-json');
+    RestContext.response = new RestResponse();
 
     Test.startTest();
-    String body = BookingProjectionRest.receiveProjection();
+    BookingProjectionRest.receiveProjection();
     Test.stopTest();
 
-    Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(body);
+    Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(RestContext.response.responseBody.toString());
     Assert.areEqual(400, intOf(response.get('statusCode')));
     Assert.isFalse((Boolean) response.get('success'));
     List<Object> errors = (List<Object>) response.get('errors');
