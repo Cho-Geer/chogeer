@@ -175,31 +175,45 @@ global with sharing class BookingProjectionRest {
    * @HttpPost は無引数で受けて requestBody を JSON.deserialize（寛容：大文字小文字非依存・
    * 未知キー無視＝契約外過剰検証なし）し、検証以降の処理チェーンへ渡す。
    * DD-02 §3.1 の処理チェーン・検証・envelope・例外マッピングは無変更
+   *
+   * プラットフォーム制約メモ（2026-09-07・IF-01 二重直列化是正 B′・コードからは表現できない
+   * 外部制約のためここに記録）：@HttpPost の戻り型はホワイトリスト制限される
+   *（Apex 原語〈Blob 除く〉/sObject/原語または sObject の List・Map〈String キーのみ〉）。
+   * Object・カスタムクラス・Map<String, Object> はいずれもコンパイル拒否
+   *（org 実機配備 3 回の実測・Apex REST Methods 公式ホワイトリスト）。
+   * したがって非 void 戻りでは裸 JSON オブジェクト応答を作れず、String 戻りはプラットフォームの
+   * 自動直列化で二重直列化（IF-01 障害根因＝応答体が引用符付き文字列になる）となる。
+   * ゆえに本アダプタのみ void で受け、envelope を RestContext.response.responseBody へ
+   * Blob で 1 回だけ直列化して書き込む（内部チェーンの Object 戻りは変更しない）
    */
   @HttpPost
-  global static String receiveProjection() {
+  global static void receiveProjection() {
     RestRequest req = RestContext.request;
     String body = (req != null && req.requestBody != null) ? req.requestBody.toString() : null;
     ProjectionRequest request = null;
+    Object envelope = null;
     try {
       if (!String.isBlank(body)) {
         request = (ProjectionRequest) JSON.deserialize(body, ProjectionRequest.class);
       }
     } catch (Exception ex) {
-      return handleValidationException(
+      envelope = handleValidationException(
         new ValidationException('INVALID_JSON', '请求体不是合法 JSON: ' + ex.getMessage(), null)
       );
     }
-    return receiveProjection(request);
+    if (envelope == null) {
+      envelope = receiveProjection(request);
+    }
+    RestContext.response.responseBody = Blob.valueOf(JSON.serialize(envelope));
   }
 
   /**
    * @description 投影本処理入口（単体テスト・REST アダプタ双方から呼ばれる）。
    * Booking__c の唯一の書込入口（BD-07 §3 境界制約）
    * @param request 投影ペイロード 9 項目
-   * @return 標準 envelope（JSON 文字列）
+   * @return 標準 envelope（ApiResponse・REST 経由時はアダプタが responseBody へ直列化）
    */
-  global static String receiveProjection(ProjectionRequest request) {
+  global static Object receiveProjection(ProjectionRequest request) {
     // レスポンスヘッダ設定（ShowcaseIntegrationRest 実測パターン流用）
     RestResponse res = RestContext.response;
     if (res != null) {
@@ -231,7 +245,7 @@ global with sharing class BookingProjectionRest {
    * @description 手順 2〜6：FOR UPDATE 定位→冪等判定→バージョンゲート→Upsert→競合兜底再試行
    * @param attempt 競合兜底の実施回数（最大 1 回）
    */
-  private static String processProjection(ProjectionRequest request, Integer attempt) {
+  private static Object processProjection(ProjectionRequest request, Integer attempt) {
     // 2) External ID 定位・FOR UPDATE 行ロック（MV-06・BD-03 §3.6・DD-02 §3.1 指定列）
     Booking__c existing = queryForUpdate(request.BookingExternalId);
 
@@ -438,7 +452,7 @@ global with sharing class BookingProjectionRest {
   /**
    * @description 受理成功応答（200）：data={eventId, currentVersion}
    */
-  private static String buildSuccessEnvelope(String message, String eventId, Decimal currentVersion) {
+  private static Object buildSuccessEnvelope(String message, String eventId, Decimal currentVersion) {
     RestResponse res = RestContext.response;
     if (res != null) {
       res.statusCode = 200;
@@ -447,7 +461,7 @@ global with sharing class BookingProjectionRest {
       'eventId' => eventId,
       'currentVersion' => currentVersion
     };
-    return JSON.serialize(new ApiResponse(true, 200, message, data));
+    return new ApiResponse(true, 200, message, data);
   }
 
   // ========== 例外→標準 envelope 変換（ShowcaseIntegrationRest handleXxxException パターン流用） ==========
@@ -455,7 +469,7 @@ global with sharing class BookingProjectionRest {
   /**
    * @description 入力検証例外（400 Bad Request）
    */
-  private static String handleValidationException(ValidationException ex) {
+  private static Object handleValidationException(ValidationException ex) {
     RestResponse res = RestContext.response;
     if (res != null) {
       res.statusCode = 400;
@@ -466,14 +480,14 @@ global with sharing class BookingProjectionRest {
       ex.fieldName,
       null
     );
-    return JSON.serialize(new ApiResponse(false, 400, '请求数据验证失败', new List<ApiError>{ error }));
+    return new ApiResponse(false, 400, '请求数据验证失败', new List<ApiError>{ error });
   }
 
   /**
    * @description バージョン競合（409 Conflict・RULE-01）。details で現行 version が判別可能
    * （IF-01 §3.3「拒否と現行 version が判別可能な競合応答」）
    */
-  private static String handleVersionConflictException(VersionConflictException ex) {
+  private static Object handleVersionConflictException(VersionConflictException ex) {
     RestResponse res = RestContext.response;
     if (res != null) {
       res.statusCode = 409;
@@ -484,13 +498,13 @@ global with sharing class BookingProjectionRest {
       'eventId' => ex.eventId
     };
     ApiError error = new ApiError('VERSION_CONFLICT', ex.getMessage(), 'CurrentVersion__c', details);
-    return JSON.serialize(new ApiResponse(false, 409, '版本竞争冲突・受理被拒', new List<ApiError>{ error }));
+    return new ApiResponse(false, 409, '版本竞争冲突・受理被拒', new List<ApiError>{ error });
   }
 
   /**
    * @description データアクセス例外（500 Internal Server Error）
    */
-  private static String handleDataAccessException(DataAccessException ex) {
+  private static Object handleDataAccessException(DataAccessException ex) {
     RestResponse res = RestContext.response;
     if (res != null) {
       res.statusCode = 500;
@@ -501,18 +515,18 @@ global with sharing class BookingProjectionRest {
       errorMessages.add(dbError.getStatusCode() + ': ' + dbError.getMessage());
     }
     ApiError error = new ApiError('DATA_ACCESS_ERROR', ex.getMessage(), ex.operation, errorMessages);
-    return JSON.serialize(new ApiResponse(false, 500, '数据访问错误', new List<ApiError>{ error }));
+    return new ApiResponse(false, 500, '数据访问错误', new List<ApiError>{ error });
   }
 
   /**
    * @description 未期例外（500 Internal Server Error）
    */
-  private static String handleUnexpectedException(Exception ex) {
+  private static Object handleUnexpectedException(Exception ex) {
     RestResponse res = RestContext.response;
     if (res != null) {
       res.statusCode = 500;
     }
     ApiError error = new ApiError('INTERNAL_SERVER_ERROR', '系统内部错误', null, null);
-    return JSON.serialize(new ApiResponse(false, 500, '系统内部错误', new List<ApiError>{ error }));
+    return new ApiResponse(false, 500, '系统内部错误', new List<ApiError>{ error });
   }
 }

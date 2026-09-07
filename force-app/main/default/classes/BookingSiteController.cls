@@ -55,6 +55,8 @@ global with sharing class BookingSiteController {
    * 外部ユーザーの AccountId は User から取得し、Booking__c を Account__c で絞り込む
    * （行級範囲は with sharing＋Sharing Set・NFR-06・MV-07）。AccountId が無い
    * （非 Community ユーザー）場合は 0 件＝空一覧（MSG-01 相当・異常にしない）。
+   * 表示順＝初回投影時刻の降順（CreatedDate DESC・2026-09-07 用户拍板・
+   * upsert 更新は CreatedDate を変えないため「新しく投影された予約」が上位に来る）
    */
   @AuraEnabled(cacheable = true)
   public static List<Booking__c> getProjections() {
@@ -76,6 +78,7 @@ global with sharing class BookingSiteController {
       FROM Booking__c
       WHERE Account__c = :accountId
       WITH SECURITY_ENFORCED
+      ORDER BY CreatedDate DESC
     ];
   }
 

@@ -420,7 +420,7 @@ global class BookingCommandQueueable implements Queueable, Database.AllowsCallou
     proj.eventId = this.commandId; // 書き戻し eventId＝commandId
     proj.correlationId = this.correlationId;
 
-    String envelopeJson = BookingProjectionRest.receiveProjection(proj);
+    String envelopeJson = JSON.serialize(BookingProjectionRest.receiveProjection(proj));
     Integer writebackStatus = parseWritebackStatus(envelopeJson);
 
     if (writebackStatus == 200) {
