@@ -40,6 +40,9 @@ const MSG_06 =
 // 確認ダイアログ文言（MSG 表外・拍板 5 の実装値）
 const CONFIRM_CANCEL_MESSAGE = "この予約をキャンセルしますか？";
 
+// 処理中行のボタン表示（档位 A・2026-09-07 拍板・MSG 表外のボタン label/title 用文案）
+const LABEL_PROCESSING = "処理中…";
+
 const COLUMNS = [
   { label: "予約番号", fieldName: "AppointmentNumber__c" }, // S-11-01
   { label: "予約日付", fieldName: "dateLabel" }, // S-11-02（YYYY-MM-DD）
@@ -51,7 +54,8 @@ const COLUMNS = [
     fieldName: "cancelAction",
     type: "button", // S-11-06
     typeAttributes: {
-      label: "キャンセル",
+      // label も行データ駆動（档位 A：処理中行は「処理中…」へ切替）
+      label: { fieldName: "cancelLabel" },
       name: "cancel",
       title: { fieldName: "cancelTitle" },
       disabled: { fieldName: "cancelDisabled" },
@@ -95,17 +99,26 @@ export default class BookingProjectionList extends LightningElement {
   pollElapsedMs = 0;
   cancelPending = false; // クリック防護（double-submit 競合窓・guard 用・描画対象外）
   pollInFlight = false; // ポーリング防重複（in-flight ロック・guard 用・描画対象外）
+  // キャンセル処理中の行定位キー（＝対象行の BookingExternalId__c・2026-09-07 拍板：
+  // 処理中表示＝档位 A・spinner 表示は档位 B として別案件）。
+  // pollOnce の全終了経路（SUCCEEDED／CONFLICT・FAILED／60 秒上限／poll 通信エラー）で
+  // 必ず undefined に戻すこと——戻し漏れはその行の「処理中…」表示を恒久化する
+  // （この呼び出し側の義務はコードの形だけでは表現されない）
+  processingKey;
+  projectionData; // wire の生データ（refreshRowStates の再正規化ソース・正規化済み行には日付原値が無いため）
 
   @wire(getProjections)
   wiredProjections(result) {
     this.wiredResult = result;
     const { data, error } = result;
     if (data) {
+      this.projectionData = data;
       this.bookings = data.map((booking) => this.normalizeBooking(booking));
       // 0 件は異常にしない（MSG-01 相当・DD-02 §3.3 処理概要 1）
       this.showMessage(data.length === 0 ? MSG_01 : undefined, "info");
     } else if (error) {
       // wire 通信エラー→MSG-02（S-11 表示条件）
+      this.projectionData = undefined;
       this.bookings = [];
       this.showMessage(MSG_02, "error");
     }
@@ -114,6 +127,18 @@ export default class BookingProjectionList extends LightningElement {
   /** 表示行へ正規化（S-11-09/10 は内部保持・非表示・SyncStatus__c は表示しない） */
   normalizeBooking(booking) {
     const cancellable = isCancellable(booking.Status__c);
+    // 档位 A：キャンセル処理中の行は「処理中…」表示＋非活性（2026-09-07 拍板）。
+    // processingKey 未設定時は比較しない（外部 ID 無しの行が誤って処理中表示になるのを防ぐ）
+    const processing =
+      this.processingKey !== undefined &&
+      booking.BookingExternalId__c === this.processingKey;
+    let cancelTitle = "キャンセル";
+    if (processing) {
+      // 処理中の title は「処理中…」＝ MSG-04（取消不可の理由提示）は処理中には使わない
+      cancelTitle = LABEL_PROCESSING;
+    } else if (!cancellable) {
+      cancelTitle = MSG_04; // MSG-04 は非活性理由の title
+    }
     return {
       Id: booking.Id,
       BookingExternalId__c: booking.BookingExternalId__c, // S-11-10 内部（定位キー）
@@ -123,9 +148,21 @@ export default class BookingProjectionList extends LightningElement {
       TimeSlot__c: booking.TimeSlot__c,
       ServiceName__c: booking.ServiceName__c,
       Status__c: booking.Status__c,
-      cancelDisabled: !cancellable,
-      cancelTitle: cancellable ? "キャンセル" : MSG_04 // MSG-04 は非活性理由の title
+      cancelDisabled: !cancellable || processing,
+      cancelLabel: processing ? LABEL_PROCESSING : "キャンセル",
+      cancelTitle
     };
+  }
+
+  /** processingKey 変更を行データへ反映：行は通常オブジェクトのため wire 再発火なしには
+   * 再正規化されない。正規化済み行には AppointmentDate__c が無い（再マップすると日付表示が
+   * 欠落する）ため、wire の生データ（projectionData）から normalizeBooking し直す */
+  refreshRowStates() {
+    if (this.projectionData) {
+      this.bookings = this.projectionData.map((booking) =>
+        this.normalizeBooking(booking)
+      );
+    }
   }
 
   showMessage(text, type) {
@@ -184,6 +221,9 @@ export default class BookingProjectionList extends LightningElement {
     });
     this.commandId = response.commandId;
     this.processingStatus = response.status; // QUEUED（S-11-07 初期表示）
+    // 档位 A：受理済みの行を「処理中…」表示へ（終態到達時に pollOnce の全出口で解除）
+    this.processingKey = row.BookingExternalId__c;
+    this.refreshRowStates();
     this.showMessage(
       MSG_06.replace("{commandId}", response.commandId),
       "info"
@@ -223,6 +263,9 @@ export default class BookingProjectionList extends LightningElement {
         if (this.pollElapsedMs >= POLL_MAX_MS) {
           // 最長 60 秒で自動停止→MSG-02 提示＋再読み込みボタンで再取得可能
           this.stopPolling();
+          // 出口③：上限打ち切りでも処理中表示を解除（恒久「処理中…」を防ぐ）
+          this.processingKey = undefined;
+          this.refreshRowStates();
           this.showMessage(MSG_02, "error");
           return; // 60 秒上限の早期 return も finally でロック解放（ロック意味論を迂回しない）
         }
@@ -235,14 +278,23 @@ export default class BookingProjectionList extends LightningElement {
         if (this.wiredResult) {
           await refreshApex(this.wiredResult);
         }
+        // 出口①：処理中表示を解除（wire 再発火が無い場合もここで必ず戻す）
+        this.processingKey = undefined;
+        this.refreshRowStates();
       } else if (isTerminalCommandStatus(result.status)) {
         // CONFLICT／FAILED → MSG-05
         this.stopPolling();
+        // 出口②：refreshApex しない経路のため行表示の復元もここで行う
+        this.processingKey = undefined;
+        this.refreshRowStates();
         this.showMessage(MSG_05.replace("{status}", result.status), "error");
       }
     } catch (error) {
       // poll 通信エラー→MSG-02
       this.stopPolling();
+      // 出口④：通信断でも処理中表示を解除（恒久「処理中…」を防ぐ）
+      this.processingKey = undefined;
+      this.refreshRowStates();
       this.showMessage(MSG_02, "error");
     } finally {
       this.pollInFlight = false; // ロック必ず解放

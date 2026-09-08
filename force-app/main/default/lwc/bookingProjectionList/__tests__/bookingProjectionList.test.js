@@ -9,6 +9,8 @@
  * - CONFLICT/FAILED → MSG-05 分岐・60 秒上限（jest フェイクタイマー）
  * - wire/poll 通信エラー→MSG-02・submitCancel 異常→Apex message 優先／無ければ MSG-03
  * - 再読み込みボタン（S-11-08）：refreshApex＋ポーリング中は即時 1 回ポーリング
+ * - キャンセル処理中表示（档位 A・2026-09-07 拍板）：処理中行は「処理中…」＋非活性・
+ *   終態（SUCCEEDED／CONFLICT）で表示解除（恒久「処理中…」を防ぐ）
  * - P1-2 UI 防護：double-submit クリックロック（cancelPending）・ポーリング in-flight ロック（pollInFlight）
  *   ＋失敗時のロック解除→再試行
  */
@@ -272,6 +274,61 @@ describe("c-booking-projection-list", () => {
     expect(
       element.shadowRoot.querySelector("[data-processing-status]").textContent
     ).toBe("SUCCEEDED");
+  });
+
+  it("marks the cancelled row as 処理中… (disabled) while processing and restores it after SUCCEEDED (档位 A)", async () => {
+    jest.useFakeTimers();
+    stubConfirm(true);
+    mockSubmitCancel.mockResolvedValue({ commandId: "uuid-1", status: "QUEUED" });
+    mockPollCommandStatus
+      .mockResolvedValueOnce({ status: "RUNNING" })
+      .mockResolvedValue({ status: "SUCCEEDED" });
+
+    const element = createComponent();
+    await emitProjections(element, mockBookings);
+
+    clickCancelRow(element, 0);
+    await flushPromises();
+
+    // 受理後〜終態前：対象行のみ「処理中…」表示＋非活性・他行は現状維持
+    const dt = element.shadowRoot.querySelector("lightning-datatable");
+    expect(dt.data[0].cancelDisabled).toBe(true);
+    expect(dt.data[0].cancelLabel).toBe("処理中…");
+    expect(dt.data[0].cancelTitle).toBe("処理中…"); // MSG-04（取消不可）は処理中には使わない
+    expect(dt.data[0].dateLabel).toBe("2026-09-10"); // 処理中でも日付など他フィールドは温存
+    expect(dt.data[1].cancelDisabled).toBe(false); // 対象外の CONFIRMED 行は変化しない
+    expect(dt.data[1].cancelLabel).toBe("キャンセル");
+
+    // 終態 SUCCEEDED：処理中表示は解除され、行は通常の活性表示へ戻る
+    await jest.advanceTimersByTimeAsync(6000);
+    expect(mockRefreshApex).toHaveBeenCalledTimes(1);
+    expect(dt.data[0].cancelDisabled).toBe(false);
+    expect(dt.data[0].cancelLabel).toBe("キャンセル");
+  });
+
+  it("clears the processing state on CONFLICT so the row never stays 処理中… permanently (档位 A)", async () => {
+    jest.useFakeTimers();
+    stubConfirm(true);
+    mockSubmitCancel.mockResolvedValue({ commandId: "uuid-1", status: "QUEUED" });
+    mockPollCommandStatus.mockResolvedValue({ status: "CONFLICT" });
+
+    const element = createComponent();
+    await emitProjections(element, mockBookings);
+
+    clickCancelRow(element, 0);
+    await flushPromises();
+
+    const dt = element.shadowRoot.querySelector("lightning-datatable");
+    expect(dt.data[0].cancelLabel).toBe("処理中…");
+
+    // CONFLICT 到達：MSG-05 提示と同時に処理表示を解除（refreshApex しない経路でも恒久化しない）
+    await jest.advanceTimersByTimeAsync(3000);
+    expect(element.shadowRoot.textContent).toContain(
+      "キャンセル処理が完了しませんでした（状態：CONFLICT）。詳細は管理者に確認してください"
+    );
+    expect(mockRefreshApex).not.toHaveBeenCalled();
+    expect(dt.data[0].cancelDisabled).toBe(false);
+    expect(dt.data[0].cancelLabel).toBe("キャンセル");
   });
 
   it("shows MSG-05 and stops polling when the command reaches CONFLICT", async () => {
