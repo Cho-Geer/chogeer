@@ -1,0 +1,12 @@
+{
+  "activeViewId" : "62a74726-96b9-4a7d-baee-bc0ebb1fb63f",
+  "appPageId" : "6f8e4dbe-58f3-400d-aad9-a1e080b8e702",
+  "configurationTags" : [ ],
+  "devName" : "detail_a02__c",
+  "id" : "e2f6d50f-dd43-4378-9dbe-83d29423b667",
+  "label" : "予約投影 詳細",
+  "objectApiName" : "Booking__c",
+  "routeType" : "detail-a02",
+  "type" : "route",
+  "urlPrefix" : "booking"
+}

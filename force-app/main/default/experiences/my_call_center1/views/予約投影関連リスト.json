@@ -1,0 +1,39 @@
+{
+  "appPageId" : "6f8e4dbe-58f3-400d-aad9-a1e080b8e702",
+  "componentName" : "siteforce:sldsOneColLayout",
+  "dataProviders" : [ ],
+  "id" : "4866512c-0278-4096-9f3e-6e245e572efd",
+  "label" : "予約投影 関連リスト",
+  "regions" : [ {
+    "id" : "eea140d3-5081-4489-9f46-5233103fb1f5",
+    "regionName" : "header",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "customTitle" : "",
+        "parentRecordId" : "{!recordId}",
+        "relatedListName" : "{!relationshipApiName}",
+        "showBreadCrumbs" : true,
+        "showCustomTitle" : false,
+        "showManualRefreshButton" : true,
+        "showRowNumbers" : true
+      },
+      "componentName" : "forceCommunity:relatedList",
+      "id" : "01a4deac-fb7d-4733-a665-faa731f2653c",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "ab08cf9b-5db7-4730-93d0-59dabdda1357",
+    "regionName" : "content",
+    "type" : "region"
+  }, {
+    "id" : "7ed460fb-a4c3-45b4-a43a-5c148dd9610c",
+    "regionName" : "footer",
+    "type" : "region"
+  } ],
+  "themeLayoutType" : "Inner",
+  "type" : "view",
+  "viewType" : "relatedlist-a02"
+}

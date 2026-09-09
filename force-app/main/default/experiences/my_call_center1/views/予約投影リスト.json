@@ -1,0 +1,46 @@
+{
+  "appPageId" : "6f8e4dbe-58f3-400d-aad9-a1e080b8e702",
+  "componentName" : "siteforce:sldsOneColLayout",
+  "dataProviders" : [ ],
+  "id" : "8b578352-14a4-436a-a2c2-4ffd2497234f",
+  "label" : "予約投影 リスト",
+  "regions" : [ {
+    "id" : "a5e30926-6a00-4d9d-a32f-d00159739c84",
+    "regionName" : "header",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "enableInlineEdit" : true,
+        "filterName" : "{!filterId}",
+        "layout" : "FULL",
+        "pageSize" : 25,
+        "scope" : "{!objectName}",
+        "showActionBar" : true,
+        "showChartsPanel" : true,
+        "showDisplay" : "showall",
+        "showFilterPanel" : true,
+        "showImageIcon" : true,
+        "showManualRefreshButton" : true,
+        "showObjectName" : true,
+        "showPinnedList" : true,
+        "showSearchBar" : true
+      },
+      "componentName" : "forceCommunity:objectHome",
+      "id" : "d604f9bd-5d58-4cc3-a2db-3b1cd09371ba",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "a55190d9-858a-41c2-bfc5-02194097743c",
+    "regionName" : "content",
+    "type" : "region"
+  }, {
+    "id" : "f0cfca80-3eba-417d-8953-a4c9c90f90a2",
+    "regionName" : "footer",
+    "type" : "region"
+  } ],
+  "themeLayoutType" : "Inner",
+  "type" : "view",
+  "viewType" : "list-a02"
+}
