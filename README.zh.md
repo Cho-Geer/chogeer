@@ -2,6 +2,36 @@
 
 以 **Salesforce 与外部系统集成**为主题的仓库：将预约系统（NestJS／Next.js）与 Salesforce **双向集成**，从需求定义 → 设计 → 实现 → 测试 → 实机验证一贯到底。
 
+## 画面画廊
+
+### Experience Cloud 站点（预约投影列表）
+
+Experience Site 上的预约投影列表。突出显示可取消的预约。
+
+![预约投影列表](docs/images/experience-site-booking-list.png)
+
+### 预约取消的命令联动
+
+从站点受理取消后，处理状态由 QUEUED → SUCCEEDED 迁移，预约状态更新为 CANCELLED。
+
+**取消受理（处理状态：QUEUED）**
+
+![取消受理（QUEUED）](docs/images/experience-site-booking-cancel-queued.png)
+
+**处理完成（处理状态：SUCCEEDED、预约状态已更新）**
+
+![处理完成（SUCCEEDED）](docs/images/experience-site-booking-cancel-succeeded.png)
+
+### booking 侧管理控制台（同步后的预约状态）
+
+反映取消结果的 booking 系统侧管理控制台。
+
+![管理控制台的预约列表](docs/images/booking-admin-console-cancelled.png)
+
+### 取消通知邮件（接收示例）
+
+![取消邮件接收示例](docs/images/booking-cancel-email-inbox.png)
+
 ## 1. 本仓库展示什么
 
 - ✅ **双向集成** — 预约投影（booking → SF）与取消命令（SF → booking）

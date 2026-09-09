@@ -2,6 +2,36 @@
 
 A repository themed on **Salesforce and external system integration**: a booking system (NestJS / Next.js) integrated with Salesforce **in both directions**, carried through requirements → design → implementation → testing → live verification.
 
+## Screen Gallery
+
+### Experience Cloud site (booking projection list)
+
+The booking projection list on the Experience Site. Bookings eligible for cancellation are highlighted.
+
+![Booking projection list](docs/images/experience-site-booking-list.png)
+
+### Cancel command flow
+
+When a cancellation is accepted from the site, the processing status transitions from QUEUED to SUCCEEDED, and the booking status is updated to CANCELLED.
+
+**Cancellation accepted (processing status: QUEUED)**
+
+![Cancellation accepted (QUEUED)](docs/images/experience-site-booking-cancel-queued.png)
+
+**Processing complete (processing status: SUCCEEDED, booking status updated)**
+
+![Processing complete (SUCCEEDED)](docs/images/experience-site-booking-cancel-succeeded.png)
+
+### booking-side admin console (booking state after sync)
+
+The admin console on the booking system side, reflecting the cancellation result.
+
+![Booking list in the admin console](docs/images/booking-admin-console-cancelled.png)
+
+### Cancellation notification email (inbox example)
+
+![Example cancellation email in the inbox](docs/images/booking-cancel-email-inbox.png)
+
 ## 1. What this repository demonstrates
 
 - ✅ **Two-way integration** — booking projection (booking → SF) and cancel commands (SF → booking)

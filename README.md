@@ -2,6 +2,36 @@
 
 **Salesforce および外部システム連携**をテーマにしたリポジトリです。予約システム（NestJS ／ Next.js）と Salesforce を**双方向に連携**させ、要件定義 → 設計 → 実装 → テスト → 実機検証まで一貫して完遂した証跡を、厳選して示します。
 
+## 画面ギャラリー
+
+### Experience Cloud サイト（予約投影リスト）
+
+Experience Site 上の予約投影リスト。キャンセル対象の予約を強調表示しています。
+
+![予約投影リスト](docs/images/experience-site-booking-list.png)
+
+### 予約キャンセルのコマンド連動
+
+サイトからキャンセルを受け付けると処理状態が QUEUED → SUCCEEDED と遷移し、予約ステータスが CANCELLED に更新されます。
+
+**キャンセル受付（処理状態: QUEUED）**
+
+![キャンセル受付（QUEUED）](docs/images/experience-site-booking-cancel-queued.png)
+
+**処理完了（処理状態: SUCCEEDED、予約ステータス更新済み）**
+
+![処理完了（SUCCEEDED）](docs/images/experience-site-booking-cancel-succeeded.png)
+
+### booking 側管理コンソール（同期後の予約状態）
+
+キャンセル結果が反映された booking システム側の管理コンソールです。
+
+![管理コンソールの予約リスト](docs/images/booking-admin-console-cancelled.png)
+
+### キャンセル通知メール（受信例）
+
+![キャンセルメール受信例](docs/images/booking-cancel-email-inbox.png)
+
 ## 1. このリポジトリで示すこと
 
 - ✅ **双方向連携** — 予約の投影（booking → SF）とキャンセル・コマンド（SF → booking）
