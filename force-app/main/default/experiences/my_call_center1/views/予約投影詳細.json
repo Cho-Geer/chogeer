@@ -1,0 +1,66 @@
+{
+  "appPageId" : "6f8e4dbe-58f3-400d-aad9-a1e080b8e702",
+  "componentName" : "siteforce:sldsOneColLayout",
+  "dataProviders" : [ ],
+  "id" : "62a74726-96b9-4a7d-baee-bc0ebb1fb63f",
+  "label" : "予約投影 詳細",
+  "regions" : [ {
+    "id" : "16a92940-0c71-4412-b55c-7696c04e376f",
+    "regionName" : "header",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "recordId" : "{!recordId}"
+      },
+      "componentName" : "forceCommunity:recordHeadline",
+      "id" : "79af6fe4-40ff-4955-bdbe-7b9c8049f777",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    }, {
+      "componentAttributes" : {
+        "detailsTabLabel" : "Details",
+        "discussionsTabLabel" : "",
+        "recordId" : "{!recordId}",
+        "relatedTabLabel" : "",
+        "showLegacyActivityComposer" : true,
+        "tab1Type" : "details",
+        "tab2Type" : "none",
+        "tab3Type" : "none",
+        "tab4Type" : "none",
+        "timelineTabLabel" : ""
+      },
+      "componentName" : "forceCommunity:recordHomeTabs",
+      "id" : "abd9d61d-51e1-4030-b48e-ab0d4b086075",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "46885c73-9c1b-45b1-adc7-d69de56adfde",
+    "regionName" : "content",
+    "type" : "region"
+  }, {
+    "id" : "cfe28dad-9908-4fe5-ba26-7df96aa53f37",
+    "regionName" : "footer",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "customHeadTags" : "",
+        "description" : "",
+        "title" : "{!Record._Object}: {!Record._Title}"
+      },
+      "componentName" : "forceCommunity:seoAssistant",
+      "id" : "260e4dcb-85ea-4fb8-b8cd-4e590dda653c",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "a66f69c6-efbd-4695-ac37-d34c7dffbb6f",
+    "regionName" : "sfdcHiddenRegion",
+    "type" : "region"
+  } ],
+  "themeLayoutType" : "Inner",
+  "type" : "view",
+  "viewType" : "detail-a02"
+}
